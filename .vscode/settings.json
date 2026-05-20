@@ -1,0 +1,4 @@
+{
+    "chat.agent.maxRequests": 5000000,
+    "CodeGPT.apiKey": "Anthropic"
+}

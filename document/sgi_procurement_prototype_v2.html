@@ -1,0 +1,888 @@
+
+<h2 class="sr-only">SGI Procurement – prototype v2, form kế hoạch tuần tách riêng khỏi form tạo đơn hàng</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1E3A5F;--blue:#2563EB;--blue-lt:#EFF6FF;--blue-md:#BFDBFE;
+  --green:#059669;--green-lt:#ECFDF5;
+  --amber:#D97706;--amber-lt:#FFFBEB;
+  --red:#DC2626;--red-lt:#FEF2F2;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --gray:#6B7280;--gray-lt:#F9FAFB;--gray-bd:#E5E7EB;
+  --text:#111827;--text2:#6B7280;--text3:#9CA3AF;
+  --white:#fff;--radius:8px;--radius-lg:12px;
+  --sidebar:200px;
+}
+body{font-family:var(--font-sans),'Segoe UI',sans-serif;font-size:14px;color:var(--text);background:var(--color-background-tertiary,#F3F4F6);min-height:620px}
+.shell{display:flex;min-height:620px;border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);overflow:hidden;background:var(--white)}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1)}
+.logo-mark{font-size:16px;font-weight:500;color:#fff;letter-spacing:.5px}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px}
+.nav{flex:1;padding:10px 0;overflow-y:auto}
+.nav-sec{padding:6px 16px 3px;font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.8px;margin-top:6px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;transition:all .15s;border-left:3px solid transparent;margin:1px 0}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:rgba(255,255,255,.13);color:#fff;border-left-color:#60A5FA}
+.nav-item i{font-size:16px;width:18px;text-align:center}
+.nav-bottom{padding:12px;border-top:1px solid rgba(255,255,255,.1)}
+.av-row{display:flex;align-items:center;gap:8px}
+.av{width:28px;height:28px;border-radius:50%;background:#3B82F6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0}
+.av-name{font-size:12px;color:rgba(255,255,255,.7)}
+.av-role{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:48px;border-bottom:0.5px solid var(--gray-bd);display:flex;align-items:center;padding:0 20px;gap:10px;background:var(--white);flex-shrink:0}
+.tb-title{font-size:15px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:20px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--radius);font-size:13px;cursor:pointer;border:0.5px solid var(--gray-bd);background:var(--white);color:var(--text);transition:all .15s;white-space:nowrap}
+.btn:hover{background:var(--gray-lt)}
+.btn.pri{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.pri:hover{background:#1D4ED8}
+.btn.sm{padding:4px 10px;font-size:12px}
+.btn.warn{background:var(--amber);color:#fff;border-color:var(--amber)}
+.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.b-draft{background:#F3F4F6;color:#374151}
+.b-pending{background:var(--amber-lt);color:#92400E}
+.b-approved{background:var(--blue-lt);color:#1E40AF}
+.b-transit{background:var(--purple-lt);color:#5B21B6}
+.b-done{background:var(--green-lt);color:#065F46}
+.b-rejected{background:var(--red-lt);color:#991B1B}
+.b-weekly{background:#F0FDF4;color:#166534}
+
+/* TABLE */
+.tw{background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+.t{width:100%;border-collapse:collapse;table-layout:fixed}
+.t th{background:var(--gray-lt);padding:8px 10px;text-align:left;font-size:12px;font-weight:500;color:var(--text2);border-bottom:0.5px solid var(--gray-bd)}
+.t td{padding:8px 10px;border-bottom:0.5px solid var(--gray-bd);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t tr:last-child td{border-bottom:none}
+.t tr.clickable:hover td{background:var(--blue-lt);cursor:pointer}
+.money{color:var(--blue);font-weight:500}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);padding:14px 16px}
+.stat-lbl{font-size:11px;color:var(--text2);margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.stat-val{font-size:22px;font-weight:500}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* CARDS */
+.card{background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);padding:16px;margin-bottom:14px}
+.card-title{font-size:11px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.frow{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--gray-bd)}
+.frow:last-child{border-bottom:none}
+.fl{font-size:12px;color:var(--text2)}
+.fv{font-size:13px;font-weight:500}
+.fv.auto{color:var(--green);font-size:12px}
+
+/* FORM */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fg.cols3{grid-template-columns:1fr 1fr 1fr}
+.fgroup{display:flex;flex-direction:column;gap:3px}
+.fgroup.full{grid-column:1/-1}
+.label{font-size:12px;font-weight:500;color:var(--text2)}
+.inp,.sel,.ta{width:100%;padding:7px 10px;border:0.5px solid var(--gray-bd);border-radius:var(--radius);font-size:13px;color:var(--text);background:var(--white)}
+.ta{resize:none;height:60px}
+.inp.calc{background:var(--blue-lt);border-color:var(--blue-md);color:#1E40AF;font-weight:500}
+.inp.total{background:var(--navy);color:#fff;font-weight:500;font-size:14px;border-color:var(--navy)}
+.fsec{grid-column:1/-1;font-size:11px;font-weight:500;color:var(--text2);padding:6px 0 4px;border-bottom:0.5px solid var(--gray-bd);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.tag-auto{font-size:10px;color:var(--green);background:var(--green-lt);padding:1px 5px;border-radius:10px;margin-left:4px}
+.tag-lock{font-size:10px;color:var(--gray);background:var(--gray-lt);padding:1px 5px;border-radius:10px;margin-left:4px}
+
+/* COST BOX */
+.cost-box{background:var(--navy);border-radius:var(--radius-lg);padding:14px 16px;color:#fff;margin-bottom:14px}
+.cost-lbl{font-size:11px;color:rgba(255,255,255,.5);margin-bottom:3px}
+.cost-val{font-size:22px;font-weight:500}
+.cost-sub{font-size:11px;color:rgba(255,255,255,.45);margin-top:3px}
+.cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.1);border-radius:var(--radius);overflow:hidden;margin-top:10px}
+.ci{background:rgba(255,255,255,.07);padding:8px 10px}
+.ci-l{font-size:10px;color:rgba(255,255,255,.4)}
+.ci-v{font-size:13px;font-weight:500;color:#fff;margin-top:1px}
+
+/* PROGRESS */
+.progress{display:flex;gap:0;align-items:center;margin-bottom:14px;background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);padding:14px 16px}
+.ps{display:flex;flex-direction:column;align-items:center;flex:1}
+.ps-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+.ps-done .ps-dot{background:var(--green-lt)}
+.ps-done .ps-lbl{color:var(--green)}
+.ps-active .ps-dot{background:var(--blue-lt);border:2px solid var(--blue)}
+.ps-active .ps-lbl{color:var(--blue);font-weight:500}
+.ps-wait .ps-dot{background:var(--gray-lt)}
+.ps-wait .ps-lbl{color:var(--text3)}
+.ps-lbl{font-size:10px;margin-top:4px;text-align:center}
+.ps-line{flex:1;height:1px}
+.ps-line.done{background:var(--green)}
+.ps-line.wait{background:var(--gray-bd)}
+.ps-line.active{background:var(--blue)}
+
+/* ALERT */
+.alert{border-radius:var(--radius);padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.alert.warn{background:var(--amber-lt);border:0.5px solid #FDE68A}
+.alert.info{background:var(--blue-lt);border:0.5px solid var(--blue-md)}
+.alert i{font-size:17px;flex-shrink:0}
+.alert.warn i{color:var(--amber)}
+.alert.info i{color:var(--blue)}
+.alert-msg{font-size:13px;flex:1}
+.alert.warn .alert-msg{color:#92400E}
+.alert.info .alert-msg{color:#1E40AF}
+
+/* MINI CHART */
+.mbars{display:flex;align-items:flex-end;gap:3px;height:54px}
+.mbar{background:var(--blue-md);border-radius:2px 2px 0 0;flex:1;transition:background .15s}
+.mbar:hover{background:var(--blue)}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.chart-wrap{background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);padding:14px}
+
+/* NOTIF DOT */
+.nb{position:relative;width:32px;height:32px;border-radius:var(--radius);border:0.5px solid var(--gray-bd);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2)}
+.nd{position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--red);border:1.5px solid #fff}
+
+/* DIFF INDICATOR */
+.diff-pos{color:var(--red);font-size:12px}
+.diff-neg{color:var(--green);font-size:12px}
+
+/* WEEKLY PLAN specific */
+.plan-header{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.plan-stat{background:var(--white);border:0.5px solid var(--gray-bd);border-radius:var(--radius-lg);padding:12px 14px}
+.plan-stat-lbl{font-size:11px;color:var(--text2);margin-bottom:3px}
+.plan-stat-val{font-size:18px;font-weight:500}
+</style>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">SGI Procurement</div>
+      <div class="logo-sub">Quản lý mua hàng</div>
+    </div>
+    <div class="nav">
+      <div class="nav-sec">Tổng quan</div>
+      <div class="nav-item active" data-screen="dashboard" onclick="go('dashboard')">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i>Dashboard
+      </div>
+      <div class="nav-sec">Mua hàng</div>
+      <div class="nav-item" data-screen="weekly" onclick="go('weekly')">
+        <i class="ti ti-calendar-week" aria-hidden="true"></i>Kế hoạch tuần
+      </div>
+      <div class="nav-item" data-screen="orders" onclick="go('orders')">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i>Đơn hàng
+      </div>
+      <div class="nav-item" data-screen="payment" onclick="go('payment')">
+        <i class="ti ti-file-invoice" aria-hidden="true"></i>Đề nghị TT
+      </div>
+      <div class="nav-sec">Kho & Tài chính</div>
+      <div class="nav-item" data-screen="warehouse" onclick="go('warehouse')">
+        <i class="ti ti-building-warehouse" aria-hidden="true"></i>Nhận hàng
+      </div>
+      <div class="nav-item" data-screen="costs" onclick="go('costs')">
+        <i class="ti ti-chart-line" aria-hidden="true"></i>Giá vốn SP
+      </div>
+      <div class="nav-sec">Hệ thống</div>
+      <div class="nav-item" data-screen="products" onclick="go('products')">
+        <i class="ti ti-tag" aria-hidden="true"></i>Danh mục SP
+      </div>
+      <div class="nav-item" data-screen="admin" onclick="go('admin')">
+        <i class="ti ti-settings" aria-hidden="true"></i>Cấu hình
+      </div>
+    </div>
+    <div class="nav-bottom">
+      <div class="av-row">
+        <div class="av">NM</div>
+        <div><div class="av-name">Nguyễn Minh</div><div class="av-role">NV Mua hàng</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="screen active" id="s-dashboard">
+      <div class="topbar">
+        <div class="tb-title">Dashboard tổng quan</div>
+        <div class="tb-actions">
+          <div class="nb" onclick="go('notif')"><i class="ti ti-bell" aria-hidden="true"></i><div class="nd"></div></div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="stats">
+          <div class="stat"><div class="stat-lbl"><i class="ti ti-shopping-cart" aria-hidden="true"></i>Đơn tháng này</div><div class="stat-val" style="color:var(--blue)">24</div><div class="stat-sub">+3 so tuần trước</div></div>
+          <div class="stat"><div class="stat-lbl"><i class="ti ti-truck" aria-hidden="true"></i>Đang vận chuyển</div><div class="stat-val" style="color:var(--purple)">7</div><div class="stat-sub">lô hàng</div></div>
+          <div class="stat"><div class="stat-lbl"><i class="ti ti-coin" aria-hidden="true"></i>Tổng tiền hàng</div><div class="stat-val" style="color:var(--amber)">4.2 tỷ</div><div class="stat-sub">VNĐ — T5/2026</div></div>
+          <div class="stat"><div class="stat-lbl"><i class="ti ti-clock" aria-hidden="true"></i>Chờ phê duyệt</div><div class="stat-val" style="color:var(--red)">5</div><div class="stat-sub">DNTT cần xử lý</div></div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-wrap">
+            <div style="font-size:13px;font-weight:500;margin-bottom:10px">Xu hướng 8 tuần</div>
+            <div class="mbars" id="bars"></div>
+            <div style="display:flex;justify-content:space-between;margin-top:3px"><span style="font-size:10px;color:var(--text3)">T3</span><span style="font-size:10px;color:var(--text3)">T4</span><span style="font-size:10px;color:var(--text3)">T5</span></div>
+          </div>
+          <div class="chart-wrap">
+            <div style="font-size:13px;font-weight:500;margin-bottom:10px">Theo nguồn nhập</div>
+            <div id="srcbars"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:13px;font-weight:500">Đơn hàng gần đây</span>
+          <button class="btn sm" onclick="go('orders')"><i class="ti ti-list" aria-hidden="true"></i>Xem tất cả</button>
+        </div>
+        <div class="tw">
+          <table class="t">
+            <thead><tr><th style="width:100px">Mã đơn</th><th>Tên sản phẩm</th><th style="width:80px">Mã POS</th><th style="width:65px">SL (pcs)</th><th style="width:110px">Trạng thái</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0024</td><td>Luxurious Tablecloths 60x80cm</td><td>TC-PH-0001</td><td>500</td><td><span class="badge b-transit"><i class="ti ti-truck" aria-hidden="true"></i>Đang VC</span></td></tr>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0023</td><td>3-in-1 Wig Headband</td><td>WG-PH-0001</td><td>1,200</td><td><span class="badge b-pending">Chờ duyệt L2</span></td></tr>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0022</td><td>Self-Locking Cabinet Hinges</td><td>HW-GL-0001</td><td>2,000</td><td><span class="badge b-done">Hoàn thành</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ KẾ HOẠCH TUẦN — DANH SÁCH ══ -->
+    <div class="screen" id="s-weekly">
+      <div class="topbar">
+        <div class="tb-title">Kế hoạch nhập hàng tuần</div>
+        <div class="tb-actions">
+          <select class="sel" style="width:150px;padding:5px 8px;font-size:12px"><option>Tuần 20 — T5/2026</option><option>Tuần 19</option><option>Tuần 18</option></select>
+          <button class="btn pri sm" onclick="go('weekly-new')">
+            <i class="ti ti-plus" aria-hidden="true"></i>Thêm kế hoạch
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="plan-header">
+          <div class="plan-stat"><div class="plan-stat-lbl">Số dòng kế hoạch</div><div class="plan-stat-val" style="color:var(--blue)">3</div></div>
+          <div class="plan-stat"><div class="plan-stat-lbl">Đã chuyển thành đơn hàng</div><div class="plan-stat-val" style="color:var(--green)">1</div></div>
+          <div class="plan-stat"><div class="plan-stat-lbl">Chưa tạo đơn hàng</div><div class="plan-stat-val" style="color:var(--amber)">2</div></div>
+        </div>
+        <div class="alert info" style="margin-bottom:14px">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <div class="alert-msg">Kế hoạch tuần là bước <strong>đề xuất nhu cầu</strong> — TP KD điền thông tin sơ bộ. Sau khi NV Mua hàng thẩm định, nhấn <strong>Tạo đơn hàng</strong> để chuyển sang form đặt hàng đầy đủ (PKD2).</div>
+        </div>
+        <div class="tw">
+          <table class="t">
+            <thead><tr>
+              <th style="width:28px">STT</th>
+              <th style="width:80px">Ngày ĐX</th>
+              <th>Tên SP (EN)</th>
+              <th style="width:85px">Mã POS</th>
+              <th style="width:60px">Tồn kho</th>
+              <th style="width:160px">SL đề xuất + Quy cách</th>
+              <th style="width:50px">QG</th>
+              <th style="width:80px">Hình thức VC</th>
+              <th style="width:80px">GN gần nhất</th>
+              <th style="width:90px">Trạng thái</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td>1</td><td>06/05</td><td>Luxurious Tablecloths 60x80cm</td><td>TC-PH-0001</td><td>200 pcs</td>
+                <td style="white-space:normal;font-size:12px">500pcs (250 be / 250 đỏ) 60×80cm</td>
+                <td>PHI</td><td>SEA PHI</td><td>5.4 CNY</td>
+                <td><span class="badge b-done">Đã tạo đơn</span></td>
+              </tr>
+              <tr>
+                <td>2</td><td>07/05</td><td>3-in-1 Wig Headband</td><td>WG-PH-0001</td><td>80 pcs</td>
+                <td style="white-space:normal;font-size:12px">1,200pcs màu mix</td>
+                <td>PHI</td><td>AIR PHI</td><td>12.8 CNY</td>
+                <td>
+                  <button class="btn sm pri" onclick="go('order-new')" title="Mở form đặt hàng PKD2 đầy đủ">
+                    <i class="ti ti-file-plus" aria-hidden="true"></i>Tạo đơn hàng
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td><td>07/05</td><td>Self-Locking Cabinet Hinges</td><td>HW-GL-0001</td><td>320 pcs</td>
+                <td style="white-space:normal;font-size:12px">2,000pcs size 40mm</td>
+                <td>PHI</td><td>SEA PHI</td><td>3.2 CNY</td>
+                <td>
+                  <button class="btn sm pri" onclick="go('order-new')" title="Mở form đặt hàng PKD2 đầy đủ">
+                    <i class="ti ti-file-plus" aria-hidden="true"></i>Tạo đơn hàng
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ KẾ HOẠCH TUẦN — FORM MỚI (PKD1) ══ -->
+    <div class="screen" id="s-weekly-new">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('weekly')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Hủy</button>
+        <div class="tb-title">Thêm kế hoạch nhập hàng — Tuần 20</div>
+        <div class="tb-actions">
+          <button class="btn sm" onclick="go('weekly')">Lưu nháp</button>
+          <button class="btn pri sm" onclick="go('weekly')"><i class="ti ti-check" aria-hidden="true"></i>Lưu kế hoạch</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="alert info" style="margin-bottom:14px">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <div class="alert-msg"><strong>Form kế hoạch nhập tuần (PKD1)</strong> — Điền thông tin sơ bộ để đề xuất nhu cầu. Sau khi NV Mua hàng thẩm định & báo giá, bước tiếp theo là <strong>Tạo đơn hàng</strong> với form đầy đủ hơn.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Thông tin sản phẩm</div>
+          <div class="fg">
+            <div class="fgroup">
+              <div class="label">Ngày đề xuất nhập <span style="color:var(--red)">*</span></div>
+              <input class="inp" type="date" value="2026-05-14">
+            </div>
+            <div class="fgroup">
+              <div class="label">Quốc gia <span style="color:var(--red)">*</span></div>
+              <select class="sel"><option>PHI — Philippines</option><option>VN — Việt Nam</option><option>MALAY — Malaysia</option></select>
+            </div>
+            <div class="fgroup">
+              <div class="label">Tên sản phẩm (tiếng Anh) <span style="color:var(--red)">*</span></div>
+              <input class="inp" placeholder="VD: Luxurious Tablecloths 60x80cm">
+            </div>
+            <div class="fgroup">
+              <div class="label">Mã POS <span style="color:var(--red)">*</span></div>
+              <select class="sel">
+                <option>TC-PH-0001 — Luxurious Tablecloths</option>
+                <option>WG-PH-0001 — 3-in-1 Wig Headband</option>
+                <option>HW-GL-0001 — Self-Locking Cabinet Hinges</option>
+                <option>── + Đề xuất mã POS mới ──</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-title" style="margin-top:8px">Nhu cầu nhập</div>
+          <div class="fg">
+            <div class="fgroup">
+              <div class="label">Tồn kho hiện tại (pcs)</div>
+              <input class="inp" type="number" placeholder="VD: 200">
+            </div>
+            <div class="fgroup">
+              <div class="label">Hình thức vận chuyển</div>
+              <select class="sel"><option>SEA PHI</option><option>AIR PHI</option><option>SEA MALAY</option><option>AIR MALAY</option><option>LALAMOVE</option><option>SHOPEE PHI</option></select>
+            </div>
+            <div class="fgroup full">
+              <div class="label">Số lượng đề xuất + Quy cách <span style="color:var(--red)">*</span></div>
+              <input class="inp" placeholder="VD: 500pcs (250 màu be / 250 màu đỏ), kích thước 60×80cm">
+            </div>
+            <div class="fgroup">
+              <div class="label">Giá nhập gần nhất (tham khảo)</div>
+              <input class="inp" placeholder="VD: 5.4 CNY/pcs">
+            </div>
+            <div class="fgroup full">
+              <div class="label">Ghi chú</div>
+              <textarea class="ta" placeholder="Ghi chú thêm về yêu cầu chất lượng, màu sắc, đóng gói..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="alert warn">
+          <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+          <div class="alert-msg">Form này chỉ có <strong>9 trường</strong> — đây là bước đề xuất nhu cầu. Thông tin chi tiết về giá, cước vận chuyển, tỉ giá sẽ được nhập ở bước <strong>Tạo đơn hàng (PKD2)</strong> sau khi được duyệt.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ORDERS LIST ══ -->
+    <div class="screen" id="s-orders">
+      <div class="topbar">
+        <div class="tb-title">Danh sách đơn hàng</div>
+        <div class="tb-actions">
+          <button class="btn sm"><i class="ti ti-download" aria-hidden="true"></i>Export Excel</button>
+          <button class="btn pri sm" onclick="go('order-new')">
+            <i class="ti ti-plus" aria-hidden="true"></i>Tạo đơn hàng mới
+          </button>
+        </div>
+      </div>
+      <div class="content">
+        <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+          <input class="inp" style="width:180px" placeholder="Tìm mã đơn, tên SP...">
+          <select class="sel" style="width:130px"><option>Tất cả nguồn</option><option>Trung Quốc</option><option>PHI-Local</option></select>
+          <select class="sel" style="width:125px"><option>Tất cả TT</option><option>Chờ duyệt</option><option>Đang VC</option><option>Hoàn thành</option></select>
+          <select class="sel" style="width:110px"><option>T5/2026</option><option>T4/2026</option></select>
+        </div>
+        <div class="tw">
+          <table class="t">
+            <thead><tr>
+              <th style="width:100px">Mã đơn</th><th>Tên sản phẩm</th><th style="width:82px">Mã POS</th>
+              <th style="width:55px">SL</th><th style="width:82px">GV 1 SP</th>
+              <th style="width:90px">Tổng lô</th><th style="width:110px">Trạng thái</th>
+            </tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0024</td><td>Luxurious Tablecloths 60x80cm</td><td>TC-PH-0001</td><td>500</td><td class="money">95,200đ</td><td class="money">47.6tr</td><td><span class="badge b-transit">Đang VC</span></td></tr>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0023</td><td>3-in-1 Wig Headband</td><td>WG-PH-0001</td><td>1,200</td><td class="money">62,400đ</td><td class="money">74.8tr</td><td><span class="badge b-pending">Chờ duyệt L2</span></td></tr>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0022</td><td>Self-Locking Cabinet Hinges</td><td>HW-GL-0001</td><td>2,000</td><td class="money">38,100đ</td><td class="money">76.2tr</td><td><span class="badge b-done">Hoàn thành</span></td></tr>
+              <tr class="clickable" onclick="go('order-detail')"><td>PO-2026-0021</td><td>Disposable Medical Face Mask</td><td>PM-PH-0001</td><td>800</td><td>—</td><td>—</td><td><span class="badge b-approved">Đã duyệt</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ĐƠN HÀNG MỚI — FORM ĐẦY ĐỦ (PKD2) ══ -->
+    <div class="screen" id="s-order-new">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('orders')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Hủy</button>
+        <div class="tb-title">Tạo đơn hàng mới (PKD2) — 3-in-1 Wig Headband</div>
+        <div class="tb-actions">
+          <button class="btn sm" onclick="go('orders')">Lưu nháp</button>
+          <button class="btn pri sm" onclick="go('order-detail')"><i class="ti ti-send" aria-hidden="true"></i>Gửi duyệt</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="alert info" style="margin-bottom:12px">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <div class="alert-msg"><strong>Form đặt hàng đầy đủ (PKD2)</strong> — Điền đủ ~30 trường để hệ thống tự tính Tổng tiền lô và GV 1 SP. Các ô màu xanh là tự động tính, không nhập tay.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Nhóm 1 — Thông tin sản phẩm & đặt hàng</div>
+          <div class="fg">
+            <div class="fgroup">
+              <div class="label">Tên sản phẩm <span class="tag-lock">Từ kế hoạch tuần</span></div>
+              <input class="inp" value="3-in-1 Wig Headband Assorted" readonly style="background:var(--gray-lt)">
+            </div>
+            <div class="fgroup">
+              <div class="label">Mã POS <span class="tag-lock">Từ kế hoạch tuần</span></div>
+              <input class="inp" value="WG-PH-0001" readonly style="background:var(--gray-lt)">
+            </div>
+            <div class="fgroup">
+              <div class="label">Mã viết tắt SP</div>
+              <input class="inp" placeholder="3IN1-WG">
+            </div>
+            <div class="fgroup">
+              <div class="label">Nguồn nhập</div>
+              <select class="sel"><option>Trung Quốc</option><option>PHI-Local</option><option>Shopee PHI</option><option>Việt Nam</option><option>Malaysia</option></select>
+            </div>
+            <div class="fgroup">
+              <div class="label">Loại tiền tệ <span class="tag-auto">Tự động</span></div>
+              <input class="inp calc" value="CNY" readonly>
+            </div>
+            <div class="fgroup">
+              <div class="label">Hình thức vận chuyển</div>
+              <select class="sel"><option>AIR PHI</option><option>SEA PHI</option><option>SEA MALAY</option></select>
+            </div>
+            <div class="fgroup">
+              <div class="label">Nhà cung cấp (NCC)</div>
+              <input class="inp" placeholder="Tên công ty NCC">
+            </div>
+            <div class="fgroup">
+              <div class="label">Ngày đặt hàng</div>
+              <input class="inp" type="date" value="2026-05-14">
+            </div>
+            <div class="fgroup">
+              <div class="label">Ngày đến kho TQ/VN</div>
+              <input class="inp" type="date">
+            </div>
+            <div class="fgroup">
+              <div class="label">SL đặt (pcs)</div>
+              <input class="inp" type="number" placeholder="1200">
+            </div>
+            <div class="fgroup">
+              <div class="label">Đơn giá nhập (CNY)</div>
+              <input class="inp" type="number" placeholder="12.8">
+            </div>
+            <div class="fgroup">
+              <div class="label">VC nội địa TQ/VN (VNĐ)</div>
+              <input class="inp" type="number" placeholder="680,000">
+            </div>
+            <div class="fgroup">
+              <div class="label">Tiền hàng (CNY) <span class="tag-auto">Tự tính</span></div>
+              <input class="inp calc" value="15,360 CNY" readonly>
+            </div>
+            <div class="fgroup">
+              <div class="label">Tỉ giá ngày TT</div>
+              <input class="inp" type="number" placeholder="3,520">
+            </div>
+            <div class="fgroup">
+              <div class="label">Tổng tiền hàng (VNĐ) <span class="tag-auto">Tự tính</span></div>
+              <input class="inp calc" value="54,067,200 đ" readonly>
+            </div>
+            <div class="fgroup">
+              <div class="label">Ngày TT tiền hàng</div>
+              <input class="inp" type="date">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Nhóm 2 — Chi phí vận chuyển quốc tế</div>
+          <div class="fg">
+            <div class="fgroup">
+              <div class="label">Phí order (VNĐ)</div>
+              <input class="inp" type="number" placeholder="0">
+            </div>
+            <div class="fgroup">
+              <div class="label">Khối lượng / Thể tích</div>
+              <input class="inp" placeholder="VD: 68 kg hoặc 1.2 m³">
+            </div>
+            <div class="fgroup">
+              <div class="label">Đơn giá VC QT (đ/kg)</div>
+              <input class="inp" type="number" placeholder="145,000">
+            </div>
+            <div class="fgroup">
+              <div class="label">Cước VC QT (VNĐ) <span class="tag-auto">Tự tính</span></div>
+              <input class="inp calc" value="9,860,000 đ" readonly>
+            </div>
+            <div class="fgroup">
+              <div class="label">Ngày TT cước VC</div>
+              <input class="inp" type="date">
+            </div>
+            <div class="fgroup">
+              <div class="label">Phí ship PHI/Malay nội địa (VNĐ)</div>
+              <input class="inp" type="number" placeholder="952,000">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Nhóm 3 — Tổng hợp & Giá vốn <span class="tag-lock">Chỉ đọc — hệ thống tự tính</span></div>
+          <div style="background:var(--navy);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px">
+            <div class="cost-lbl">Tổng tiền lô (VNĐ)</div>
+            <div class="cost-val">65,559,200 đ</div>
+            <div class="cost-sub">= Tiền hàng + VC nội địa + Cước VC QT + Phí ship nội địa</div>
+            <div class="cost-grid">
+              <div class="ci"><div class="ci-l">Tiền hàng VNĐ</div><div class="ci-v">54.1tr</div></div>
+              <div class="ci"><div class="ci-l">Cước VC QT</div><div class="ci-v">9.9tr</div></div>
+              <div class="ci"><div class="ci-l">Phí ship + VC nội địa</div><div class="ci-v">1.6tr</div></div>
+            </div>
+          </div>
+          <div class="fg">
+            <div class="fgroup">
+              <div class="label">GV đầy đủ 1 SP (VNĐ) <span class="tag-auto">Tự tính</span></div>
+              <input class="inp calc" value="54,633 đ/pcs" readonly>
+            </div>
+            <div class="fgroup">
+              <div class="label">Phương thức thanh toán</div>
+              <select class="sel"><option>CNY qua CK bank</option><option>PHP qua GIP</option><option>VNĐ qua CK bank</option><option>GCash</option></select>
+            </div>
+            <div class="fgroup">
+              <div class="label">Đã cọc (VNĐ)</div>
+              <input class="inp" type="number" placeholder="0">
+            </div>
+            <div class="fgroup">
+              <div class="label">Còn phải TT (VNĐ) <span class="tag-auto">Tự tính</span></div>
+              <input class="inp calc" value="65,559,200 đ" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ORDER DETAIL ══ -->
+    <div class="screen" id="s-order-detail">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('orders')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Quay lại</button>
+        <div class="tb-title">PO-2026-0024 — Luxurious Tablecloths 60x80cm</div>
+        <div class="tb-actions">
+          <span class="badge b-transit" style="padding:5px 12px">Đang vận chuyển</span>
+          <button class="btn sm" onclick="go('dntt-detail')"><i class="ti ti-file-invoice" aria-hidden="true"></i>Xem DNTT</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="progress">
+          <div class="ps ps-done"><div class="ps-dot"><i class="ti ti-check" style="color:var(--green);font-size:13px" aria-hidden="true"></i></div><div class="ps-lbl">Đề xuất</div></div>
+          <div class="ps-line done"></div>
+          <div class="ps ps-done"><div class="ps-dot"><i class="ti ti-check" style="color:var(--green);font-size:13px" aria-hidden="true"></i></div><div class="ps-lbl">Duyệt đơn</div></div>
+          <div class="ps-line done"></div>
+          <div class="ps ps-done"><div class="ps-dot"><i class="ti ti-check" style="color:var(--green);font-size:13px" aria-hidden="true"></i></div><div class="ps-lbl">Thanh toán</div></div>
+          <div class="ps-line active"></div>
+          <div class="ps ps-active"><div class="ps-dot"><i class="ti ti-truck" style="color:var(--blue);font-size:12px" aria-hidden="true"></i></div><div class="ps-lbl">Đang VC</div></div>
+          <div class="ps-line wait"></div>
+          <div class="ps ps-wait"><div class="ps-dot"><i class="ti ti-building-warehouse" style="color:var(--text3);font-size:12px" aria-hidden="true"></i></div><div class="ps-lbl">Nhận kho</div></div>
+          <div class="ps-line wait"></div>
+          <div class="ps ps-wait"><div class="ps-dot"><i class="ti ti-circle-check" style="color:var(--text3);font-size:12px" aria-hidden="true"></i></div><div class="ps-lbl">Hoàn thành</div></div>
+        </div>
+        <div class="cost-box">
+          <div class="cost-lbl">Tổng tiền lô <span style="font-size:10px;background:rgba(255,255,255,.15);padding:1px 6px;border-radius:10px;margin-left:4px">Tự động tính</span></div>
+          <div class="cost-val">47,600,000 đ</div>
+          <div class="cost-sub">GV đầy đủ 1 SP: 95,200 đ/pcs · SL đặt: 500 pcs</div>
+          <div class="cost-grid">
+            <div class="ci"><div class="ci-l">Tiền hàng VNĐ</div><div class="ci-v">40.5tr</div></div>
+            <div class="ci"><div class="ci-l">Cước VC QT</div><div class="ci-v">5.8tr</div></div>
+            <div class="ci"><div class="ci-l">Phí ship + VC nội địa</div><div class="ci-v">1.3tr</div></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Thông tin đặt hàng</div>
+            <div class="frow"><div class="fl">Mã POS</div><div class="fv">TC-PH-0001</div></div>
+            <div class="frow"><div class="fl">Nguồn nhập</div><div class="fv">Trung Quốc</div></div>
+            <div class="frow"><div class="fl">Loại tiền tệ</div><div class="fv">CNY</div></div>
+            <div class="frow"><div class="fl">Hình thức VC</div><div class="fv">SEA PHI</div></div>
+            <div class="frow"><div class="fl">Ngày đặt hàng</div><div class="fv">02/05/2026</div></div>
+            <div class="frow"><div class="fl">SL đặt (pcs)</div><div class="fv">500</div></div>
+            <div class="frow"><div class="fl">Đơn giá (CNY)</div><div class="fv">16.5 CNY</div></div>
+            <div class="frow"><div class="fl">Tỉ giá ngày TT</div><div class="fv">3,520</div></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Chi phí & Vận chuyển</div>
+            <div class="frow"><div class="fl">VC nội địa TQ/VN</div><div class="fv money">480,000 đ</div></div>
+            <div class="frow"><div class="fl">Khối lượng</div><div class="fv">42 kg</div></div>
+            <div class="frow"><div class="fl">Đơn giá VC QT</div><div class="fv">138,000 đ/kg</div></div>
+            <div class="frow"><div class="fl">Cước VC QT (VNĐ)</div><div class="fv auto">5,796,000 đ ✓</div></div>
+            <div class="frow"><div class="fl">Phí ship PHI</div><div class="fv money">1,320,000 đ</div></div>
+            <div class="frow"><div class="fl">Phương thức TT</div><div class="fv">CNY qua CK bank</div></div>
+            <div class="frow"><div class="fl">Ngày TT tiền hàng</div><div class="fv">05/05/2026</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAYMENT ══ -->
+    <div class="screen" id="s-payment">
+      <div class="topbar">
+        <div class="tb-title">Đề nghị thanh toán (DNTT)</div>
+        <div class="tb-actions">
+          <button class="btn pri sm" onclick="go('dntt-detail')"><i class="ti ti-plus" aria-hidden="true"></i>Lập DNTT mới</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="alert warn">
+          <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+          <div class="alert-msg" style="flex:1"><strong>5 DNTT đang chờ xử lý</strong> — 2 chờ duyệt L1, 3 chờ duyệt L2</div>
+          <button class="btn sm" onclick="go('dntt-detail')">Xem ngay</button>
+        </div>
+        <div class="tw">
+          <table class="t">
+            <thead><tr><th style="width:100px">Mã DNTT</th><th>Liên kết đơn hàng</th><th style="width:80px">Loại</th><th style="width:95px">Số tiền</th><th style="width:110px">Trạng thái</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="go('dntt-detail')"><td>DNTT-0031</td><td>PO-2026-0023 — 3-in-1 Wig Headband</td><td>Hàng hóa</td><td class="money">74.8tr đ</td><td><span class="badge b-pending">Chờ duyệt L2</span></td></tr>
+              <tr class="clickable" onclick="go('dntt-detail')"><td>DNTT-0030</td><td>PO-2026-0023 — Wig Headband</td><td>VC quốc tế</td><td class="money">8.2tr đ</td><td><span class="badge b-pending">Chờ duyệt L1</span></td></tr>
+              <tr class="clickable" onclick="go('dntt-detail')"><td>DNTT-0029</td><td>PO-2026-0024 — Tablecloths</td><td>Hàng hóa</td><td class="money">47.6tr đ</td><td><span class="badge b-done">Đã thanh toán</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DNTT DETAIL ══ -->
+    <div class="screen" id="s-dntt-detail">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('payment')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Quay lại</button>
+        <div class="tb-title">DNTT-0031 — Hàng hóa</div>
+        <div class="tb-actions">
+          <span class="badge b-pending" style="padding:5px 12px">Chờ duyệt BGD</span>
+          <button class="btn danger sm">Từ chối</button>
+          <button class="btn pri sm" onclick="go('payment')"><i class="ti ti-check" aria-hidden="true"></i>Duyệt</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="alert warn">
+          <i class="ti ti-clock" aria-hidden="true"></i>
+          <div class="alert-msg">DNTT đang chờ <strong>BGD phê duyệt lần 2</strong>. Kế toán đã duyệt lúc 09:15 ngày 13/05/2026.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Thông tin DNTT</div>
+            <div class="frow"><div class="fl">Mã DNTT</div><div class="fv">DNTT-0031</div></div>
+            <div class="frow"><div class="fl">Loại</div><div class="fv">Hàng hóa</div></div>
+            <div class="frow"><div class="fl">Số tiền</div><div class="fv money">74,880,000 đ</div></div>
+            <div class="frow"><div class="fl">Loại tiền tệ</div><div class="fv">VNĐ</div></div>
+            <div class="frow"><div class="fl">Ngân hàng TH</div><div class="fv">Vietcombank</div></div>
+            <div class="frow"><div class="fl">Số tài khoản</div><div class="fv">1234 5678 9012</div></div>
+            <div class="frow"><div class="fl">Phương thức TT</div><div class="fv">CNY qua CK bank</div></div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="card-title">Chứng từ đính kèm</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;border:0.5px solid var(--gray-bd);border-radius:var(--radius)">
+                <i class="ti ti-file-text" style="font-size:17px;color:var(--blue)" aria-hidden="true"></i>
+                <div style="flex:1"><div style="font-size:12px;font-weight:500">HoaDon_NCC.pdf</div><div style="font-size:11px;color:var(--text3)">245 KB</div></div>
+                <button class="btn sm"><i class="ti ti-download" aria-hidden="true"></i></button>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding:8px;border:0.5px solid var(--gray-bd);border-radius:var(--radius)">
+                <i class="ti ti-photo" style="font-size:17px;color:var(--amber)" aria-hidden="true"></i>
+                <div style="flex:1"><div style="font-size:12px;font-weight:500">Bill_chuyen_khoan.jpg</div><div style="font-size:11px;color:var(--text3)">1.2 MB</div></div>
+                <button class="btn sm"><i class="ti ti-download" aria-hidden="true"></i></button>
+              </div>
+              <button class="btn" style="width:100%;justify-content:center"><i class="ti ti-upload" aria-hidden="true"></i>Upload thêm chứng từ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ WAREHOUSE ══ -->
+    <div class="screen" id="s-warehouse">
+      <div class="topbar"><div class="tb-title">Nhận hàng & Kiểm đếm</div></div>
+      <div class="content">
+        <div class="tw">
+          <table class="t">
+            <thead><tr><th style="width:100px">Mã đơn</th><th>Tên sản phẩm</th><th style="width:65px">SL đặt</th><th style="width:80px">Hình thức VC</th><th style="width:110px">Thao tác</th></tr></thead>
+            <tbody>
+              <tr><td>PO-2026-0024</td><td>Luxurious Tablecloths 60x80cm</td><td>500</td><td>SEA PHI</td><td><button class="btn sm pri" onclick="go('receive')"><i class="ti ti-package" aria-hidden="true"></i>Nhận hàng</button></td></tr>
+              <tr><td>PO-2026-0019</td><td>Dry Pork Belly Snack 100g</td><td>400</td><td>AIR PHI</td><td><button class="btn sm pri" onclick="go('receive')"><i class="ti ti-package" aria-hidden="true"></i>Nhận hàng</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RECEIVE ══ -->
+    <div class="screen" id="s-receive">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('warehouse')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Quay lại</button>
+        <div class="tb-title">Xác nhận nhận hàng — PO-2026-0024</div>
+        <div class="tb-actions"><button class="btn pri sm" onclick="go('warehouse')"><i class="ti ti-check" aria-hidden="true"></i>Xác nhận</button></div>
+      </div>
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Xác nhận kho</div>
+          <div class="fg">
+            <div class="fgroup"><div class="label">Ngày về thực tế</div><input class="inp" type="date" value="2026-05-14"></div>
+            <div class="fgroup"><div class="label">SL kho nhận (pcs)</div><input class="inp" type="number" placeholder="500"></div>
+            <div class="fgroup"><div class="label">Người check</div><input class="inp" placeholder="Tên nhân viên kho"></div>
+            <div class="fgroup"><div class="label">Tình trạng hàng</div>
+              <select class="sel"><option>✅ Đủ, không hỏng</option><option>⚠️ Thiếu số lượng</option><option>⚠️ Hàng bị hỏng</option></select>
+            </div>
+            <div class="fgroup full"><div class="label">Upload ảnh biên bản (bắt buộc nếu có sự cố)</div>
+              <div style="border:1px dashed var(--gray-bd);border-radius:var(--radius);padding:18px;text-align:center;color:var(--text3);font-size:13px"><i class="ti ti-upload" style="font-size:20px;display:block;margin-bottom:5px" aria-hidden="true"></i>Kéo thả hoặc click để upload</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COSTS ══ -->
+    <div class="screen" id="s-costs">
+      <div class="topbar">
+        <div class="tb-title">Giá vốn sản phẩm (GV bình quân gia quyền)</div>
+        <div class="tb-actions"><button class="btn sm"><i class="ti ti-download" aria-hidden="true"></i>Export</button></div>
+      </div>
+      <div class="content">
+        <div class="tw">
+          <table class="t">
+            <thead><tr><th style="width:82px">Mã POS</th><th>Tên sản phẩm</th><th style="width:50px">Số lô</th><th style="width:70px">Tổng SL</th><th style="width:90px">GV lô gần nhất</th><th style="width:95px">GV BQ gia quyền</th><th style="width:75px">Chênh lệch</th></tr></thead>
+            <tbody>
+              <tr><td>TC-PH-0001</td><td>Luxurious Tablecloths 60x80cm</td><td>5</td><td>2,400</td><td class="money">95,200đ</td><td class="money">88,400đ</td><td class="diff-pos">+6,800đ</td></tr>
+              <tr><td>WG-PH-0001</td><td>3-in-1 Wig Headband Assorted</td><td>3</td><td>3,200</td><td class="money">62,400đ</td><td class="money">65,100đ</td><td class="diff-neg">-2,700đ</td></tr>
+              <tr><td>HW-GL-0001</td><td>Self-Locking Cabinet Hinges</td><td>7</td><td>12,000</td><td class="money">38,100đ</td><td class="money">36,800đ</td><td class="diff-pos">+1,300đ</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PRODUCTS ══ -->
+    <div class="screen" id="s-products">
+      <div class="topbar">
+        <div class="tb-title">Danh mục sản phẩm — Mã POS</div>
+        <div class="tb-actions"><button class="btn pri sm"><i class="ti ti-plus" aria-hidden="true"></i>Đề xuất mã mới</button></div>
+      </div>
+      <div class="content">
+        <div class="tw">
+          <table class="t">
+            <thead><tr><th style="width:82px">Mã POS</th><th>Tên SP (EN)</th><th style="width:70px">Viết tắt</th><th style="width:90px">Danh mục</th><th style="width:60px">TT gốc</th><th style="width:80px">Trạng thái</th></tr></thead>
+            <tbody>
+              <tr><td>TC-PH-0001</td><td>Luxurious Tablecloths 60x80cm</td><td>LUX-TC</td><td>TC — Table</td><td>PHI</td><td><span class="badge b-done">Hoạt động</span></td></tr>
+              <tr><td>WG-PH-0001</td><td>3-in-1 Wig Headband Assorted</td><td>3IN1-WG</td><td>WG — Wig</td><td>PHI</td><td><span class="badge b-done">Hoạt động</span></td></tr>
+              <tr><td>HW-GL-0001</td><td>Self-Locking Cabinet Hinges</td><td>SLCK-HW</td><td>HW — Hardware</td><td>GL</td><td><span class="badge b-done">Hoạt động</span></td></tr>
+              <tr><td>PM-PH-0001</td><td>Disposable Medical Face Mask (50pcs)</td><td>DMF-PM</td><td>PM — Medical</td><td>PHI</td><td><span class="badge b-draft">Chờ duyệt</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN ══ -->
+    <div class="screen" id="s-admin">
+      <div class="topbar"><div class="tb-title">Cấu hình hệ thống</div></div>
+      <div class="content">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="card" style="margin-bottom:0;cursor:pointer">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="ti ti-users" style="font-size:18px;color:var(--blue)" aria-hidden="true"></i><div class="card-title" style="margin:0">Quản lý người dùng</div></div>
+            <div style="font-size:12px;color:var(--text2)">CRUD tài khoản, gán role & market</div>
+            <div style="margin-top:10px;font-size:20px;font-weight:500;color:var(--blue)">8 <span style="font-size:12px;color:var(--text3);font-weight:400">tài khoản</span></div>
+          </div>
+          <div class="card" style="margin-bottom:0;cursor:pointer">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><i class="ti ti-list-check" style="font-size:18px;color:var(--purple)" aria-hidden="true"></i><div class="card-title" style="margin:0">Danh mục dropdown</div></div>
+            <div style="font-size:12px;color:var(--text2)">Nguồn nhập, hình thức VC, phương thức TT</div>
+            <div style="margin-top:10px;font-size:20px;font-weight:500;color:var(--purple)">22 <span style="font-size:12px;color:var(--text3);font-weight:400">giá trị</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIF ══ -->
+    <div class="screen" id="s-notif">
+      <div class="topbar">
+        <button class="btn sm" onclick="go('dashboard')"><i class="ti ti-arrow-left" aria-hidden="true"></i>Quay lại</button>
+        <div class="tb-title">Thông báo</div>
+        <div class="tb-actions"><button class="btn sm">Đọc tất cả</button></div>
+      </div>
+      <div class="content">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;gap:10px;padding:12px;border-radius:var(--radius);background:var(--blue-lt);cursor:pointer" onclick="go('dntt-detail')">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:13px;font-weight:500">DNTT-0031 cần bạn phê duyệt (Lần 2)</div><div style="font-size:12px;color:var(--text2);margin-top:2px">3-in-1 Wig Headband — 74.8tr VNĐ</div><div style="font-size:11px;color:var(--text3);margin-top:3px">13/05/2026 09:18</div></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:12px;border-radius:var(--radius);background:var(--blue-lt);cursor:pointer" onclick="go('warehouse')">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:13px;font-weight:500">PO-2026-0024 sắp về kho</div><div style="font-size:12px;color:var(--text2);margin-top:2px">Luxurious Tablecloths — dự kiến 14/05/2026</div><div style="font-size:11px;color:var(--text3);margin-top:3px">12/05/2026 16:40</div></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:12px;border-radius:var(--radius);cursor:pointer;opacity:.55">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--gray-bd);margin-top:5px;flex-shrink:0"></div>
+            <div><div style="font-size:13px">DNTT-0029 đã được Thủ quỹ xác nhận thanh toán</div><div style="font-size:11px;color:var(--text3);margin-top:3px">10/05/2026 14:22</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<script>
+const MAP = {
+  dashboard:'s-dashboard', weekly:'s-weekly', 'weekly-new':'s-weekly-new',
+  orders:'s-orders', 'order-new':'s-order-new', 'order-detail':'s-order-detail',
+  payment:'s-payment', 'dntt-detail':'s-dntt-detail',
+  warehouse:'s-warehouse', receive:'s-receive',
+  costs:'s-costs', products:'s-products', admin:'s-admin', notif:'s-notif'
+};
+const NAV_MATCH = {
+  dashboard:'Dashboard', weekly:'Kế hoạch tuần', 'weekly-new':'Kế hoạch tuần',
+  orders:'Đơn hàng', 'order-new':'Đơn hàng', 'order-detail':'Đơn hàng',
+  payment:'Đề nghị TT', 'dntt-detail':'Đề nghị TT',
+  warehouse:'Nhận hàng', receive:'Nhận hàng',
+  costs:'Giá vốn SP', products:'Danh mục SP', admin:'Cấu hình'
+};
+
+function go(key) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const sid = MAP[key];
+  if (sid) document.getElementById(sid).classList.add('active');
+  const match = NAV_MATCH[key];
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    if (match && n.textContent.trim() === match) n.classList.add('active');
+  });
+}
+
+const barsEl = document.getElementById('bars');
+if (barsEl) {
+  [2,3,4,5,3,6,4,7].forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'mbar';
+    b.style.height = (v * 7) + 'px';
+    barsEl.appendChild(b);
+  });
+}
+
+const srcEl = document.getElementById('srcbars');
+if (srcEl) {
+  [['Trung Quốc', 62, 'var(--blue)'], ['PHI-Local', 21, 'var(--green)'], ['Việt Nam', 11, 'var(--amber)'], ['Malaysia', 6, 'var(--purple)']].forEach(([lbl, pct, color]) => {
+    srcEl.insertAdjacentHTML('beforeend',
+      `<div style="margin-bottom:7px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:2px"><span>${lbl}</span><span>${pct}%</span></div>
+        <div style="background:var(--gray-lt);border-radius:2px;height:5px"><div style="background:${color};width:${pct}%;height:100%;border-radius:2px"></div></div>
+      </div>`
+    );
+  });
+}
+</script>

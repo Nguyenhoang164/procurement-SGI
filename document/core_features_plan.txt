@@ -1,0 +1,53 @@
+# Kế hoạch triển khai các case chức năng chính (Core Features)
+
+Mục tiêu: Hoàn thiện luồng mua hàng chính từ "Kế hoạch tuần (PKD1)" → "Tạo đơn hàng (PKD2)" → "Đề nghị thanh toán (DNTT)" → "Nhận hàng (Warehouse)". Các tính năng phụ (notifications, export, admin mở rộng) sẽ làm sau.
+
+1. User stories (core)
+- US-01 (TP KD): Tạo / chỉnh sửa kế hoạch tuần (PKD1) với 9 trường cơ bản.
+- US-02 (NV Mua hàng): Chuyển 1 dòng PKD1 thành Đơn hàng PKD2 (mở form đầy đủ ~30 trường).
+- US-03 (NV Mua hàng): Lưu Đơn hàng — hệ thống tự tính tiền hàng, cước VC, tổng lô, GV 1 SP, còn phải thanh toán.
+- US-04 (Kế toán): Tạo / duyệt Đề nghị thanh toán (DNTT) liên kết tới PO.
+- US-05 (Kho): Xác nhận nhận hàng — khi hoàn thành, cập nhật giá vốn bình quân gia quyền.
+
+2. Database schema (chính)
+- users (id, username, password, role, market)
+- weekly_plans (id, proposed_date, pos_code, suggested_qty, spec, country, shipping_method, recent_unit_price, note, created_by, status)
+- purchase_orders (id, pos_code, ordered_qty, unit_price, currency, exchange_rate, domestic_shipping_vnd, intl_shipping_vnd, order_fee_vnd, local_delivery_fee_vnd, total_lot_cost_vnd, unit_cost_full_vnd, deposit_vnd, remaining_payment_vnd, status, created_by)
+- payment_requests (id, po_id, type, amount_vnd, currency, status, created_by)
+- warehouse_receipts (id, po_id, received_qty, received_date, inspector, condition, attachments)
+
+3. REST API endpoints (minimum)
+- Auth: POST `/api/v1/auth/login`
+- WeeklyPlan: GET `/api/v1/weekly-plans`, POST `/api/v1/weekly-plans`
+- PurchaseOrder: GET `/api/v1/purchase-orders`, POST `/api/v1/purchase-orders`, GET `/api/v1/purchase-orders/{id}`
+- PaymentRequest: GET `/api/v1/payment-requests`, POST `/api/v1/payment-requests`
+- WarehouseReceipt: POST `/api/v1/warehouse-receipts` (confirm receive)
+
+4. Frontend routes (minimum)
+- `/weekly-plans` — list + create
+- `/purchase-orders` — list
+- `/purchase-orders/new` — create PKD2
+- `/purchase-orders/:id` — detail
+- `/payments` — list / detail
+
+5. Implementation checklist (BE)
+- [ ] Create entities + repositories for `weekly_plans`, `purchase_orders`, `payment_requests`, `warehouse_receipts`.
+- [ ] Implement service layer with business logic and validations.
+- [ ] Implement `CostCalculatorService` invoked before saving `PurchaseOrder`.
+- [ ] Expose REST controllers with DTOs.
+- [ ] Add Flyway SQL migration files.
+- [ ] Add basic unit tests for `CostCalculatorService`.
+
+6. Implementation checklist (FE)
+- [ ] Pages: WeeklyPlanList, WeeklyPlanNew, OrderList, OrderNew, OrderDetail, PaymentList
+- [ ] API clients (weeklyPlanApi, purchaseOrderApi, paymentApi)
+- [ ] Hooks: useWeeklyPlans, useCreateWeeklyPlan, useOrders, useCreateOrder, useComputedCosts
+
+7. Deploy & test
+- Use `docker-compose up --build` to start MySQL + phpMyAdmin + backend.
+- Run basic smoke tests: `GET /api/v1/weekly-plans`, `POST /api/v1/purchase-orders` (sample payload).
+
+## Next step immediate (this sprint)
+- Implement minimal BE entities/repositories/services/controllers for `WeeklyPlan`, `PurchaseOrder` (ensure CostCalculator invoked), and `PaymentRequest`.
+- Add Flyway migration SQL for `weekly_plans` and `payment_requests`.
+- Smoke-test endpoints locally with `docker-compose`.

@@ -1,0 +1,107 @@
+.App {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+}
+
+main {
+  flex: 1;
+  padding: 0;
+  background-color: #f5f7fa;
+  overflow-y: auto;
+}
+
+/* Global button styles */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn.btn-primary:hover {
+  background-color: #2980b9;
+}
+
+.btn.btn-secondary {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.btn.btn-secondary:hover {
+  background-color: #7f8c8d;
+}
+
+.btn.btn-danger {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn.btn-danger:hover {
+  background-color: #c0392b;
+}
+
+/* Utility classes */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #f5c6cb;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #c3e6cb;
+}
+
+.info-message {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  padding: 12px 20px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #bee5eb;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+  main {
+    padding: 10px;
+  }
+}
+

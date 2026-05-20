@@ -1,0 +1,39 @@
+# Maven
+target/
+*.jar
+*.war
+*.nar
+*.ear
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.maven.metadata.xml
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Gradle
+.gradle/
+build/
+
+# Spring Boot
+*.log
+application-*.properties
+
+# Database
+*.db
+*.sqlite
+
+# Environment
+.env
+.env.local
