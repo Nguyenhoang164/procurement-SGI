@@ -1,17 +1,19 @@
 package com.sgiprocurement.controller;
 
 import com.sgiprocurement.dto.ProductDTO;
+import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/products")
+@RequestMapping("/v1/products")
 @CrossOrigin(origins = "http://localhost:3000")
 public class ProductController {
 
@@ -22,6 +24,13 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductDTO>> getAllProducts() {
         List<ProductDTO> products = productService.getAllProducts();
+        return ResponseEntity.ok(products);
+    }
+
+    // SEARCH products
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam String query) {
+        List<ProductDTO> products = productService.searchProducts(query);
         return ResponseEntity.ok(products);
     }
 
@@ -41,13 +50,31 @@ public class ProductController {
 
     // Generate POS code
     @GetMapping("/generate-code")
-    public ResponseEntity<String> generateCode(@RequestParam String market, @RequestParam String category) {
-        String code = productService.generatePosCode(market, category);
+    public ResponseEntity<String> generateCode(
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String market,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false, defaultValue = "0") int iteration) {
+        
+        // Ưu tiên dùng productName nếu có, nếu không thì dùng category (để tương thích ngược)
+        String nameToUse = (productName != null && !productName.isEmpty()) ? productName : category;
+        String code = productService.generatePosCode(nameToUse, market, iteration);
         return ResponseEntity.ok(code);
+    }
+
+    @GetMapping("/by-pos-code/{posCode}")
+    public ResponseEntity<ProductDTO> getByPosCode(@PathVariable String posCode) {
+        try {
+            ProductDTO product = productService.getProductByPosCode(posCode);
+            return ResponseEntity.ok(product);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     // UPDATE product
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductDTO productDTO) {

@@ -33,6 +33,12 @@ public class PaymentRequest {
     @Column(nullable = false, length = 50)
     private String status = "DRAFT";  // DRAFT, PENDING, APPROVED, REJECTED, PAID
 
+    @Column(length = 2000)
+    private String attachments;
+
+    @Column(length = 500)
+    private String note;
+
     @Column(name = "created_by")
     private String createdBy;
 

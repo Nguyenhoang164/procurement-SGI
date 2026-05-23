@@ -1,122 +1,98 @@
 # SGI Procurement Backend
 
-## Description
-Backend API for SGI Procurement System built with Spring Boot following MVC architecture pattern.
+Backend API for the SGI Procurement System, built with Spring Boot and configured to run with MySQL by default.
 
-## Architecture
-- **Model**: JPA entities representing database tables
-- **View**: RESTful API endpoints returning JSON
-- **Controller**: REST controllers handling HTTP requests
-- **Service**: Business logic and data processing
-- **Repository**: Data access layer using Spring Data JPA
+## Stack
 
-## Technologies
-- Java 17
-- Spring Boot 3.2.0
+- Java 17+
+- Spring Boot 3.5.14
 - Spring Data JPA / Hibernate
-- H2 Database (development)
-- MySQL (production)
-- Maven
-- Lombok
+- Spring Security + JWT
+- Flyway
+- MySQL 8.x
+- Gradle Wrapper
 
 ## Project Structure
-```
+
+```text
 backend/
 ├── src/
-│   ├── main/
-│   │   ├── java/com/sgiprocurement/
-│   │   │   ├── controller/    # REST Controllers
-│   │   │   ├── service/       # Business Logic
-│   │   │   ├── repository/    # Data Access
-│   │   │   ├── model/         # JPA Entities
-│   │   │   ├── dto/           # Data Transfer Objects
-│   │   │   ├── exception/     # Custom Exceptions
-│   │   │   ├── config/        # Configuration Classes
-│   │   │   └── SgiProcurementApplication.java
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-└── pom.xml
+│   └── main/
+│       ├── java/com/sgiprocurement/
+│       │   ├── config/
+│       │   ├── controller/
+│       │   ├── dto/
+│       │   ├── exception/
+│       │   ├── model/
+│       │   ├── repository/
+│       │   ├── service/
+│       │   └── SgiProcurementApplication.java
+│       └── resources/
+│           ├── application.properties
+│           └── db/migration/
+├── build.gradle
+├── settings.gradle
+├── gradlew
+└── gradlew.bat
 ```
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
 - Java 17 or higher
-- Maven 3.6.0 or higher
-- MySQL (optional, for production)
+- MySQL 8.x
 
-### Installation
+## Database Configuration
 
-1. Clone/Navigate to the project directory:
+Application uses these environment variables, with defaults shown below:
+
 ```bash
-cd backend
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=sgi_procurement
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
-2. Build the project:
+The JDBC URL enables `createDatabaseIfNotExist=true`, so the database can be created automatically if the MySQL user has permission.
+
+## Run
+
+Windows:
+
+```powershell
+.\gradlew.bat bootRun
+```
+
+macOS/Linux:
+
 ```bash
-mvn clean install
+./gradlew bootRun
 ```
 
-3. Run the application:
+Application base URL:
+
+```text
+http://localhost:8080/api
+```
+
+## Test
+
+Windows:
+
+```powershell
+.\gradlew.bat test
+```
+
+macOS/Linux:
+
 ```bash
-mvn spring-boot:run
+./gradlew test
 ```
 
-The application will start on `http://localhost:8080/api`
+## Database Migrations
 
-## API Endpoints
+Flyway migrations are under:
 
-### Products
-- **GET** `/api/products` - Get all products
-- **GET** `/api/products/{id}` - Get product by ID
-- **POST** `/api/products` - Create new product
-- **PUT** `/api/products/{id}` - Update product
-- **DELETE** `/api/products/{id}` - Delete product
-
-## Database
-- Default: H2 (in-memory, development)
-- H2 Console: `http://localhost:8080/h2-console`
-
-To switch to MySQL, uncomment the MySQL configuration in `application.properties`
-
-## Configuration
-Edit `src/main/resources/application.properties` to configure:
-- Server port
-- Database connection
-- Logging level
-- JPA/Hibernate settings
-
-## Development
-
-### Add New Entity
-1. Create entity class in `model/` package
-2. Create repository in `repository/` package extending JpaRepository
-3. Create DTO in `dto/` package
-4. Create service in `service/` package
-5. Create controller in `controller/` package
-
-### Testing
-```bash
-mvn test
+```text
+src/main/resources/db/migration
 ```
-
-## Common Tasks
-
-### Change Database Port
-Edit `application.properties`:
-```properties
-server.port=8081
-```
-
-### Enable SQL Logging
-Edit `application.properties`:
-```properties
-spring.jpa.show-sql=true
-```
-
-## Frontend Connection
-CORS is enabled for `http://localhost:3000` (React frontend)
-
-## License
-Copyright © 2024 SGI Procurement

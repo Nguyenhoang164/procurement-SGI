@@ -11,7 +11,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/weekly-plans")
+@RequestMapping("/v1/weekly-plans")
 @CrossOrigin(origins = "http://localhost:3000")
 public class WeeklyPlanController {
 
@@ -55,4 +55,31 @@ public class WeeklyPlanController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<WeeklyPlanDTO> submitForApproval(@PathVariable Long id) {
+        WeeklyPlanDTO submitted = weeklyPlanService.submitForApproval(id);
+        return ResponseEntity.ok(submitted);
+    }
+
+    @PostMapping("/{id}/approve-l1")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<WeeklyPlanDTO> approveL1(@PathVariable Long id) {
+        WeeklyPlanDTO approved = weeklyPlanService.approveL1(id);
+        return ResponseEntity.ok(approved);
+    }
+
+    @PostMapping("/{id}/approve-l2")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<WeeklyPlanDTO> approveL2(@PathVariable Long id) {
+        WeeklyPlanDTO approved = weeklyPlanService.approveL2(id);
+        return ResponseEntity.ok(approved);
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<WeeklyPlanDTO> reject(@PathVariable Long id) {
+        WeeklyPlanDTO rejected = weeklyPlanService.reject(id);
+        return ResponseEntity.ok(rejected);
+    }
 }

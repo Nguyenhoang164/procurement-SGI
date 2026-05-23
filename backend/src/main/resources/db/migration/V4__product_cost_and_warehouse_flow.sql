@@ -1,0 +1,5 @@
+ALTER TABLE products
+  ADD COLUMN lot_count INT NOT NULL DEFAULT 0,
+  ADD COLUMN total_qty INT NOT NULL DEFAULT 0,
+  ADD COLUMN latest_unit_cost_vnd DECIMAL(15,0) DEFAULT 0,
+  ADD COLUMN weighted_avg_cost_vnd DECIMAL(15,0) DEFAULT 0;

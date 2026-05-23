@@ -25,6 +25,10 @@ public class PaymentRequestDTO {
 
     private String status;
 
+    private String attachments;
+
+    private String note;
+
     private String createdBy;
 
     private LocalDateTime createdAt;

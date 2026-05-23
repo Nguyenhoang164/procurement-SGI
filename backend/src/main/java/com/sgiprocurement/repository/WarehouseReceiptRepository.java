@@ -10,4 +10,6 @@ public interface WarehouseReceiptRepository extends JpaRepository<WarehouseRecei
 
     Optional<WarehouseReceipt> findByPoId(Long poId);
 
+    boolean existsByPoId(Long poId);
+
 }

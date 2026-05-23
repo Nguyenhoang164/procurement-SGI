@@ -11,7 +11,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/purchase-orders")
+@RequestMapping("/v1/purchase-orders")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PurchaseOrderController {
 
@@ -53,6 +53,34 @@ public class PurchaseOrderController {
     public ResponseEntity<Void> deletePurchaseOrder(@PathVariable Long id) {
         purchaseOrderService.deletePurchaseOrder(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/approve-l1")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderDTO> approveL1(@PathVariable Long id) {
+        PurchaseOrderDTO approved = purchaseOrderService.approveL1(id);
+        return ResponseEntity.ok(approved);
+    }
+
+    @PostMapping("/{id}/approve-l2")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PurchaseOrderDTO> approveL2(@PathVariable Long id) {
+        PurchaseOrderDTO approved = purchaseOrderService.approveL2(id);
+        return ResponseEntity.ok(approved);
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderDTO> reject(@PathVariable Long id) {
+        PurchaseOrderDTO rejected = purchaseOrderService.reject(id);
+        return ResponseEntity.ok(rejected);
+    }
+
+    @PostMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderDTO> updateStatus(@PathVariable Long id, @RequestParam String status) {
+        PurchaseOrderDTO updated = purchaseOrderService.updateStatus(id, status);
+        return ResponseEntity.ok(updated);
     }
 
 }

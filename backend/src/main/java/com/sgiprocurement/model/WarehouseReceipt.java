@@ -29,7 +29,7 @@ public class WarehouseReceipt {
     @Column(length = 100)
     private String inspector;
 
-    @Column(length = 500)
+    @Column(name = "condition_description", length = 500)
     private String condition;
 
     @Column(length = 500)

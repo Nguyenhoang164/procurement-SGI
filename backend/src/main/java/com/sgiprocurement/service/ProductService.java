@@ -26,6 +26,14 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    // Search products by name or code
+    public List<ProductDTO> searchProducts(String query) {
+        return productRepository.findByProductNameContainingIgnoreCase(query)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     // Get product by ID
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
@@ -39,8 +47,8 @@ public class ProductService {
         // auto-generate posCode if absent
         if (product.getPosCode() == null || product.getPosCode().isEmpty()) {
             String code = productNamingService.generatePosCode(
-                    product.getMarketCode(),
-                    product.getCategoryId() != null ? String.valueOf(product.getCategoryId()) : "NA"
+                    product.getProductName(),
+                    product.getMarketCode()
             );
             product.setPosCode(code);
         }
@@ -64,8 +72,18 @@ public class ProductService {
         return convertToDTO(updatedProduct);
     }
 
-    public String generatePosCode(String market, String category) {
-        return productNamingService.generatePosCode(market, category);
+    public String generatePosCode(String prefix, String market) {
+        return productNamingService.generatePosCode(prefix, market, 0);
+    }
+
+    public String generatePosCode(String prefix, String market, int iteration) {
+        return productNamingService.generatePosCode(prefix, market, iteration);
+    }
+
+    public ProductDTO getProductByPosCode(String posCode) {
+        Product product = productRepository.findByPosCode(posCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with posCode: " + posCode));
+        return convertToDTO(product);
     }
 
     // Delete product
@@ -79,10 +97,11 @@ public class ProductService {
     private ProductDTO convertToDTO(Product product) {
         return new ProductDTO(
             product.getId(),
+            product.getPosCode(),
             product.getProductName(),
-            product.getSpec(),
             product.getCategoryId(),
             product.getMarketCode(),
+            product.getSpec(),
             product.getUnit(),
             product.getStatus(),
             product.getCreatedAt(),
@@ -93,12 +112,13 @@ public class ProductService {
     private Product convertToEntity(ProductDTO productDTO) {
         Product p = new Product();
         p.setId(productDTO.getId());
+        p.setPosCode(productDTO.getPosCode());
         p.setProductName(productDTO.getProductName());
         p.setSpec(productDTO.getSpec());
         p.setCategoryId(productDTO.getCategoryId());
         p.setMarketCode(productDTO.getMarketCode());
         p.setUnit(productDTO.getUnit());
-        p.setStatus(productDTO.getStatus());
+        p.setStatus(productDTO.getStatus() != null ? productDTO.getStatus() : "ACTIVE");
         p.setCreatedAt(productDTO.getCreatedAt());
         p.setUpdatedAt(productDTO.getUpdatedAt());
         return p;

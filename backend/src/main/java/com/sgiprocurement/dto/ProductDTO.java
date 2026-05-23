@@ -4,8 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 
 import java.time.LocalDateTime;
 
@@ -16,10 +14,10 @@ public class ProductDTO {
 
     private Long id;
 
-    @NotBlank(message = "Product name is required")
-        private String productName;
+    private String posCode;
 
-    private String description;
+    @NotBlank(message = "Product name is required")
+    private String productName;
 
     private Long categoryId;
 

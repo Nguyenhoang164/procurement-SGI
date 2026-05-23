@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
 
@@ -21,6 +22,15 @@ public class PurchaseOrder {
     @Column(nullable = false, length = 50)
     private String posCode;
 
+    @Column(length = 255)
+    private String productName;
+
+    @Column(length = 100)
+    private String productShortCode;
+
+    @Column(length = 255)
+    private String supplierName;
+
     @Column(nullable = false)
     private Integer orderedQty;
 
@@ -30,7 +40,7 @@ public class PurchaseOrder {
     @Column(length = 10)
     private String currency = "USD";
 
-    @Column(precision = 8, scale = 4)
+    @Column(precision = 12, scale = 4)
     private BigDecimal exchangeRate = BigDecimal.ONE;
 
     // Chi phí vận chuyển
@@ -41,6 +51,12 @@ public class PurchaseOrder {
     private BigDecimal intlShippingVnd = BigDecimal.ZERO;
 
     @Column(precision = 15, scale = 0)
+    private BigDecimal internationalShippingUnitPriceVnd = BigDecimal.ZERO;
+
+    @Column(length = 100)
+    private String packageMeasurement;
+
+    @Column(precision = 15, scale = 0)
     private BigDecimal orderFeeVnd = BigDecimal.ZERO;
 
     @Column(precision = 15, scale = 0)
@@ -49,6 +65,12 @@ public class PurchaseOrder {
     // Tính toán tự động
     @Column(precision = 15, scale = 0)
     private BigDecimal totalLotCostVnd = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 0)
+    private BigDecimal totalGoodsCostVnd = BigDecimal.ZERO;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal totalGoodsAmount = BigDecimal.ZERO;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal recentUnitPrice = BigDecimal.ZERO;
@@ -61,6 +83,21 @@ public class PurchaseOrder {
 
     @Column(length = 50)
     private String shippingMethod;
+
+    @Column(name = "order_date")
+    private LocalDate orderDate;
+
+    @Column(name = "expected_warehouse_arrival_date")
+    private LocalDate expectedWarehouseArrivalDate;
+
+    @Column(name = "goods_payment_date")
+    private LocalDate goodsPaymentDate;
+
+    @Column(name = "freight_payment_date")
+    private LocalDate freightPaymentDate;
+
+    @Column(length = 100)
+    private String paymentMethod;
 
     @Column(length = 1000)
     private String note;
@@ -75,7 +112,10 @@ public class PurchaseOrder {
     private BigDecimal remainingPaymentVnd = BigDecimal.ZERO;
 
     @Column(nullable = false, length = 50)
-    private String status = "DRAFT";  // DRAFT, PENDING, APPROVED, IN_TRANSIT, COMPLETED
+    private String status = "PENDING";  // PENDING, APPROVED, IN_TRANSIT, COMPLETED, REJECTED
+
+    @Column(name = "payment_status", length = 50)
+    private String paymentStatus;
 
     @Column(name = "created_by")
     private String createdBy;

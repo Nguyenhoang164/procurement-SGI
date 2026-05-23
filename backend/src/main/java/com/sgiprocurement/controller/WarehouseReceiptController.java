@@ -1,6 +1,8 @@
 package com.sgiprocurement.controller;
 
 import com.sgiprocurement.dto.WarehouseReceiptDTO;
+import com.sgiprocurement.dto.PendingReceiveDTO;
+import com.sgiprocurement.dto.WarehouseReceiveRequest;
 import com.sgiprocurement.service.WarehouseReceiptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,12 +13,25 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/warehouse-receipts")
+@RequestMapping("/v1/warehouse-receipts")
 @CrossOrigin(origins = "http://localhost:3000")
 public class WarehouseReceiptController {
 
     @Autowired
     private WarehouseReceiptService warehouseReceiptService;
+
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<List<PendingReceiveDTO>> getPendingReceives() {
+        return ResponseEntity.ok(warehouseReceiptService.getPendingReceives());
+    }
+
+    @PostMapping("/receive")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<WarehouseReceiptDTO> receiveGoods(@Valid @RequestBody WarehouseReceiveRequest request) {
+        WarehouseReceiptDTO created = warehouseReceiptService.receiveGoods(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
@@ -25,7 +40,7 @@ public class WarehouseReceiptController {
         return ResponseEntity.ok(receipts);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
     public ResponseEntity<WarehouseReceiptDTO> getWarehouseReceiptById(@PathVariable Long id) {
         WarehouseReceiptDTO receipt = warehouseReceiptService.getWarehouseReceiptById(id);
@@ -39,7 +54,7 @@ public class WarehouseReceiptController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<WarehouseReceiptDTO> updateWarehouseReceipt(
             @PathVariable Long id,
@@ -48,7 +63,7 @@ public class WarehouseReceiptController {
         return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteWarehouseReceipt(@PathVariable Long id) {
         warehouseReceiptService.deleteWarehouseReceipt(id);

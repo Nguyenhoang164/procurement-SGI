@@ -1,0 +1,122 @@
+ĐẶC TẢ KỸ THUẬT NÂNG CẤP HỆ THỐNG QUẢN LÝ MUA HÀNG
+MODULE 1: QUẢN LÝ KẾ HOẠCH NHẬP HÀNG (PKD1)
+
+Mối quan hệ: 1 Phiếu kế hoạch có thể chứa Nhiều (N) sản phẩm.
+1.1. Cấu trúc dữ liệu Sản phẩm trong Kế hoạch (Item/Sku Level)
+
+    Mã POS: Dạng Search-and-select từ Danh mục sản phẩm cũ HOẶC cho phép click button "Đề xuất mã mới".
+
+    Loại sản phẩm: Thêm Flag phân loại [Hàng mới / Hàng cũ].
+
+    Số lượng đề xuất: Kiểu số (Integer), lớn hơn 0.
+
+    Quốc gia/Nguồn nhập: Text/Dropdown.
+
+    Hình thức vận chuyển: Dropdown (AIR PHI, SEA, v.v.).
+
+    Giá tham khảo: Kiểu số (Decimal).
+
+    Quy cách: Textarea.
+
+    Link nguồn: Kiểu URL (Bắt buộc nhập để bot/user check nguồn hàng).
+
+    Mức độ ưu tiên: Dropdown [Cao / Trung bình / Thấp].
+
+MODULE 2: QUẢN LÝ ĐƠN HÀNG (PO - PKD2)
+
+Mối quan hệ: 1 Đơn hàng (PO) chứa một Danh sách (Array/List) gồm nhiều sản phẩm.
+2.1. Nhóm 1 — Thông tin sản phẩm & Đặt hàng (Dạng Bảng/Danh sách)
+
+    Cho phép hiển thị dạng bảng (Table grid) thay vì form đơn lẻ để chứa nhiều sản phẩm trong 1 PO.
+
+    Logic tính toán tự động: Thành tiền (Nguyên tệ) = Đơn giá * Số lượng đặt.
+
+    Tỷ giá: Số thập phân (Mặc định hiển thị theo loại tiền tệ được chọn, ví dụ CNY = 3520).
+
+    Thành tiền (VND): Thành tiền (Nguyên tệ) * Tỷ giá.
+
+2.2. Nhóm 2 — Chi phí vận chuyển quốc tế
+
+    Điều kiện hiển thị (Trạng thái động): Chỉ hiển thị nhóm này khi trạng thái đơn hàng thuộc nhóm [Đang vận chuyển / In Transit].
+
+    Các trường thành phần: VC nội địa, VC quốc tế, Phí đặt hàng, Đơn giá VC QT (đ/kg), Khối lượng/Thể tích, Phí giao hàng địa phương, Ngày TT cước VC.
+
+2.3. Nhóm 3 — Tổng hợp & Giá vốn (Tổng hợp toàn bộ PO)
+
+    Tổng tiền lô (VND): = Tổng tiền hàng + Tổng VC nội địa + Tổng Cước VC QT + Tổng Phí ship nội địa.
+
+    Logic chỉnh sửa quyền: Cho phép User có thẩm quyền Sửa đổi trực tiếp (Override) tại ô Tổng giá (Hệ thống tự động tính ngược lại hoặc ghi nhận giá trị override).
+
+    Giá vốn đầy đủ 1 SP (GV đầy đủ 1 SP): Tính toán phân bổ chi phí vận chuyển vào từng SKU theo công thức kế toán.
+
+    Cơ chế duyệt (Workflow):
+
+        Trạng thái đơn hàng: Nháp -> Gửi duyệt Lead -> Lead Phê duyệt -> Dự kiến gửi Kế toán.
+
+    Tính năng tương tác Kế toán (Comment Section):
+
+        Khi Kế toán phát hiện có sự chênh lệch về Giá vốn (Giữa giá dự kiến và thực tế thanh toán/phân bổ), hệ thống mở một phân hệ Comment/Log riêng để Kế toán nhập nội dung cảnh báo chênh lệch giá vốn, tự động bắn thông báo cho bộ phận mua hàng.
+
+MODULE 3: ĐỀ NGHỊ THANH TOÁN (DNTT)
+
+Mối quan hệ: * 1 DNTT có thể áp dụng/gắn cho Nhiều (N) Đơn hàng (PO) khác nhau.
+
+    1 DNTT có thể quản lý/gắn với Nhiều (N) Mã vận đơn (Waybill) khác nhau.
+
+3.1. Cấu trúc trường & Layout tùy biến
+
+    Layout Custom: Thiết kế giao diện động (Dynamic form layout) theo quy chuẩn biểu mẫu hiện tại của công ty.
+
+    Phí chênh lệch: Kiểu số, ghi nhận chênh lệch tỷ giá hoặc giá phát sinh.
+
+    Phí vận chuyển bổ sung: Gắn trực tiếp vào DNTT.
+
+    Trường chi phí tùy biến (Custom Fees Matrix): Giao diện cho phép user bấm nút "Thêm chi phí phát sinh" để tự định nghĩa Tên chi phí và Số tiền.
+
+    Xác nhận thanh toán: * Nút tác vụ [Xác nhận thanh toán].
+
+        Trường đính kèm: Bắt buộc/Cho phép upload hình ảnh/file PDF để Gắn Bill/Ủy nhiệm chi (Proof of Payment).
+
+MODULE 4: QUẢN LÝ NHẬP KHO (LOGISTICS & INVENTORY)
+4.1. Phân hệ Theo dõi vận chuyển
+
+    Bổ sung tab/mục riêng: Theo dõi vận chuyển đơn hàng (Quản lý trạng thái lộ trình, lịch sử cập nhật vị trí của các mã vận đơn).
+
+4.2. Quy trình nhập kho (Giao diện đối chiếu)
+
+Khi thực hiện nhập kho, nhân viên kho chọn mã đơn hàng. Hệ thống hiển thị bảng đối chiếu sau:
+
+    Mã đơn hàng (PO Code)
+
+    Mã vận đơn (Waybill Code)
+
+    Số lượng hàng theo mã vận đơn (Expected Quantity)
+
+    Số lượng thực tế nhập kho (Actual Received Quantity)
+
+    Tình trạng hàng hóa khi nhận (Status): Dropdown [Nguyên vẹn / Móp méo / Thiếu hàng / Hỏng hóc].
+
+MODULE 5: DANH MỤC SẢN PHẨM & TÍNH NĂNG LIÊN KẾT (DANH MỤC MASTER)
+5.1. Danh mục sản phẩm (Product Catalog)
+
+    Hình ảnh sản phẩm: Thêm bộ sưu tập ảnh (Gallery) cho phép lưu trữ từ 3 - 5 ảnh sản phẩm.
+
+    Link nguồn: Lưu trữ link gốc (Taobao, 1688, Tmall, v.v.) để tham chiếu nhanh.
+
+5.2. Tính năng liên kết màn hình (Deep Linking)
+
+    Tại màn hình PO (Đơn hàng): Khi click vào Mã sản phẩm/Mã POS -> Hệ thống tự động mở liên kết chuyển hướng (Redirect) sang đúng trang chi tiết của sản phẩm đó trong hệ thống Danh mục sản phẩm.
+
+    Mã liên kết: Mỗi đối tượng (Kế hoạch, Đơn hàng, DNTT, Mã vận đơn) đều có định dạng Clickable Link (Hyperlink) để xem nhanh thông tin chi tiết (Drawer hoặc Màn hình detail riêng).
+
+5.3. Công cụ Tìm kiếm nâng cao (Global/Advanced Search)
+
+    Phạm vi áp dụng: Bộ lọc tìm kiếm tại màn hình Đơn hàng và Đề nghị thanh toán (DNTT).
+
+    Cơ chế tìm kiếm: Thanh tìm kiếm phải hỗ trợ tìm kiếm đa mục tiêu (Multi-match search), nghĩa là nhập vào ô search có thể tìm ra bản ghi nếu khớp với bất kỳ 1 trong 3 mã:
+
+        Mã Đơn hàng (PO Code)
+
+        Mã Đề nghị thanh toán (DNTT Code)
+
+        Mã Vận đơn (Waybill Code)

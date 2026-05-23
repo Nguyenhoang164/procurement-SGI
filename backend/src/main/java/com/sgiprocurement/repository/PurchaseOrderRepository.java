@@ -12,4 +12,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     List<PurchaseOrder> findByPosCode(String posCode);
 
+    List<PurchaseOrder> findByPaymentStatus(String paymentStatus);
+
 }
