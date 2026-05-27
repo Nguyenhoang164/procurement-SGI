@@ -51,6 +51,9 @@ public class Product {
     @Column(name = "weighted_avg_cost_vnd", precision = 15, scale = 0)
     private BigDecimal weightedAvgCostVnd = BigDecimal.ZERO;
 
+    @Column(name = "source_link", length = 500)
+    private String sourceLink;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

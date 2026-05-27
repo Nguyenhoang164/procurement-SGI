@@ -5,8 +5,8 @@ import com.sgiprocurement.dto.PaymentRequestDTO;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.model.PaymentRequest;
 import com.sgiprocurement.model.PurchaseOrder;
-import com.sgiprocurement.repository.PaymentRequestRepository;
-import com.sgiprocurement.repository.PurchaseOrderRepository;
+import com.sgiprocurement.model.Waybill;
+import com.sgiprocurement.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,6 +33,21 @@ class PaymentRequestServiceTest {
 
     @Mock
     private FileStorageService fileStorageService;
+
+    @Mock
+    private WaybillRepository waybillRepository;
+
+    @Mock
+    private PaymentRequestPurchaseOrderRepository paymentRequestPurchaseOrderRepository;
+
+    @Mock
+    private PurchaseOrderItemRepository purchaseOrderItemRepository;
+
+    @Mock
+    private PaymentRequestWaybillRepository paymentRequestWaybillRepository;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private PaymentRequestService paymentRequestService;
@@ -205,14 +220,23 @@ class PaymentRequestServiceTest {
     }
 
     @Test
-    void markAsPaid_shouldSetPaid_whenApproved() {
+    void markAsPaid_shouldSetPaid_whenApproved() throws Exception {
         paymentRequest.setStatus("APPROVED");
         when(paymentRequestRepository.findById(1L)).thenReturn(Optional.of(paymentRequest));
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(approvedPO));
         when(paymentRequestRepository.save(any(PaymentRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(paymentRequestPurchaseOrderRepository.findByPaymentRequestId(1L)).thenReturn(List.of());
+        when(purchaseOrderItemRepository.findByPurchaseOrderId(1L)).thenReturn(List.of());
+        when(objectMapper.writeValueAsString(any())).thenReturn("[]");
+        when(waybillRepository.save(any(Waybill.class))).thenAnswer(invocation -> {
+            Waybill wb = invocation.getArgument(0);
+            wb.setId(1L);
+            return wb;
+        });
+        when(paymentRequestWaybillRepository.save(any())).thenReturn(null);
 
-        PaymentRequestDTO result = paymentRequestService.markAsPaid(1L);
+        PaymentRequestDTO result = paymentRequestService.markAsPaid(1L, null);
 
         assertEquals("PAID", result.getStatus());
     }
@@ -222,7 +246,7 @@ class PaymentRequestServiceTest {
         paymentRequest.setStatus("PENDING_L1");
         when(paymentRequestRepository.findById(1L)).thenReturn(Optional.of(paymentRequest));
 
-        assertThrows(IllegalStateException.class, () -> paymentRequestService.markAsPaid(1L));
+        assertThrows(IllegalStateException.class, () -> paymentRequestService.markAsPaid(1L, null));
     }
 
     @Test

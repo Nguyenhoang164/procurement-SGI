@@ -85,19 +85,24 @@ class WarehouseReceiptServiceTest {
     @Test
     void getPendingReceives_shouldReturnOnlyPaidInTransitWithoutReceipt() {
         when(purchaseOrderRepository.findByPaymentStatus("PAID")).thenReturn(List.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(false);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of());
         when(productRepository.findByPosCode("ABC-VN-0001")).thenReturn(Optional.of(product));
 
         List<PendingReceiveDTO> result = warehouseReceiptService.getPendingReceives();
 
         assertEquals(1, result.size());
         assertEquals(1L, result.get(0).getPoId());
+        assertEquals(100, result.get(0).getRemainingQty());
     }
 
     @Test
-    void getPendingReceives_shouldExcludePOsWithExistingReceipt() {
+    void getPendingReceives_shouldExcludePOsWithExistingFullReceipt() {
+        WarehouseReceipt fullReceipt = new WarehouseReceipt();
+        fullReceipt.setPoId(1L);
+        fullReceipt.setReceivedQty(100);
         when(purchaseOrderRepository.findByPaymentStatus("PAID")).thenReturn(List.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(true);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of(fullReceipt));
+        when(productRepository.findByPosCode("ABC-VN-0001")).thenReturn(Optional.of(product));
 
         List<PendingReceiveDTO> result = warehouseReceiptService.getPendingReceives();
 
@@ -107,7 +112,7 @@ class WarehouseReceiptServiceTest {
     @Test
     void receiveGoods_shouldCreateReceiptAndUpdatePO() {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(false);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of());
         when(warehouseReceiptRepository.save(any(WarehouseReceipt.class))).thenAnswer(invocation -> {
             WarehouseReceipt saved = invocation.getArgument(0);
             saved.setId(1L);
@@ -137,17 +142,22 @@ class WarehouseReceiptServiceTest {
     }
 
     @Test
-    void receiveGoods_shouldThrow_whenReceiptAlreadyExists() {
+    void receiveGoods_shouldThrow_whenTotalExceedsOrdered() {
+        WarehouseReceipt existing = new WarehouseReceipt();
+        existing.setPoId(1L);
+        existing.setReceivedQty(80);
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(true);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of(existing));
 
-        assertThrows(IllegalStateException.class, () -> warehouseReceiptService.receiveGoods(receiveRequest));
+        receiveRequest.setReceivedQty(30);
+
+        assertThrows(IllegalArgumentException.class, () -> warehouseReceiptService.receiveGoods(receiveRequest));
     }
 
     @Test
     void receiveGoods_shouldThrow_whenQtyExceedsOrdered() {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(false);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of());
 
         receiveRequest.setReceivedQty(200);
 
@@ -191,7 +201,7 @@ class WarehouseReceiptServiceTest {
     @Test
     void createWarehouseReceipt_shouldDelegateToReceiveGoods() {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(paidPO));
-        when(warehouseReceiptRepository.existsByPoId(1L)).thenReturn(false);
+        when(warehouseReceiptRepository.findAllByPoId(1L)).thenReturn(List.of());
         when(warehouseReceiptRepository.save(any(WarehouseReceipt.class))).thenAnswer(invocation -> {
             WarehouseReceipt saved = invocation.getArgument(0);
             saved.setId(1L);

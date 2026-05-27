@@ -85,7 +85,6 @@ MODULE 4: QUẢN LÝ NHẬP KHO (LOGISTICS & INVENTORY)
 4.2. Quy trình nhập kho (Giao diện đối chiếu)
 
 Khi thực hiện nhập kho, nhân viên kho chọn mã đơn hàng. Hệ thống hiển thị bảng đối chiếu sau:
-
     Mã đơn hàng (PO Code)
 
     Mã vận đơn (Waybill Code)

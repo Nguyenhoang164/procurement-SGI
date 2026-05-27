@@ -33,7 +33,10 @@ class ProductControllerTest {
     @Test
     @WithMockUser
     void getAllProducts_shouldReturnList() throws Exception {
-        ProductDTO dto = new ProductDTO(1L, "ABC-VN-0001", "Test", 1L, "VN", "spec", "pcs", "ACTIVE", null, null);
+        ProductDTO dto = new ProductDTO();
+        dto.setId(1L);
+        dto.setPosCode("ABC-VN-0001");
+        dto.setProductName("Test");
         when(productService.getAllProducts()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/v1/products"))
@@ -45,7 +48,10 @@ class ProductControllerTest {
     @Test
     @WithMockUser
     void searchProducts_shouldReturnResults() throws Exception {
-        ProductDTO dto = new ProductDTO(1L, "ABC-VN-0001", "Test", 1L, "VN", "spec", "pcs", "ACTIVE", null, null);
+        ProductDTO dto = new ProductDTO();
+        dto.setId(1L);
+        dto.setPosCode("ABC-VN-0001");
+        dto.setProductName("Test");
         when(productService.searchProducts("Test")).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/v1/products/search").param("query", "Test"))
@@ -56,7 +62,10 @@ class ProductControllerTest {
     @Test
     @WithMockUser
     void getProductById_shouldReturnProduct() throws Exception {
-        ProductDTO dto = new ProductDTO(1L, "ABC-VN-0001", "Test", 1L, "VN", "spec", "pcs", "ACTIVE", null, null);
+        ProductDTO dto = new ProductDTO();
+        dto.setId(1L);
+        dto.setPosCode("ABC-VN-0001");
+        dto.setProductName("Test");
         when(productService.getProductById(1L)).thenReturn(dto);
 
         mockMvc.perform(get("/v1/products/1"))
@@ -67,7 +76,10 @@ class ProductControllerTest {
     @Test
     @WithMockUser
     void createProduct_shouldReturn201() throws Exception {
-        ProductDTO created = new ProductDTO(1L, "NP-VN-0001", "New Product", null, "VN", null, null, "ACTIVE", null, null);
+        ProductDTO created = new ProductDTO();
+        created.setId(1L);
+        created.setPosCode("NP-VN-0001");
+        created.setProductName("New Product");
         when(productService.createProduct(any(ProductDTO.class))).thenReturn(created);
 
         mockMvc.perform(post("/v1/products")
@@ -80,7 +92,10 @@ class ProductControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void updateProduct_shouldReturnUpdated() throws Exception {
-        ProductDTO updated = new ProductDTO(1L, "ABC-VN-0001", "Updated", 1L, "VN", "spec", "pcs", "ACTIVE", null, null);
+        ProductDTO updated = new ProductDTO();
+        updated.setId(1L);
+        updated.setPosCode("ABC-VN-0001");
+        updated.setProductName("Updated");
         when(productService.updateProduct(eq(1L), any(ProductDTO.class))).thenReturn(updated);
 
         mockMvc.perform(put("/v1/products/1")

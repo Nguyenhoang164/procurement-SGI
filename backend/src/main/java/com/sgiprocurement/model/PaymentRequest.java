@@ -21,8 +21,8 @@ public class PaymentRequest {
     @Column(name = "po_id", nullable = false)
     private Long poId;
 
-    @Column(nullable = false, length = 50)
-    private String type;  // DEPOSIT, BALANCE, FULL_PAYMENT
+    @Column(length = 50)
+    private String type;
 
     @Column(precision = 15, scale = 0)
     private BigDecimal amountVnd = BigDecimal.ZERO;
@@ -31,13 +31,31 @@ public class PaymentRequest {
     private String currency = "VND";
 
     @Column(nullable = false, length = 50)
-    private String status = "DRAFT";  // DRAFT, PENDING, APPROVED, REJECTED, PAID
+    private String status = "DRAFT";
 
     @Column(length = 2000)
     private String attachments;
 
     @Column(length = 500)
     private String note;
+
+    @Column(length = 500)
+    private String reason;
+
+    @Column(name = "exchange_rate_diff_vnd", precision = 15, scale = 0)
+    private BigDecimal exchangeRateDiffVnd = BigDecimal.ZERO;
+
+    @Column(name = "additional_shipping_vnd", precision = 15, scale = 0)
+    private BigDecimal additionalShippingVnd = BigDecimal.ZERO;
+
+    @Column(name = "total_amount_vnd", precision = 15, scale = 0)
+    private BigDecimal totalAmountVnd = BigDecimal.ZERO;
+
+    @Column(name = "payment_confirmed_at")
+    private LocalDateTime paymentConfirmedAt;
+
+    @Column(name = "payment_confirmed_by", length = 100)
+    private String paymentConfirmedBy;
 
     @Column(name = "created_by")
     private String createdBy;
@@ -47,6 +65,18 @@ public class PaymentRequest {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "rejected_by", length = 100)
+    private String rejectedBy;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "reject_reason", length = 500)
+    private String rejectReason;
+
+    @Column(name = "rejected_level", length = 10)
+    private String rejectedLevel;
 
     @PrePersist
     protected void onCreate() {

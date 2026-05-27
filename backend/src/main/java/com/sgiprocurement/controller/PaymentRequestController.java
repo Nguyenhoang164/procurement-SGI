@@ -75,23 +75,34 @@ public class PaymentRequestController {
 
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<PaymentRequestDTO> reject(@PathVariable Long id, @RequestParam(required = false) String reason) {
-        PaymentRequestDTO rejected = paymentRequestService.reject(id, reason);
+    public ResponseEntity<PaymentRequestDTO> reject(@PathVariable Long id, @RequestParam(required = false) String reason, @RequestParam(required = false) String rejectedBy) {
+        PaymentRequestDTO rejected = paymentRequestService.reject(id, reason, rejectedBy);
         return ResponseEntity.ok(rejected);
     }
 
     @PostMapping("/{id}/pay")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')") // Thường là Kế toán/Admin
-    public ResponseEntity<PaymentRequestDTO> markAsPaid(@PathVariable Long id) {
-        PaymentRequestDTO paid = paymentRequestService.markAsPaid(id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PaymentRequestDTO> markAsPaid(
+            @PathVariable Long id,
+            @RequestParam(required = false) String confirmedBy) {
+        PaymentRequestDTO paid = paymentRequestService.markAsPaid(id, confirmedBy);
         return ResponseEntity.ok(paid);
+    }
+
+    @PostMapping("/{id}/confirm-payment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PaymentRequestDTO> confirmPayment(
+            @PathVariable Long id,
+            @RequestParam String confirmedBy) {
+        PaymentRequestDTO confirmed = paymentRequestService.confirmPayment(id, confirmedBy);
+        return ResponseEntity.ok(confirmed);
     }
 
     @GetMapping("/{id}/attachments")
     public ResponseEntity<String> attachmentsMethodHint(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
                 .header(HttpHeaders.ALLOW, "POST")
-                .body("Upload minh chứng: dùng POST multipart/form-data, field name \"files\", tới /v1/payment-requests/" + id + "/attachments");
+                .body("Upload minh chung: dung POST multipart/form-data, field name \"files\", toi /v1/payment-requests/" + id + "/attachments");
     }
 
     @PostMapping(path = "/{id}/attachments", produces = MediaType.APPLICATION_JSON_VALUE)

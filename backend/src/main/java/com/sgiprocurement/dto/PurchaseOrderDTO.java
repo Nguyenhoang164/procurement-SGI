@@ -3,11 +3,10 @@ package com.sgiprocurement.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Positive;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +15,10 @@ public class PurchaseOrderDTO {
 
     private Long id;
 
-    @NotBlank(message = "POS Code is required")
+    private String poCode;
+
+    private Long sourcePlanId;
+
     private String posCode;
 
     private String productName;
@@ -25,15 +27,12 @@ public class PurchaseOrderDTO {
 
     private String supplierName;
 
-    @Positive(message = "Ordered quantity must be greater than 0")
     private Integer orderedQty;
 
-    @Positive(message = "Unit price must be greater than 0")
     private BigDecimal unitPrice;
 
     private String currency = "USD";
 
-    @Positive(message = "Exchange rate must be greater than 0")
     private BigDecimal exchangeRate = BigDecimal.ONE;
 
     private BigDecimal domesticShippingVnd = BigDecimal.ZERO;
@@ -48,7 +47,6 @@ public class PurchaseOrderDTO {
 
     private BigDecimal localDeliveryFeeVnd = BigDecimal.ZERO;
 
-    // Auto calculated
     private BigDecimal totalLotCostVnd = BigDecimal.ZERO;
 
     private BigDecimal totalGoodsCostVnd = BigDecimal.ZERO;
@@ -90,5 +88,7 @@ public class PurchaseOrderDTO {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private List<PurchaseOrderItemDTO> items;
 
 }

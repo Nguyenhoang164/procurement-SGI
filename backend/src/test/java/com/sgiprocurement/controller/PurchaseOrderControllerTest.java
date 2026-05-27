@@ -103,15 +103,6 @@ class PurchaseOrderControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void approveL2_shouldApprove() throws Exception {
-        when(purchaseOrderService.approveL2(1L)).thenReturn(createDTO());
-
-        mockMvc.perform(post("/v1/purchase-orders/1/approve-l2"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
     @WithMockUser(roles = "MANAGER")
     void reject_shouldReject() throws Exception {
         when(purchaseOrderService.reject(1L)).thenReturn(createDTO());

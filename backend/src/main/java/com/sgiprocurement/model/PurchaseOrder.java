@@ -7,10 +7,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "purchase_orders")
-@Data // Tự động tạo getter, setter, toString...
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class PurchaseOrder {
@@ -19,7 +21,13 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "po_code", length = 50)
+    private String poCode;
+
+    @Column(name = "source_plan_id")
+    private Long sourcePlanId;
+
+    @Column(length = 50)
     private String posCode;
 
     @Column(length = 255)
@@ -31,10 +39,9 @@ public class PurchaseOrder {
     @Column(length = 255)
     private String supplierName;
 
-    @Column(nullable = false)
     private Integer orderedQty;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal unitPrice;
 
     @Column(length = 10)
@@ -43,7 +50,6 @@ public class PurchaseOrder {
     @Column(precision = 12, scale = 4)
     private BigDecimal exchangeRate = BigDecimal.ONE;
 
-    // Chi phí vận chuyển
     @Column(precision = 15, scale = 0)
     private BigDecimal domesticShippingVnd = BigDecimal.ZERO;
 
@@ -62,7 +68,6 @@ public class PurchaseOrder {
     @Column(precision = 15, scale = 0)
     private BigDecimal localDeliveryFeeVnd = BigDecimal.ZERO;
 
-    // Tính toán tự động
     @Column(precision = 15, scale = 0)
     private BigDecimal totalLotCostVnd = BigDecimal.ZERO;
 
@@ -112,7 +117,7 @@ public class PurchaseOrder {
     private BigDecimal remainingPaymentVnd = BigDecimal.ZERO;
 
     @Column(nullable = false, length = 50)
-    private String status = "PENDING";  // PENDING, APPROVED, IN_TRANSIT, COMPLETED, REJECTED
+    private String status = "DRAFT";
 
     @Column(name = "payment_status", length = 50)
     private String paymentStatus;
@@ -125,6 +130,9 @@ public class PurchaseOrder {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<PurchaseOrderItem> items = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

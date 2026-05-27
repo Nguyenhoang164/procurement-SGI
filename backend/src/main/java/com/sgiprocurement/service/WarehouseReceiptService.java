@@ -9,13 +9,27 @@ import com.sgiprocurement.dto.WarehouseReceiveRequest;
 import com.sgiprocurement.repository.WarehouseReceiptRepository;
 import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.ProductRepository;
+import com.sgiprocurement.repository.PaymentRequestRepository;
+import com.sgiprocurement.repository.WaybillRepository;
+import com.sgiprocurement.repository.PurchaseOrderItemRepository;
+import com.sgiprocurement.repository.PaymentRequestPurchaseOrderRepository;
+import com.sgiprocurement.model.PaymentRequest;
+import com.sgiprocurement.model.PaymentRequestPurchaseOrder;
+import com.sgiprocurement.model.Waybill;
+import com.sgiprocurement.model.PurchaseOrderItem;
+import com.sgiprocurement.dto.WaybillBriefDTO;
+import com.sgiprocurement.dto.PurchaseOrderItemDTO;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,47 +48,231 @@ public class WarehouseReceiptService {
     @Autowired
     private ProductCostService productCostService;
 
-    /**
-     * Đơn đã thanh toán (payment_status = PAID) và chưa có phiếu nhận hàng.
-     */
+    @Autowired
+    private PaymentRequestRepository paymentRequestRepository;
+
+    @Autowired
+    private WaybillRepository waybillRepository;
+
+    @Autowired
+    private PaymentRequestPurchaseOrderRepository paymentRequestPurchaseOrderRepository;
+
+    @Autowired
+    private PurchaseOrderItemRepository purchaseOrderItemRepository;
+
     public List<PendingReceiveDTO> getPendingReceives() {
-        return purchaseOrderRepository.findByPaymentStatus("PAID").stream()
-                .filter(po -> "IN_TRANSIT".equals(po.getStatus()))
-                .filter(po -> !warehouseReceiptRepository.existsByPoId(po.getId()))
-                .map(this::toPendingReceive)
-                .collect(Collectors.toList());
+        List<PendingReceiveDTO> result = new ArrayList<>();
+
+        for (Waybill wb : waybillRepository.findByStatus("DELIVERED")) {
+            List<WarehouseReceipt> existingWbReceipts = warehouseReceiptRepository.findAllByWaybillId(wb.getId());
+            boolean hasConfirmedReceipt = existingWbReceipts.stream().anyMatch(r -> "RECEIVED".equals(r.getStatus()));
+            if (hasConfirmedReceipt) {
+                continue;
+            }
+
+            if (wb.getPaymentRequestId() != null) {
+                PaymentRequest pr = paymentRequestRepository.findById(wb.getPaymentRequestId()).orElse(null);
+                if (pr != null) {
+                    List<Long> poIds = new ArrayList<>();
+                    if (pr.getPoId() != null) poIds.add(pr.getPoId());
+                    List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository.findByPaymentRequestId(pr.getId());
+                    for (PaymentRequestPurchaseOrder link : poLinks) {
+                        if (!poIds.contains(link.getPoId())) poIds.add(link.getPoId());
+                    }
+
+                    boolean hasIncompletePo = false;
+                    for (Long poId : poIds) {
+                        PurchaseOrder po = purchaseOrderRepository.findById(poId).orElse(null);
+                        if (po == null || po.getOrderedQty() == null) {
+                            hasIncompletePo = true;
+                            break;
+                        }
+                        List<WarehouseReceipt> poReceipts = warehouseReceiptRepository.findAllByPoId(po.getId());
+                        int poReceived = poReceipts.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+                        if (poReceived < po.getOrderedQty()) {
+                            hasIncompletePo = true;
+                            break;
+                        }
+                    }
+                    if (!hasIncompletePo && !poIds.isEmpty()) {
+                        continue;
+                    }
+                }
+            }
+
+            PendingReceiveDTO dto = toPendingReceiveFromWaybill(wb);
+            if (dto != null) {
+                result.add(dto);
+            }
+        }
+
+        return result;
     }
 
     public WarehouseReceiptDTO receiveGoods(WarehouseReceiveRequest request) {
-        PurchaseOrder po = purchaseOrderRepository.findById(request.getPoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + request.getPoId()));
+        Long requestedPoId = request.getPoId();
+        PurchaseOrder po = null;
+        Waybill waybill = null;
 
-        if (!"PAID".equals(po.getPaymentStatus())) {
-            throw new IllegalStateException("Đơn hàng chưa được kế toán xác nhận thanh toán (PAID)");
+        if (requestedPoId != null && requestedPoId < 0) {
+            waybill = waybillRepository.findById(-requestedPoId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Waybill not found with id: " + (-requestedPoId)));
+
+            if (!"DELIVERED".equals(waybill.getStatus())) {
+                throw new IllegalStateException("Van don chua duoc xac nhan giao hang (DELIVERED)");
+            }
+
+            if (waybill.getPaymentRequestId() != null) {
+                PaymentRequest pr = paymentRequestRepository.findById(waybill.getPaymentRequestId()).orElse(null);
+                if (pr != null) {
+                    po = purchaseOrderRepository.findById(pr.getPoId()).orElse(null);
+                }
+            }
+
+            if (po == null) {
+                throw new IllegalStateException("Van don chua duoc lien ket voi De Nghi Thanh Toan (DNTT). Vui long cap nhat ma DNTT cho van don truoc khi nhap kho.");
+            }
+        } else {
+            po = purchaseOrderRepository.findById(requestedPoId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + requestedPoId));
         }
 
-        if (warehouseReceiptRepository.existsByPoId(po.getId())) {
-            throw new IllegalStateException("Đơn hàng đã được nhận kho trước đó");
+        int totalReceived = 0;
+
+        if (po != null) {
+            boolean isPaid = "PAID".equals(po.getPaymentStatus());
+            boolean hasDeliveredWaybill = false;
+
+            if (request.getWaybillId() != null) {
+                Waybill wb = waybillRepository.findById(request.getWaybillId()).orElse(null);
+                if (wb != null && "DELIVERED".equals(wb.getStatus())) {
+                    hasDeliveredWaybill = true;
+                }
+            }
+
+            if (!isPaid && !hasDeliveredWaybill) {
+                List<PaymentRequest> prs = paymentRequestRepository.findByPoId(po.getId());
+                hasDeliveredWaybill = prs.stream()
+                        .flatMap(pr -> waybillRepository.findByPaymentRequestId(pr.getId()).stream())
+                        .anyMatch(w -> "DELIVERED".equals(w.getStatus()));
+            }
+
+            if (!isPaid && !hasDeliveredWaybill) {
+                throw new IllegalStateException("Don hang chua duoc ke toan xac nhan thanh toan (PAID) va chua co van don nao xac nhan giao hang (DELIVERED)");
+            }
+
+            if (request.getWaybillId() != null) {
+                List<WarehouseReceipt> existingForWb = warehouseReceiptRepository.findAllByWaybillId(request.getWaybillId());
+                boolean hasConfirmedReceipt = existingForWb.stream().anyMatch(r -> "RECEIVED".equals(r.getStatus()));
+                if (hasConfirmedReceipt) {
+                    throw new IllegalStateException("Van don nay da duoc nhap kho truoc do");
+                }
+            }
+
+            List<WarehouseReceipt> existing = warehouseReceiptRepository.findAllByPoId(po.getId());
+            totalReceived = existing.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+
+            if (waybill != null && waybill.getPaymentRequestId() != null) {
+                PaymentRequest pr = paymentRequestRepository.findById(waybill.getPaymentRequestId()).orElse(null);
+                if (pr != null) {
+                    List<Waybill> dnttWaybills = waybillRepository.findByPaymentRequestId(pr.getId());
+                    for (Waybill dnttWb : dnttWaybills) {
+                        List<WarehouseReceipt> negReceipts = warehouseReceiptRepository.findAllByPoId(-dnttWb.getId());
+                        for (WarehouseReceipt nr : negReceipts) {
+                            if (existing.stream().noneMatch(e -> e.getId().equals(nr.getId()))) {
+                                totalReceived += nr.getReceivedQty();
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (po.getOrderedQty() != null && totalReceived + request.getReceivedQty() > po.getOrderedQty()) {
+                throw new IllegalArgumentException("Tong so luong nhan vuot qua so luong dat (" + po.getOrderedQty() + ")");
+            }
         }
 
-        if (request.getReceivedQty() > po.getOrderedQty()) {
-            throw new IllegalArgumentException("Số lượng nhận không được vượt quá số lượng đặt");
+        // Nếu có PENDING receipt từ auto-create, cập nhật thay vì tạo mới
+        Long wbId = request.getWaybillId() != null ? request.getWaybillId() : (waybill != null ? waybill.getId() : null);
+        WarehouseReceipt receipt = null;
+        if (wbId != null) {
+            List<WarehouseReceipt> existingForWb = warehouseReceiptRepository.findAllByWaybillId(wbId);
+            receipt = existingForWb.stream()
+                    .filter(r -> "PENDING".equals(r.getStatus()))
+                    .findFirst()
+                    .orElse(null);
         }
-
-        WarehouseReceipt receipt = new WarehouseReceipt();
-        receipt.setPoId(po.getId());
+        if (receipt == null) {
+            receipt = new WarehouseReceipt();
+            receipt.setWaybillId(wbId);
+            receipt.setWaybillCode(request.getWaybillCode() != null ? request.getWaybillCode() : (waybill != null ? waybill.getWaybillCode() : null));
+            receipt.setPoId(po != null ? po.getId() : (waybill != null ? -waybill.getId() : requestedPoId));
+        }
         receipt.setReceivedQty(request.getReceivedQty());
         receipt.setReceivedDate(LocalDateTime.now());
         receipt.setInspector(request.getInspector());
         receipt.setCondition(request.getConditionDescription());
+        receipt.setExpectedQty(request.getExpectedQty());
+        receipt.setGoodsCondition(request.getGoodsCondition());
         receipt.setStatus("RECEIVED");
 
         WarehouseReceipt saved = warehouseReceiptRepository.save(receipt);
 
-        po.setStatus("COMPLETED");
-        purchaseOrderRepository.save(po);
+        if (po != null) {
+            int newTotal = totalReceived + request.getReceivedQty();
+            if (po.getOrderedQty() != null && newTotal >= po.getOrderedQty()) {
+                po.setStatus("COMPLETED");
+                po.setExpectedWarehouseArrivalDate(LocalDate.now());
+                purchaseOrderRepository.save(po);
+            }
 
-        productCostService.applyReceiptFromPurchaseOrder(po, request.getReceivedQty());
+            if (waybill != null && waybill.getPaymentRequestId() != null && po.getOrderedQty() != null && newTotal < po.getOrderedQty()) {
+                List<Waybill> dnttWaybills = waybillRepository.findByPaymentRequestId(waybill.getPaymentRequestId());
+                int extraReceived = 0;
+                for (Waybill dnttWb : dnttWaybills) {
+                    List<WarehouseReceipt> negReceipts = warehouseReceiptRepository.findAllByPoId(-dnttWb.getId());
+                    for (WarehouseReceipt nr : negReceipts) {
+                        if (!nr.getId().equals(saved.getId())) {
+                            extraReceived += nr.getReceivedQty();
+                        }
+                    }
+                }
+                newTotal += extraReceived;
+                if (newTotal >= po.getOrderedQty()) {
+                    po.setStatus("COMPLETED");
+                    po.setExpectedWarehouseArrivalDate(LocalDate.now());
+                    purchaseOrderRepository.save(po);
+                }
+            }
+
+            if (waybill != null && waybill.getPaymentRequestId() != null) {
+                PaymentRequest pr = paymentRequestRepository.findById(waybill.getPaymentRequestId()).orElse(null);
+                if (pr != null) {
+                    List<Long> allPoIds = new ArrayList<>();
+                    if (pr.getPoId() != null) allPoIds.add(pr.getPoId());
+                    List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository.findByPaymentRequestId(pr.getId());
+                    for (PaymentRequestPurchaseOrder link : poLinks) {
+                        if (!allPoIds.contains(link.getPoId())) allPoIds.add(link.getPoId());
+                    }
+
+                    for (Long pid : allPoIds) {
+                        if (pid.equals(po.getId())) continue;
+                        PurchaseOrder otherPo = purchaseOrderRepository.findById(pid).orElse(null);
+                        if (otherPo != null && otherPo.getOrderedQty() != null) {
+                            List<WarehouseReceipt> otherReceipts = warehouseReceiptRepository.findAllByPoId(otherPo.getId());
+                            int otherTotal = otherReceipts.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+                            if (otherTotal >= otherPo.getOrderedQty()) {
+                                otherPo.setStatus("COMPLETED");
+                                otherPo.setExpectedWarehouseArrivalDate(LocalDate.now());
+                                purchaseOrderRepository.save(otherPo);
+                            }
+                        }
+                    }
+                }
+            }
+
+            productCostService.applyReceiptFromPurchaseOrder(po, request.getReceivedQty());
+        }
 
         return convertToDTO(saved);
     }
@@ -83,13 +281,46 @@ public class WarehouseReceiptService {
         return warehouseReceiptRepository.findAll()
                 .stream()
                 .map(this::convertToDTO)
+                .peek(this::enrichReceiptDTO)
                 .collect(Collectors.toList());
     }
 
     public WarehouseReceiptDTO getWarehouseReceiptById(Long id) {
         WarehouseReceipt receipt = warehouseReceiptRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse receipt not found with id: " + id));
-        return convertToDTO(receipt);
+        WarehouseReceiptDTO dto = convertToDTO(receipt);
+        enrichReceiptDTO(dto);
+        return dto;
+    }
+
+    private void enrichReceiptDTO(WarehouseReceiptDTO dto) {
+        if (dto.getPoId() != null && dto.getPoId() > 0) {
+            purchaseOrderRepository.findById(dto.getPoId()).ifPresent(po -> {
+                dto.setPoCode("PO-" + po.getId());
+                dto.setPosCode(po.getPosCode());
+                List<PurchaseOrderItem> poItems = purchaseOrderItemRepository.findByPurchaseOrderId(po.getId());
+                dto.setProducts(poItems.stream().map(item -> {
+                    PurchaseOrderItemDTO pdto = new PurchaseOrderItemDTO();
+                    pdto.setId(item.getId());
+                    pdto.setPosCode(item.getPosCode());
+                    pdto.setProductName(item.getProductName());
+                    pdto.setProductShortCode(item.getProductShortCode());
+                    pdto.setOrderedQty(item.getOrderedQty());
+                    pdto.setUnitPrice(item.getUnitPrice());
+                    pdto.setCurrency(item.getCurrency());
+                    pdto.setSpec(item.getSpec());
+                    return pdto;
+                }).collect(Collectors.toList()));
+            });
+        }
+        if (dto.getWaybillId() != null) {
+            waybillRepository.findById(dto.getWaybillId()).ifPresent(wb -> {
+                if (wb.getPaymentRequestId() != null) {
+                    dto.setPaymentRequestCode("DNTT-" + wb.getPaymentRequestId());
+                    dto.setPaymentRequestId(wb.getPaymentRequestId());
+                }
+            });
+        }
     }
 
     public WarehouseReceiptDTO getWarehouseReceiptByPoId(Long poId) {
@@ -104,6 +335,10 @@ public class WarehouseReceiptService {
         request.setReceivedQty(dto.getReceivedQty());
         request.setInspector(dto.getInspector());
         request.setConditionDescription(dto.getCondition());
+        request.setWaybillId(dto.getWaybillId());
+        request.setWaybillCode(dto.getWaybillCode());
+        request.setExpectedQty(dto.getExpectedQty());
+        request.setGoodsCondition(dto.getGoodsCondition());
         return receiveGoods(request);
     }
 
@@ -115,6 +350,10 @@ public class WarehouseReceiptService {
         receipt.setInspector(dto.getInspector());
         receipt.setCondition(dto.getCondition());
         receipt.setAttachments(dto.getAttachments());
+        receipt.setWaybillId(dto.getWaybillId());
+        receipt.setWaybillCode(dto.getWaybillCode());
+        receipt.setExpectedQty(dto.getExpectedQty());
+        receipt.setGoodsCondition(dto.getGoodsCondition());
 
         WarehouseReceipt updated = warehouseReceiptRepository.save(receipt);
         return convertToDTO(updated);
@@ -131,29 +370,242 @@ public class WarehouseReceiptService {
                 .map(Product::getProductName)
                 .orElse(po.getPosCode());
 
-        return new PendingReceiveDTO(
-                po.getId(),
-                "PO-" + po.getId(),
-                po.getPosCode(),
-                productName,
-                po.getOrderedQty(),
-                po.getShippingMethod(),
-                po.getPaymentStatus()
-        );
+        List<WarehouseReceipt> existing = warehouseReceiptRepository.findAllByPoId(po.getId());
+        int receivedQty = existing.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+        int remainingQty = po.getOrderedQty() != null ? po.getOrderedQty() - receivedQty : 0;
+
+        PendingReceiveDTO dto = new PendingReceiveDTO();
+        dto.setPoId(po.getId());
+        dto.setPoCode("PO-" + po.getId());
+        dto.setPosCode(po.getPosCode());
+        dto.setProductName(productName);
+        dto.setOrderedQty(po.getOrderedQty());
+        dto.setReceivedQty(receivedQty);
+        dto.setRemainingQty(Math.max(remainingQty, 0));
+        dto.setShippingMethod(po.getShippingMethod());
+        dto.setPaymentStatus(po.getPaymentStatus());
+
+        List<WaybillBriefDTO> waybillDTOs = paymentRequestRepository.findByPoId(po.getId()).stream()
+                .flatMap(pr -> waybillRepository.findByPaymentRequestId(pr.getId()).stream()
+                        .map(wb -> {
+                            WaybillBriefDTO wbdto = new WaybillBriefDTO();
+                            wbdto.setWaybillId(wb.getId());
+                            wbdto.setWaybillCode(wb.getWaybillCode());
+                            wbdto.setCarrier(wb.getCarrier());
+                            wbdto.setExpectedQty(wb.getExpectedQty());
+                            wbdto.setActualQty(wb.getActualQty());
+                            wbdto.setStatus(wb.getStatus());
+                            wbdto.setPaymentRequestId(pr.getId());
+                            wbdto.setPaymentRequestCode("DNTT-" + pr.getId());
+                            return wbdto;
+                        }))
+                .collect(Collectors.toList());
+        dto.setWaybills(waybillDTOs);
+
+        List<PurchaseOrderItem> poItems = purchaseOrderItemRepository.findByPurchaseOrderId(po.getId());
+        List<PurchaseOrderItemDTO> productDTOs = poItems.stream().map(item -> {
+            PurchaseOrderItemDTO pdto = new PurchaseOrderItemDTO();
+            pdto.setId(item.getId());
+            pdto.setPosCode(item.getPosCode());
+            pdto.setProductName(item.getProductName());
+            pdto.setProductShortCode(item.getProductShortCode());
+            pdto.setOrderedQty(item.getOrderedQty());
+            pdto.setUnitPrice(item.getUnitPrice());
+            pdto.setCurrency(item.getCurrency());
+            pdto.setSpec(item.getSpec());
+            return pdto;
+        }).collect(Collectors.toList());
+        dto.setProducts(productDTOs);
+
+        return dto;
+    }
+
+    private PendingReceiveDTO toPendingReceiveFromWaybill(Waybill wb) {
+        PendingReceiveDTO dto = new PendingReceiveDTO();
+        dto.setPoId(-wb.getId());
+        dto.setPosCode("");
+        dto.setProductName("Vận đơn: " + wb.getWaybillCode());
+        dto.setOrderedQty(wb.getExpectedQty());
+        dto.setReceivedQty(0);
+        dto.setRemainingQty(wb.getExpectedQty() != null ? wb.getExpectedQty() : 0);
+        dto.setShippingMethod(wb.getCarrier());
+        dto.setPaymentStatus("DELIVERED");
+
+        String paymentRequestCode = null;
+        String poCode = wb.getWaybillCode();
+        final String prCode;
+        final Long prId = wb.getPaymentRequestId();
+
+        if (prId != null) {
+            paymentRequestCode = "DNTT-" + prId;
+            prCode = paymentRequestCode;
+            PaymentRequest pr = paymentRequestRepository.findById(prId).orElse(null);
+            if (pr != null) {
+                List<Long> poIds = new ArrayList<>();
+                if (pr.getPoId() != null) poIds.add(pr.getPoId());
+                List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository.findByPaymentRequestId(pr.getId());
+                for (PaymentRequestPurchaseOrder link : poLinks) {
+                    if (!poIds.contains(link.getPoId())) poIds.add(link.getPoId());
+                }
+
+                int totalOrdered = 0;
+                int totalReceived = 0;
+                StringBuilder poCodes = new StringBuilder();
+
+                for (int i = 0; i < poIds.size(); i++) {
+                    PurchaseOrder po = purchaseOrderRepository.findById(poIds.get(i)).orElse(null);
+                    if (po != null) {
+                        if (i > 0) poCodes.append(", ");
+                        poCodes.append("PO-").append(po.getId());
+
+                        if (i == 0) {
+                            dto.setPosCode(po.getPosCode());
+                        }
+
+                        if (po.getOrderedQty() != null) {
+                            totalOrdered += po.getOrderedQty();
+                        }
+                        List<WarehouseReceipt> poReceipts = warehouseReceiptRepository.findAllByPoId(po.getId());
+                        totalReceived += poReceipts.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+                    }
+                }
+
+                poCode = poCodes.length() > 0 ? poCodes.toString() : poCode;
+                dto.setReceivedQty(totalReceived);
+                if (totalOrdered > 0) {
+                    dto.setOrderedQty(totalOrdered);
+                    dto.setRemainingQty(Math.max(0, totalOrdered - totalReceived));
+                }
+            }
+        } else {
+            prCode = null;
+        }
+        dto.setPoCode(poCode);
+
+        WaybillBriefDTO wbdto = new WaybillBriefDTO();
+        wbdto.setWaybillId(wb.getId());
+        wbdto.setWaybillCode(wb.getWaybillCode());
+        wbdto.setCarrier(wb.getCarrier());
+        wbdto.setExpectedQty(wb.getExpectedQty());
+        wbdto.setActualQty(wb.getActualQty());
+        wbdto.setStatus(wb.getStatus());
+        wbdto.setPaymentRequestId(prId);
+        wbdto.setPaymentRequestCode(prCode);
+
+        if (prId != null) {
+            List<WaybillBriefDTO> allWb = waybillRepository.findByPaymentRequestId(prId).stream()
+                    .map(other -> {
+                        WaybillBriefDTO o = new WaybillBriefDTO();
+                        o.setWaybillId(other.getId());
+                        o.setWaybillCode(other.getWaybillCode());
+                        o.setCarrier(other.getCarrier());
+                        o.setExpectedQty(other.getExpectedQty());
+                        o.setActualQty(other.getActualQty());
+                        o.setStatus(other.getStatus());
+                        o.setPaymentRequestId(prId);
+                        o.setPaymentRequestCode(prCode);
+                        return o;
+                    })
+                    .collect(Collectors.toList());
+            dto.setWaybills(allWb);
+        } else {
+            dto.setWaybills(List.of(wbdto));
+        }
+
+        dto.setProducts(List.of());
+        return dto;
     }
 
     private WarehouseReceiptDTO convertToDTO(WarehouseReceipt receipt) {
-        return new WarehouseReceiptDTO(
-                receipt.getId(),
-                receipt.getPoId(),
-                receipt.getReceivedQty(),
-                receipt.getReceivedDate(),
-                receipt.getInspector(),
-                receipt.getCondition(),
-                receipt.getAttachments(),
-                receipt.getStatus(),
-                receipt.getCreatedAt(),
-                receipt.getUpdatedAt()
-        );
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(receipt.getId());
+        dto.setPoId(receipt.getPoId());
+        dto.setReceivedQty(receipt.getReceivedQty());
+        dto.setReceivedDate(receipt.getReceivedDate());
+        dto.setInspector(receipt.getInspector());
+        dto.setCondition(receipt.getCondition());
+        dto.setAttachments(receipt.getAttachments());
+        dto.setStatus(receipt.getStatus());
+        dto.setCreatedAt(receipt.getCreatedAt());
+        dto.setUpdatedAt(receipt.getUpdatedAt());
+        dto.setWaybillId(receipt.getWaybillId());
+        dto.setWaybillCode(receipt.getWaybillCode());
+        dto.setExpectedQty(receipt.getExpectedQty());
+        dto.setGoodsCondition(receipt.getGoodsCondition());
+        return dto;
+    }
+
+    @Transactional
+    public WarehouseReceiptDTO createFromWaybill(com.sgiprocurement.model.Waybill waybill) {
+        List<Long> poIds = new ArrayList<>();
+        PurchaseOrder primaryPo = null;
+
+        if (waybill.getPaymentRequestId() != null) {
+            PaymentRequest paymentRequest = paymentRequestRepository.findById(waybill.getPaymentRequestId()).orElse(null);
+            if (paymentRequest != null) {
+                if (paymentRequest.getPoId() != null) {
+                    poIds.add(paymentRequest.getPoId());
+                    primaryPo = purchaseOrderRepository.findById(paymentRequest.getPoId()).orElse(null);
+                }
+                List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository.findByPaymentRequestId(paymentRequest.getId());
+                for (PaymentRequestPurchaseOrder link : poLinks) {
+                    if (!poIds.contains(link.getPoId())) {
+                        poIds.add(link.getPoId());
+                        if (primaryPo == null) {
+                            primaryPo = purchaseOrderRepository.findById(link.getPoId()).orElse(null);
+                        }
+                    }
+                }
+            }
+        }
+
+        Integer receivedQty = waybill.getActualQty() != null ? waybill.getActualQty() : waybill.getExpectedQty();
+        String condition = "Giao hang tu xac nhan van don";
+
+        if (!poIds.isEmpty()) {
+            Long primaryPoId = poIds.get(0);
+            WarehouseReceipt receipt = new WarehouseReceipt();
+            receipt.setWaybillId(waybill.getId());
+            receipt.setWaybillCode(waybill.getWaybillCode());
+            receipt.setPoId(primaryPoId);
+            receipt.setReceivedQty(receivedQty);
+            receipt.setReceivedDate(java.time.LocalDateTime.now());
+            receipt.setInspector("System");
+            receipt.setCondition(condition);
+            receipt.setExpectedQty(waybill.getExpectedQty());
+            receipt.setGoodsCondition("GOOD");
+            receipt.setStatus("PENDING");
+
+            WarehouseReceipt saved = warehouseReceiptRepository.save(receipt);
+
+            if (primaryPo != null) {
+                List<WarehouseReceipt> existing = warehouseReceiptRepository.findAllByPoId(primaryPoId);
+                int totalReceived = existing.stream().mapToInt(WarehouseReceipt::getReceivedQty).sum();
+                if (totalReceived >= (primaryPo.getOrderedQty() != null ? primaryPo.getOrderedQty() : 0)) {
+                    primaryPo.setStatus("COMPLETED");
+                    primaryPo.setExpectedWarehouseArrivalDate(java.time.LocalDate.now());
+                    purchaseOrderRepository.save(primaryPo);
+                }
+                productCostService.applyReceiptFromPurchaseOrder(primaryPo, receipt.getReceivedQty());
+            }
+
+            return convertToDTO(saved);
+        }
+
+        // Fallback: tạo phiếu nhập kho gắn trực tiếp với waybill (không qua PO)
+        WarehouseReceipt receipt = new WarehouseReceipt();
+        receipt.setWaybillId(waybill.getId());
+        receipt.setWaybillCode(waybill.getWaybillCode());
+        receipt.setPoId(-waybill.getId());
+        receipt.setReceivedQty(receivedQty != null ? receivedQty : 0);
+        receipt.setReceivedDate(java.time.LocalDateTime.now());
+        receipt.setInspector("System");
+        receipt.setCondition(condition);
+        receipt.setExpectedQty(waybill.getExpectedQty());
+        receipt.setGoodsCondition("GOOD");
+        receipt.setStatus("PENDING");
+
+        WarehouseReceipt saved = warehouseReceiptRepository.save(receipt);
+        return convertToDTO(saved);
     }
 }

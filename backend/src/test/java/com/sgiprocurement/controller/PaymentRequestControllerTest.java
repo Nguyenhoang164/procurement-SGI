@@ -123,7 +123,7 @@ class PaymentRequestControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void markAsPaid_shouldPay() throws Exception {
-        when(paymentRequestService.markAsPaid(1L)).thenReturn(createDTO());
+        when(paymentRequestService.markAsPaid(1L, null)).thenReturn(createDTO());
 
         mockMvc.perform(post("/v1/payment-requests/1/pay"))
                 .andExpect(status().isOk());

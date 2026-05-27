@@ -125,25 +125,6 @@ class PurchaseOrderServiceTest {
     }
 
     @Test
-    void approveL2_shouldApprove_whenDraft() {
-        po.setStatus("DRAFT");
-        when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(po));
-        when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        PurchaseOrderDTO result = purchaseOrderService.approveL2(1L);
-
-        assertEquals("APPROVED", result.getStatus());
-    }
-
-    @Test
-    void approveL2_shouldThrow_whenInvalidStatus() {
-        po.setStatus("COMPLETED");
-        when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(po));
-
-        assertThrows(IllegalStateException.class, () -> purchaseOrderService.approveL2(1L));
-    }
-
-    @Test
     void reject_shouldSetStatusToRejected() {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(po));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));

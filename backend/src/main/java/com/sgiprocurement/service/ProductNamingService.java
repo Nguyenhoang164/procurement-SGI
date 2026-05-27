@@ -38,8 +38,10 @@ public class ProductNamingService {
     private String generateAbbreviation(String name) {
         if (name == null || name.trim().isEmpty()) return "PROD";
         
-        // Lấy các chữ cái đầu của từng từ (ví dụ: Durex Pro -> DP)
-        String[] words = name.trim().split("\\s+");
+        // Tách theo khoảng trắng, dấu gạch ngang, gạch dưới, dấu gạch chéo
+        // Ví dụ: C-JESUS CAR HANGING DECOR -> C JESUS CAR HANGING DECOR -> C J C H D -> CJCHD
+        String normalized = name.trim().replaceAll("[\\s\\-/_&]+", " ").trim();
+        String[] words = normalized.split("\\s+");
         StringBuilder sb = new StringBuilder();
         for (String word : words) {
             if (!word.isEmpty()) {

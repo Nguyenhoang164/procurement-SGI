@@ -55,6 +55,13 @@ public class PurchaseOrderController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{id}/submit")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PurchaseOrderDTO> submitForApproval(@PathVariable Long id) {
+        PurchaseOrderDTO submitted = purchaseOrderService.submitForApproval(id);
+        return ResponseEntity.ok(submitted);
+    }
+
     @PostMapping("/{id}/approve-l1")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> approveL1(@PathVariable Long id) {
@@ -62,11 +69,11 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(approved);
     }
 
-    @PostMapping("/{id}/approve-l2")
+    @PostMapping("/{id}/send-to-accounting")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PurchaseOrderDTO> approveL2(@PathVariable Long id) {
-        PurchaseOrderDTO approved = purchaseOrderService.approveL2(id);
-        return ResponseEntity.ok(approved);
+    public ResponseEntity<PurchaseOrderDTO> sendToAccounting(@PathVariable Long id) {
+        PurchaseOrderDTO sent = purchaseOrderService.sendToAccounting(id);
+        return ResponseEntity.ok(sent);
     }
 
     @PostMapping("/{id}/reject")
@@ -81,6 +88,12 @@ public class PurchaseOrderController {
     public ResponseEntity<PurchaseOrderDTO> updateStatus(@PathVariable Long id, @RequestParam String status) {
         PurchaseOrderDTO updated = purchaseOrderService.updateStatus(id, status);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    public ResponseEntity<List<PurchaseOrderDTO>> search(@RequestParam String keyword) {
+        return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword));
     }
 
 }

@@ -3,9 +3,8 @@ package com.sgiprocurement.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import jakarta.validation.constraints.NotBlank;
-
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +15,6 @@ public class ProductDTO {
 
     private String posCode;
 
-    @NotBlank(message = "Product name is required")
     private String productName;
 
     private Long categoryId;
@@ -28,6 +26,10 @@ public class ProductDTO {
     private String unit;
 
     private String status;
+
+    private String sourceLink;
+
+    private List<ProductImageDTO> images;
 
     private LocalDateTime createdAt;
 

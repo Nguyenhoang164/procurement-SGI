@@ -1,6 +1,8 @@
 package com.sgiprocurement.controller;
 
+import com.sgiprocurement.dto.ProductComboDTO;
 import com.sgiprocurement.dto.ProductDTO;
+import com.sgiprocurement.dto.ProductImportResult;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +74,14 @@ public class ProductController {
         }
     }
 
+    // IMPORT products from JSON array
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ProductImportResult> importProducts(@RequestBody List<ProductDTO> products) {
+        ProductImportResult result = productService.importProducts(products);
+        return ResponseEntity.ok(result);
+    }
+
     // UPDATE product
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -86,6 +96,43 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // BATCH DELETE products
+    @PostMapping("/batch-delete")
+    public ResponseEntity<Void> batchDelete(@RequestBody List<Long> ids) {
+        productService.batchDelete(ids);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/combos")
+    public ResponseEntity<List<ProductComboDTO>> getCombos(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getCombos(id));
+    }
+
+    @PostMapping("/{id}/combos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ProductComboDTO> createCombo(
+            @PathVariable Long id,
+            @Valid @RequestBody ProductComboDTO dto) {
+        ProductComboDTO created = productService.createCombo(id, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PutMapping("/{id}/combos/{comboId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ProductComboDTO> updateCombo(
+            @PathVariable Long id,
+            @PathVariable Long comboId,
+            @Valid @RequestBody ProductComboDTO dto) {
+        return ResponseEntity.ok(productService.updateCombo(id, comboId, dto));
+    }
+
+    @DeleteMapping("/{id}/combos/{comboId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<Void> deleteCombo(@PathVariable Long id, @PathVariable Long comboId) {
+        productService.deleteCombo(id, comboId);
         return ResponseEntity.noContent().build();
     }
 

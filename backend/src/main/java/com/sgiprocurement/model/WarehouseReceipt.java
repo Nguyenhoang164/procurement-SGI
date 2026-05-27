@@ -32,6 +32,18 @@ public class WarehouseReceipt {
     @Column(name = "condition_description", length = 500)
     private String condition;
 
+    @Column(name = "waybill_id")
+    private Long waybillId;
+
+    @Column(name = "waybill_code", length = 100)
+    private String waybillCode;
+
+    @Column(name = "expected_qty")
+    private Integer expectedQty;
+
+    @Column(name = "goods_condition", length = 50)
+    private String goodsCondition;
+
     @Column(length = 500)
     private String attachments;
 

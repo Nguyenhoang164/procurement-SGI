@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "weekly_plans")
@@ -21,14 +23,13 @@ public class WeeklyPlan {
     @Column(nullable = false)
     private LocalDateTime proposedDate;
 
-    @Column(nullable = false, length = 50)
-    private String posCode;  // Product Code
+    @Column(length = 50)
+    private String posCode;
 
-    @Column(nullable = false)
     private Integer suggestedQty;
 
     @Column(length = 500)
-    private String spec;  // Specification
+    private String spec;
 
     @Column(length = 50)
     private String country;
@@ -43,7 +44,7 @@ public class WeeklyPlan {
     private String note;
 
     @Column(nullable = false, length = 50)
-    private String status = "DRAFT";  // DRAFT, PENDING, APPROVED, REJECTED
+    private String status = "DRAFT";
 
     @Column(name = "created_by")
     private String createdBy;
@@ -53,6 +54,9 @@ public class WeeklyPlan {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<WeeklyPlanItem> items = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

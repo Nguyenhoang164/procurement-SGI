@@ -18,4 +18,12 @@ public class WarehouseReceiveRequest {
 
     private String conditionDescription;
 
+    private Long waybillId;
+
+    private String waybillCode;
+
+    private Integer expectedQty;
+
+    private String goodsCondition;
+
 }

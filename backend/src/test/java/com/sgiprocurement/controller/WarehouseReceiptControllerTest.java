@@ -34,7 +34,9 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser
     void getPendingReceives_shouldReturnList() throws Exception {
-        PendingReceiveDTO dto = new PendingReceiveDTO(1L, "PO-1", "ABC-VN-0001", "Test Product", 100, "SEA", "PAID");
+        PendingReceiveDTO dto = new PendingReceiveDTO();
+        dto.setPoId(1L);
+        dto.setPoCode("PO-1");
         when(warehouseReceiptService.getPendingReceives()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/v1/warehouse-receipts/pending"))
@@ -45,7 +47,9 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void receiveGoods_shouldReturn201() throws Exception {
-        WarehouseReceiptDTO dto = new WarehouseReceiptDTO(1L, 1L, 100, null, "Inspector", "Good", null, "RECEIVED", null, null);
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(1L);
+        dto.setPoId(1L);
         when(warehouseReceiptService.receiveGoods(any())).thenReturn(dto);
 
         mockMvc.perform(post("/v1/warehouse-receipts/receive")
@@ -57,7 +61,9 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser
     void getAllWarehouseReceipts_shouldReturnList() throws Exception {
-        WarehouseReceiptDTO dto = new WarehouseReceiptDTO(1L, 1L, 100, null, "Inspector", "Good", null, "RECEIVED", null, null);
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(1L);
+        dto.setPoId(1L);
         when(warehouseReceiptService.getAllWarehouseReceipts()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/v1/warehouse-receipts"))
@@ -68,7 +74,9 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser
     void getWarehouseReceiptById_shouldReturnReceipt() throws Exception {
-        WarehouseReceiptDTO dto = new WarehouseReceiptDTO(1L, 1L, 100, null, "Inspector", "Good", null, "RECEIVED", null, null);
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(1L);
+        dto.setPoId(1L);
         when(warehouseReceiptService.getWarehouseReceiptById(1L)).thenReturn(dto);
 
         mockMvc.perform(get("/v1/warehouse-receipts/1"))
@@ -79,7 +87,9 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void createWarehouseReceipt_shouldReturn201() throws Exception {
-        WarehouseReceiptDTO dto = new WarehouseReceiptDTO(1L, 1L, 100, null, "Inspector", "Good", null, "RECEIVED", null, null);
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(1L);
+        dto.setPoId(1L);
         when(warehouseReceiptService.createWarehouseReceipt(any(WarehouseReceiptDTO.class))).thenReturn(dto);
 
         mockMvc.perform(post("/v1/warehouse-receipts")
@@ -91,7 +101,10 @@ class WarehouseReceiptControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void updateWarehouseReceipt_shouldReturnUpdated() throws Exception {
-        WarehouseReceiptDTO dto = new WarehouseReceiptDTO(1L, 1L, 80, null, "Inspector B", "Fair", null, "RECEIVED", null, null);
+        WarehouseReceiptDTO dto = new WarehouseReceiptDTO();
+        dto.setId(1L);
+        dto.setPoId(1L);
+        dto.setReceivedQty(80);
         when(warehouseReceiptService.updateWarehouseReceipt(eq(1L), any(WarehouseReceiptDTO.class))).thenReturn(dto);
 
         mockMvc.perform(put("/v1/warehouse-receipts/1")
