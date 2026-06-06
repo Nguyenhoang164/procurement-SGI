@@ -47,25 +47,11 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
+    ports:
+      - "3000:80"
     environment:
       REACT_APP_API_URL: /api/v1
-
-  caddy:
-    image: caddy:2.8-alpine
-    container_name: sgi-caddy
-    restart: unless-stopped
-    depends_on:
-      - frontend
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
 
 volumes:
   mysql_data:
   uploads_data:
-  caddy_data:
-  caddy_config:
