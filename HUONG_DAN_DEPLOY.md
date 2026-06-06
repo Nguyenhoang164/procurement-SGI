@@ -1,24 +1,41 @@
 # HƯỚNG DẪN DEPLOY procurement.sgiholding.com.vn
 
-**Yêu cầu:** Không ảnh hưởng đến web chính sgiholding.com.vn (Apache)
-
-**Cách làm:**
-- Docker chạy riêng: MySQL + Backend + Frontend
-- Frontend expose ra **port 3000** (KHÔNG dùng port 80/443)
-- Thêm VirtualHost trong Apache để proxy subdomain → localhost:3000
-- Dùng certbot để cấp SSL cho subdomain
+## 📌 Yêu cầu
+- **Tuyệt đối không ảnh hưởng** đến web chính `sgiholding.com.vn`
+- Chạy hoàn toàn riêng biệt, có rollback nếu lỗi
 
 ---
 
-## PHẦN 1: TẠO DATABASE
+## 🏗 Kiến trúc
 
-Không dùng phpMyAdmin của web chính. MySQL sẽ chạy trong Docker, database riêng hoàn toàn.
+```
+Subdomain: procurement.sgiholding.com.vn
+                    │
+            Apache (VirtualHost mới)
+                    │
+        ┌───────────┴───────────┐
+        │    localhost:3000     │
+        │  (Docker Frontend)    │
+        │         │             │
+        │  localhost:8080       │
+        │  (Docker Backend)     │
+        │         │             │
+        │  localhost:3306       │
+        │  (Docker MySQL)       │
+        └───────────────────────┘
+```
+
+- **Docker** chạy 3 container RIÊNG BIỆT (không đụng đến MariaDB/web chính)
+- **Apache** chỉ thêm 1 VirtualHost MỚI (không sửa config web chính)
+- **Backup + Rollback** đầy đủ
 
 ---
 
-## PHẦN 2: SSH VÀO VPS
+## 🚀 DEPLOY (Tự động - 1 câu lệnh)
 
-Mở Terminal (Mac/Linux) hoặc PowerShell (Windows), gõ:
+### Bước 1: SSH vào VPS
+
+Mở Terminal/PowerShell, gõ:
 
 ```bash
 ssh root@103.90.225.141
@@ -26,197 +43,87 @@ ssh root@103.90.225.141
 
 Mật khẩu: **YOnOT1YRqfEIp6ZUuU1T**
 
-(Gõ `yes` nếu hỏi fingerprint, nhập mật khẩu)
-
----
-
-## PHẦN 3: CÀI DOCKER
-
-```bash
-curl -fsSL https://get.docker.com | sh
-apt install docker-compose-plugin -y
-```
-
----
-
-## PHẦN 4: UPLOAD CODE LÊN VPS
-
-**Bước 1 - Trên máy local** (mở PowerShell ở thư mục `C:\Users\kamit\Desktop\procurement-SGI`):
-
-```powershell
-# Xóa thư mục build cũ
-Remove-Item -Recurse -Force backend\build, frontend\build, backend\target, frontend\node_modules -ErrorAction SilentlyContinue
-
-# Nén project
-Compress-Archive -Path "backend\*", "frontend\*", "docker-compose.yml" -DestinationPath "deploy.zip" -Force
-
-# Copy lên VPS
-scp deploy.zip root@103.90.225.141:/opt/
-```
-
-(Nhập mật khẩu VPS: **YOnOT1YRqfEIp6ZUuU1T**)
-
-**Bước 2 - Trên VPS** (cửa sổ SSH):
+### Bước 2: Chạy script deploy
 
 ```bash
 cd /opt
-apt install unzip -y
-mkdir -p procurement
-unzip deploy.zip -d procurement/
-rm deploy.zip
-```
-
----
-
-## PHẦN 5: BUILD & CHẠY DOCKER
-
-```bash
+git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
 cd /opt/procurement
-docker compose up -d --build
+bash deploy.sh
 ```
 
-Lần đầu mất **5-15 phút** (download image, build Java, build React). Đợi đến khi thấy dấu nhắc.
+Script sẽ tự động:
+1. ✅ Backup Apache config vào `/root/apache-backup-*`
+2. ✅ Cài Docker (nếu chưa có)
+3. ✅ Clone code mới nhất
+4. ✅ Build & chạy 3 containers (MySQL + Backend + Frontend)
+5. ✅ Thêm VirtualHost cho subdomain
+6. ✅ Cấp SSL Let's Encrypt
 
-**Kiểm tra:**
+### Bước 3: Trỏ DNS
 
-```bash
-docker compose ps
-```
-
-Phải thấy 3 container: `sgi-mysql`, `sgi-backend`, `sgi-frontend` đều **Up**.
-
-```bash
-docker compose logs backend --tail 20
-```
-
-Cuối log phải có dòng `Started SgiProcurementBackendApplication`.
-
-Lúc này frontend đã chạy ở `http://localhost:3000` trên VPS.
-
----
-
-## PHẦN 6: THÊM VIRTUALHOST VÀO APACHE CHO SUBDOMAIN
-
-### 6.1. Bật mod proxy của Apache
-
-```bash
-a2enmod proxy proxy_http proxy_balancer lbmethod_byrequests headers ssl rewrite
-systemctl restart apache2
-```
-
-### 6.2. Tạo file cấu hình cho subdomain
-
-```bash
-nano /etc/apache2/sites-available/procurement.sgiholding.com.vn.conf
-```
-
-Dán nội dung sau:
-
-```apache
-<VirtualHost *:80>
-    ServerName procurement.sgiholding.com.vn
-
-    ProxyPreserveHost On
-    ProxyPass / http://localhost:3000/
-    ProxyPassReverse / http://localhost:3000/
-
-    ErrorLog ${APACHE_LOG_DIR}/procurement-error.log
-    CustomLog ${APACHE_LOG_DIR}/procurement-access.log combined
-</VirtualHost>
-```
-
-Nhấn **Ctrl+X** → **Y** → **Enter**.
-
-### 6.3. Kích hoạt site
-
-```bash
-a2ensite procurement.sgiholding.com.vn.conf
-systemctl reload apache2
-```
-
-### 6.4. Cấp SSL cho subdomain
-
-```bash
-# Cài certbot
-apt install certbot python3-certbot-apache -y
-
-# Cấp chứng chỉ
-certbot --apache -d procurement.sgiholding.com.vn
-```
-
-(Nhập email admin@sgiholding.com.vn, chọn **A** (Agree), **N** (No sharing), **2** (Redirect) khi được hỏi)
-
-Certbot sẽ tự động sửa file cấu hình Apache để thêm SSL.
-
----
-
-## PHẦN 7: TRỎ DNS
-
-Vào trang quản lý DNS của **sgiholding.com.vn**, thêm bản ghi:
+Vào trang quản lý DNS, thêm bản ghi:
 
 | Loại | Tên | Giá trị | TTL |
 |------|-----|---------|-----|
 | A | `procurement` | **103.90.225.141** | 300 |
 
-Sau 5-10 phút, mở trình duyệt vào `https://procurement.sgiholding.com.vn`
+Sau 5-10 phút, vào `https://procurement.sgiholding.com.vn`
 
 ---
 
-## XỬ LÝ LỖI THƯỜNG GẶP
-
-### Apache không khởi động được sau khi bật mod proxy
+## 🔄 ROLLBACK (Nếu lỗi)
 
 ```bash
-journalctl -u apache2 --no-pager -n 20
+cd /opt/procurement
+bash rollback.sh /root/apache-backup-20240101_120000
 ```
 
-### Cổng 3000 bị chặn
+(Thay đường dẫn bằng thư mục backup thực tế - xem khi chạy deploy)
 
-Kiểm tra Docker frontend có chạy không:
-
+Hoặc làm thủ công:
 ```bash
-curl http://localhost:3000
-```
+# Ngừng Docker
+docker compose down
 
-Nếu không thấy gì:
-
-```bash
-docker compose logs frontend
-```
-
-### Docker build lỗi
-
-```bash
-docker compose build --no-cache backend
-docker compose build --no-cache frontend
-docker compose up -d
+# Xóa VirtualHost
+a2dissite procurement.sgiholding.com.vn.conf
+rm /etc/apache2/sites-available/procurement.sgiholding.com.vn.conf
+systemctl reload apache2
 ```
 
 ---
 
-## CÁC LỆNH CẦN BIẾT
+## 📋 CÁC LỆNH KIỂM TRA
 
 ```bash
 # Docker
-docker compose ps                          # Xem trạng thái
-docker compose logs -f backend            # Xem log backend
-docker compose logs -f frontend           # Xem log frontend
+docker compose ps                          # Trạng thái container
+docker compose logs -f backend            # Log backend
+docker compose logs -f frontend           # Log frontend
 docker compose restart                     # Khởi động lại
-docker compose down                        # Dừng hẳn
-
-# Build lại backend sau khi sửa code
-docker compose build backend
-docker compose up -d backend
-
-# Build lại frontend sau khi sửa code
-docker compose build frontend
-docker compose up -d frontend
 
 # Apache
-systemctl reload apache2                   # Reload cấu hình
-systemctl restart apache2                  # Khởi động lại
+curl -I http://localhost:3000             # Test frontend
+systemctl status apache2                  # Trạng thái Apache
+apache2ctl -S                             # Danh sách VirtualHost
 
-# Log
+# Log subdomain
 tail -f /var/log/apache2/procurement-error.log
 tail -f /var/log/apache2/procurement-access.log
 ```
+
+---
+
+## ☁️ PHƯƠNG ÁN THAY THẾ: Cloudflare Tunnel
+
+Nếu bạn KHÔNG muốn thêm VirtualHost vào Apache (cách ly 100%), dùng **Cloudflare Tunnel**:
+
+1. Đăng ký Cloudflare, thêm domain `sgiholding.com.vn` vào Cloudflare
+2. Trỏ NS về Cloudflare
+3. Cài cloudflared trên VPS (`apt install cloudflared`)
+4. Chạy: `cloudflared tunnel create procurement`
+5. Cấu hình tunnel trỏ đến `localhost:3000`
+6. DNS: `procurement.sgiholding.com.vn` → Cloudflare proxy
+
+**Ưu điểm:** Không cần mở port, không đụng Apache, SSL free, bảo vệ DDoS.
