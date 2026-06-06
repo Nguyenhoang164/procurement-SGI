@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -16,5 +18,12 @@ public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, 
 
     @Query("SELECT pr FROM PaymentRequest pr WHERE CAST(pr.id AS string) LIKE %:keyword% OR pr.note LIKE %:keyword%")
     List<PaymentRequest> searchByKeyword(@Param("keyword") String keyword);
+
+    long countByStatus(String status);
+
+    long countByCreatedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COALESCE(SUM(pr.totalAmountVnd), 0) FROM PaymentRequest pr")
+    BigDecimal sumTotalAmountVnd();
 
 }

@@ -396,3 +396,7 @@ export const tradeRouteAPI = {
 export const globalSearchAPI = {
   search: async (keyword) => requestJson(`${API_BASE_URL}/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() })
 };
+
+export const dashboardAPI = {
+  getKpi: async () => requestJson(`${API_BASE_URL}/dashboard`, { headers: getHeaders() })
+};

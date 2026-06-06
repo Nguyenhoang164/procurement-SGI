@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Query;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -17,5 +18,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Optional<Product> findByPosCode(String posCode);
 
     long countByPosCodeStartingWith(String prefix);
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE p.status = 'ACTIVE'")
+    long countActiveProducts();
 
 }
