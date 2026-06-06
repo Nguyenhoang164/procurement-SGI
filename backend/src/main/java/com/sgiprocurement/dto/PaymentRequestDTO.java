@@ -54,6 +54,14 @@ public class PaymentRequestDTO {
 
     private String rejectedLevel;
 
+    private Long referencePaymentRequestId;
+
+    private Long bankAccountId;
+
+    private String accountingCheckedBy;
+
+    private LocalDateTime accountingCheckedAt;
+
     private List<Long> poIds;
 
     private List<Long> waybillIds;
@@ -61,5 +69,9 @@ public class PaymentRequestDTO {
     private List<CustomFeeDTO> customFees;
 
     private List<WarehouseReceiptDTO> warehouseReceipts;
+
+    private String sourceDnttIds;
+
+    private String shipmentItems;
 
 }

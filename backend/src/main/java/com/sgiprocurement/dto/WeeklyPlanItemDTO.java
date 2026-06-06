@@ -16,11 +16,13 @@ public class WeeklyPlanItemDTO {
     private String productType;
     private Integer suggestedQty;
     private String country;
+    private String tradeRoute;
     private String shippingMethod;
     private BigDecimal referencePrice;
     private String currency;
     private String spec;
     private String sourceLink;
     private String priorityLevel;
+    private String landing;
 
 }

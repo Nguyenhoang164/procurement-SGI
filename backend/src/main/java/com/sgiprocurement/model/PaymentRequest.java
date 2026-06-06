@@ -78,6 +78,24 @@ public class PaymentRequest {
     @Column(name = "rejected_level", length = 10)
     private String rejectedLevel;
 
+    @Column(name = "reference_payment_request_id")
+    private Long referencePaymentRequestId;
+
+    @Column(name = "bank_account_id")
+    private Long bankAccountId;
+
+    @Column(name = "accounting_checked_by", length = 100)
+    private String accountingCheckedBy;
+
+    @Column(name = "accounting_checked_at")
+    private LocalDateTime accountingCheckedAt;
+
+    @Column(name = "source_dntt_ids", columnDefinition = "TEXT")
+    private String sourceDnttIds;
+
+    @Column(name = "shipment_items", columnDefinition = "TEXT")
+    private String shipmentItems;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

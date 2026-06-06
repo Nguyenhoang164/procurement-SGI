@@ -29,6 +29,7 @@ build/
 # Spring Boot
 *.log
 application-*.properties
+!application-prod.properties
 
 # Database
 *.db

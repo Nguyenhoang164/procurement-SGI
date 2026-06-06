@@ -10,6 +10,8 @@ public interface PaymentRequestWaybillRepository extends JpaRepository<PaymentRe
 
     List<PaymentRequestWaybill> findByPaymentRequestId(Long paymentRequestId);
 
+    List<PaymentRequestWaybill> findByWaybillId(Long waybillId);
+
     void deleteByPaymentRequestId(Long paymentRequestId);
 
 }

@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+backend/build/
+backend/target/
+frontend/build/
+frontend/tsconfig.tsbuildinfo
+
+# Runtime data
+backend/uploads/
+
+# Docker
+docker-compose.override.yml
+
+# Auto-generated SSH keys
+backend/.codex-ssh/

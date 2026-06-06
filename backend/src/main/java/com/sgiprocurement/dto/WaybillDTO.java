@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -23,5 +24,6 @@ public class WaybillDTO {
     private LocalDateTime updatedAt;
     private Long paymentRequestId;
     private String products;
+    private List<Long> paymentRequestIds;
 
 }

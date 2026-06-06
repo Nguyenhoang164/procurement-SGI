@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "purchase_order_items")
@@ -30,6 +31,9 @@ public class PurchaseOrderItem {
     @Column(name = "product_short_code", length = 100)
     private String productShortCode;
 
+    @Column(name = "product_type", length = 20)
+    private String productType;
+
     @Column(name = "ordered_qty", nullable = false)
     private Integer orderedQty;
 
@@ -54,4 +58,18 @@ public class PurchaseOrderItem {
     @Column(name = "source_link", length = 500)
     private String sourceLink;
 
+    @Transient
+    private BigDecimal weightedAvgCostVnd;
+
+    @Transient
+    private BigDecimal latestUnitCostVnd;
+
+    @Transient
+    private String latestOrderCode;
+
+    @Transient
+    private LocalDateTime latestCostDate;
+
 }
+
+

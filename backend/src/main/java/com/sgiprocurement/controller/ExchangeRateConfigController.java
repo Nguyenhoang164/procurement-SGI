@@ -4,6 +4,7 @@ import com.sgiprocurement.dto.ExchangeRateConfigDTO;
 import com.sgiprocurement.service.ExchangeRateConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
@@ -18,11 +19,13 @@ public class ExchangeRateConfigController {
     private ExchangeRateConfigService service;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
     public ResponseEntity<List<ExchangeRateConfigDTO>> getAll() {
         return ResponseEntity.ok(service.getAll());
     }
 
     @GetMapping("/{currency}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
     public ResponseEntity<ExchangeRateConfigDTO> getByCurrency(@PathVariable String currency) {
         ExchangeRateConfigDTO dto = service.getByCurrency(currency);
         if (dto == null) return ResponseEntity.notFound().build();
@@ -30,6 +33,7 @@ public class ExchangeRateConfigController {
     }
 
     @PutMapping("/{currency}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
     public ResponseEntity<ExchangeRateConfigDTO> save(
             @PathVariable String currency,
             @Valid @RequestBody ExchangeRateConfigDTO dto) {

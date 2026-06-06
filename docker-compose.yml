@@ -1,0 +1,57 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: sgi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Sgi@Root2024
+      MYSQL_DATABASE: sgi_procurement
+      MYSQL_USER: sgi_user
+      MYSQL_PASSWORD: Sgi@User2024
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sgi-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: sgi_procurement
+      DB_USERNAME: sgi_user
+      DB_PASSWORD: Sgi@User2024
+      JWT_SECRET: sgi-procurement-secret-key-2024-spring-boot-jwt-authentication-for-hs512-signing-key
+      JWT_EXPIRATION: 86400000
+      CORS_ALLOWED_ORIGINS: https://procurement.sgiholding.com.vn
+      APP_UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sgi-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_API_URL: /api/v1
+
+volumes:
+  mysql_data:
+  uploads_data:

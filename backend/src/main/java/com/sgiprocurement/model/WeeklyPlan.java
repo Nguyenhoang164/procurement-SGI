@@ -34,6 +34,9 @@ public class WeeklyPlan {
     @Column(length = 50)
     private String country;
 
+    @Column(name = "trade_route", length = 100)
+    private String tradeRoute;
+
     @Column(length = 50)
     private String shippingMethod;
 

@@ -1,168 +1,398 @@
-const API_BASE_URL = 'http://localhost:8080/api/v1';
-
-const getHeaders = () => {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : ''
-  };
+﻿const getBaseUrl = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) return envUrl;
+  const host = window.location.hostname;
+  const port = window.location.port === '3000' ? '8080' : window.location.port;
+  return `${window.location.protocol}//${host}:${port}/api/v1`;
 };
 
-// Auth API
+const getOrigin = () => {
+  const envUrl = process.env.REACT_APP_API_URL;
+  if (envUrl) return envUrl.replace('/v1', '');
+  const host = window.location.hostname;
+  const port = window.location.port === '3000' ? '8080' : window.location.port;
+  return `${window.location.protocol}//${host}:${port}/api`;
+};
+
+export const API_BASE_URL = getBaseUrl();
+export const API_ORIGIN = getOrigin();
+
+export const resolveFileUrl = (path) => {
+  if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${API_ORIGIN}${normalized}`;
+};
+
+export const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+};
+
+const requestJson = async (url, options = {}) => {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Yêu cầu thất bại với mã ${response.status}`);
+  }
+  return response.json();
+};
+
+const requestText = async (url, options = {}) => {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `Yêu cầu thất bại với mã ${response.status}`);
+  }
+  return response.text();
+};
+
 export const authAPI = {
-  login: async (username, password) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+  login: async (username, password) =>
+    requestJson(`${API_BASE_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password })
-    });
-    if (!response.ok) throw new Error('Login failed');
-    return response.json();
-  }
+    }),
+  register: async (username, password, market) =>
+    requestJson(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, market })
+    })
 };
 
-// Weekly Plan API
 export const weeklyPlanAPI = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/weekly-plans`, {
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch weekly plans');
-    return response.json();
-  },
-  
-  getById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/weekly-plans/${id}`, {
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch weekly plan');
-    return response.json();
-  },
-  
-  create: async (data) => {
-    const response = await fetch(`${API_BASE_URL}/weekly-plans`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to create weekly plan');
-    return response.json();
-  generateCode: async (market, category) => {
-    const params = new URLSearchParams({ market, category });
-    const response = await fetch(`${API_BASE_URL}/products/generate-code?${params.toString()}`, { headers: getHeaders() });
-    if (!response.ok) throw new Error('Failed to generate code');
-    return response.text();
-  }
-  
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE_URL}/weekly-plans/${id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to update weekly plan');
-    return response.json();
-  },
-  
+  getAll: async () => requestJson(`${API_BASE_URL}/weekly-plans`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/weekly-plans`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/weekly-plans/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
   delete: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/weekly-plans/${id}`, {
-      method: 'DELETE',
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to delete weekly plan');
-  }
+    const response = await fetch(`${API_BASE_URL}/weekly-plans/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa kế hoạch tuần thất bại');
+  },
+  submit: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}/submit`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  approveL1: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}/approve-l1`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  approveL2: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}/approve-l2`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  reject: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}/reject`, {
+    method: 'POST', headers: getHeaders()
+  })
 };
 
-// Purchase Order API
 export const purchaseOrderAPI = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/purchase-orders`, {
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch purchase orders');
-    return response.json();
-  },
-  
-  getById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to fetch purchase order');
-    return response.json();
-  },
-  
-  create: async (data) => {
-    const response = await fetch(`${API_BASE_URL}/purchase-orders`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to create purchase order');
-    return response.json();
-  },
-  
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to update purchase order');
-    return response.json();
-  },
-  
+  getAll: async () => requestJson(`${API_BASE_URL}/purchase-orders`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/purchase-orders/${id}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/purchase-orders`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/purchase-orders/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
   delete: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, {
-      method: 'DELETE',
-      headers: getHeaders()
+    const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa đơn hàng thất bại');
+  },
+  approveL1: async (id) => requestJson(`${API_BASE_URL}/purchase-orders/${id}/approve-l1`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  reject: async (id, reason, rejectedBy) => {
+    const params = new URLSearchParams();
+    if (reason) params.set('reason', reason);
+    if (rejectedBy) params.set('rejectedBy', rejectedBy);
+    const query = params.toString();
+    const url = query ? `${API_BASE_URL}/purchase-orders/${id}/reject?${query}` : `${API_BASE_URL}/purchase-orders/${id}/reject`;
+    return requestJson(url, { method: 'POST', headers: getHeaders() });
+  },
+  updateStatus: async (id, status) => {
+    const params = new URLSearchParams({ status });
+    return requestJson(`${API_BASE_URL}/purchase-orders/${id}/status?${params.toString()}`, {
+      method: 'POST', headers: getHeaders()
     });
-    if (!response.ok) throw new Error('Failed to delete purchase order');
+  },
+  search: async (keyword) => requestJson(`${API_BASE_URL}/purchase-orders/search?keyword=${encodeURIComponent(keyword)}`, {
+    headers: getHeaders()
+  }),
+  importOrders: async (orders) => requestJson(`${API_BASE_URL}/purchase-orders/import`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(orders)
+  })
+};
+
+export const paymentRequestAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/payment-requests`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/payment-requests/${id}`, { headers: getHeaders() }),
+  search: async (keyword) => requestJson(`${API_BASE_URL}/payment-requests/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/payment-requests`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/payment-requests/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/payment-requests/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa đề nghị thanh toán thất bại');
+  },
+  approveL1: async (id) => requestJson(`${API_BASE_URL}/payment-requests/${id}/approve-l1`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  approveL2: async (id) => requestJson(`${API_BASE_URL}/payment-requests/${id}/approve-l2`, {
+    method: 'POST', headers: getHeaders()
+  }),
+  accountingCheck: async (id, checkedBy) => {
+    const params = new URLSearchParams({ checkedBy });
+    return requestJson(`${API_BASE_URL}/payment-requests/${id}/accounting-check?${params.toString()}`, {
+      method: 'POST', headers: getHeaders()
+    });
+  },
+  reject: async (id, reason, rejectedBy) => {
+    const params = new URLSearchParams({ reason: reason || '', rejectedBy: rejectedBy || '' });
+    return requestJson(`${API_BASE_URL}/payment-requests/${id}/reject?${params.toString()}`, {
+      method: 'POST', headers: getHeaders()
+    });
+  },
+  pay: async (id, confirmedBy, bankAccountId) => {
+    const params = new URLSearchParams();
+    if (confirmedBy) params.set('confirmedBy', confirmedBy);
+    if (bankAccountId) params.set('bankAccountId', bankAccountId);
+    return requestJson(`${API_BASE_URL}/payment-requests/${id}/pay?${params.toString()}`, {
+      method: 'POST', headers: getHeaders()
+    });
+  },
+  getExchangeRateDiff: async (id) => requestJson(`${API_BASE_URL}/payment-requests/${id}/exchange-rate-diff`, {
+    headers: getHeaders()
+  }),
+  confirmPayment: async (id, confirmedBy) => {
+    const params = new URLSearchParams({ confirmedBy });
+    return requestJson(`${API_BASE_URL}/payment-requests/${id}/confirm-payment?${params.toString()}`, {
+      method: 'POST', headers: getHeaders()
+    });
+  },
+  uploadAttachments: async (id, files) => {
+    if (!files?.length) return null;
+    const formData = new FormData();
+    Array.from(files).forEach((file) => formData.append('files', file, file.name));
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}/payment-requests/${id}/attachments`, {
+      method: 'POST', headers, body: formData
+    });
+    if (!response.ok) {
+      let message = 'Tải file minh chứng thất bại';
+      try { const errBody = await response.json(); message = errBody.message || message; }
+      catch { const text = await response.text(); if (text) message = text; }
+      throw new Error(message);
+    }
+    return response.json();
   }
 };
 
-// Payment Request API
-export const paymentRequestAPI = {
-  getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/payment-requests`, {
-      headers: getHeaders()
+export const warehouseAPI = {
+  getPending: async () => requestJson(`${API_BASE_URL}/warehouse-receipts/pending`, { headers: getHeaders() }),
+  receive: async (data) => requestJson(`${API_BASE_URL}/warehouse-receipts/receive`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  getAll: async () => requestJson(`${API_BASE_URL}/warehouse-receipts`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/warehouse-receipts/${id}`, { headers: getHeaders() }),
+  uploadImages: async (id, files) => {
+    if (!files?.length) return null;
+    const formData = new FormData();
+    Array.from(files).forEach((file) => formData.append('files', file, file.name));
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}/warehouse-receipts/${id}/images`, {
+      method: 'POST', headers, body: formData
     });
-    if (!response.ok) throw new Error('Failed to fetch payment requests');
+    if (!response.ok) {
+      let message = 'Tải ảnh lên thất bại';
+      try { const errBody = await response.json(); message = errBody.message || message; }
+      catch { const text = await response.text(); if (text) message = text; }
+      throw new Error(message);
+    }
     return response.json();
   },
-  
-  getById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/payment-requests/${id}`, {
-      headers: getHeaders()
+  uploadItemImages: async (receiptId, itemId, files) => {
+    if (!files?.length) return null;
+    const formData = new FormData();
+    Array.from(files).forEach((file) => formData.append('files', file, file.name));
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}/warehouse-receipts/${receiptId}/items/${itemId}/images`, {
+      method: 'POST', headers, body: formData
     });
-    if (!response.ok) throw new Error('Failed to fetch payment request');
+    if (!response.ok) {
+      let message = 'Tải ảnh sản phẩm thất bại';
+      try { const errBody = await response.json(); message = errBody.message || message; }
+      catch { const text = await response.text(); if (text) message = text; }
+      throw new Error(message);
+    }
     return response.json();
-  },
-  
-  create: async (data) => {
-    const response = await fetch(`${API_BASE_URL}/payment-requests`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to create payment request');
-    return response.json();
-  },
-  
-  update: async (id, data) => {
-    const response = await fetch(`${API_BASE_URL}/payment-requests/${id}`, {
-      method: 'PUT',
-      headers: getHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!response.ok) throw new Error('Failed to update payment request');
-    return response.json();
-  },
-  
-  delete: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/payment-requests/${id}`, {
-      method: 'DELETE',
-      headers: getHeaders()
-    });
-    if (!response.ok) throw new Error('Failed to delete payment request');
   }
+};
+
+export const exchangeRateAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/exchange-rates`, { headers: getHeaders() }),
+  getByCurrency: async (currency) => requestJson(`${API_BASE_URL}/exchange-rates/${currency}`, { headers: getHeaders() }),
+  save: async (currency, data) => requestJson(`${API_BASE_URL}/exchange-rates/${currency}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  })
+};
+
+export const productCostAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/product-costs`, { headers: getHeaders() }),
+  getAllAlerts: async () => requestJson(`${API_BASE_URL}/product-costs/alerts`, { headers: getHeaders() }),
+  getAlertsByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/product-costs/alerts/${encodeURIComponent(posCode)}`, { headers: getHeaders() })
+};
+
+export const productAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/products`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/products/${id}`, { headers: getHeaders() }),
+  getByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/products/by-pos-code/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
+  search: async (query) => requestJson(`${API_BASE_URL}/products/search?query=${encodeURIComponent(query)}`, { headers: getHeaders() }),
+  generateCode: async (market, productName, iteration = 0) => {
+    const params = new URLSearchParams({ market, productName, category: productName, iteration: String(iteration) });
+    return requestText(`${API_BASE_URL}/products/generate-code?${params.toString()}`, {
+      method: 'GET', headers: getHeaders()
+    });
+  },
+  create: async (data) => requestJson(`${API_BASE_URL}/products`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/products/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa sản phẩm thất bại');
+  },
+  importExcel: async (products) => requestJson(`${API_BASE_URL}/products/import`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(products)
+  }),
+  batchDelete: async (ids) => {
+    const response = await fetch(`${API_BASE_URL}/products/batch-delete`, {
+      method: 'POST', headers: getHeaders(), body: JSON.stringify(ids)
+    });
+    if (!response.ok) throw new Error('Xóa hàng loạt thất bại');
+  }
+};
+
+export const productComboAPI = {
+  getByProduct: async (productId) => requestJson(`${API_BASE_URL}/products/${productId}/combos`, { headers: getHeaders() }),
+  create: async (productId, data) => requestJson(`${API_BASE_URL}/products/${productId}/combos`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (productId, comboId, data) => requestJson(`${API_BASE_URL}/products/${productId}/combos/${comboId}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  delete: async (productId, comboId) => {
+    const response = await fetch(`${API_BASE_URL}/products/${productId}/combos/${comboId}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa combo thất bại');
+  }
+};
+
+export const waybillAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/waybills`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/waybills/${id}`, { headers: getHeaders() }),
+  getByIds: async (ids) => {
+    if (!ids || ids.length === 0) return [];
+    return Promise.all(ids.map(id => waybillAPI.getById(id)));
+  },
+  getByPaymentRequestId: async (paymentRequestId) => requestJson(`${API_BASE_URL}/waybills/by-payment-request/${paymentRequestId}`, { headers: getHeaders() }),
+  search: async (keyword) => requestJson(`${API_BASE_URL}/waybills/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/waybills`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/waybills/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  confirmDelivery: async (id) => requestJson(`${API_BASE_URL}/waybills/${id}/confirm`, {
+    method: 'PUT', headers: getHeaders()
+  }),
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/waybills/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa vận đơn thất bại');
+  }
+};
+
+export const shipmentTrackingAPI = {
+  getByWaybillId: async (waybillId) => requestJson(`${API_BASE_URL}/shipment-trackings/waybill/${waybillId}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/shipment-trackings`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  })
+};
+
+export const costCommentAPI = {
+  getByPoId: async (poId) => requestJson(`${API_BASE_URL}/cost-comments/po/${poId}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/cost-comments`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  })
+};
+
+export const bankAccountAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/bank-accounts`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/bank-accounts/${id}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/bank-accounts`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/bank-accounts/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa tài khoản ngân hàng thất bại');
+  },
+  uploadQrCode: async (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = localStorage.getItem('token');
+    const headers = {};
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch(`${API_BASE_URL}/bank-accounts/${id}/qr-code`, {
+      method: 'POST', headers, body: formData
+    });
+    if (!response.ok) {
+      let message = 'Tải mã QR thất bại';
+      try { const errBody = await response.json(); message = errBody.message || message; }
+      catch { const text = await response.text(); if (text) message = text; }
+      throw new Error(message);
+    }
+    return response.json();
+  },
+  getBankNames: async () => requestJson(`${API_BASE_URL}/bank-accounts/bank-names`, { headers: getHeaders() }),
+  addBankName: async (data) => requestJson(`${API_BASE_URL}/bank-accounts/bank-names`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  })
+};
+
+export const tradeRouteAPI = {
+  getAll: async () => requestJson(`${API_BASE_URL}/trade-routes`, { headers: getHeaders() }),
+  getActive: async () => requestJson(`${API_BASE_URL}/trade-routes/active`, { headers: getHeaders() }),
+  getById: async (id) => requestJson(`${API_BASE_URL}/trade-routes/${id}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/trade-routes`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  update: async (id, data) => requestJson(`${API_BASE_URL}/trade-routes/${id}`, {
+    method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
+  }),
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/trade-routes/${id}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa tuyến hàng thất bại');
+  }
+};
+
+export const globalSearchAPI = {
+  search: async (keyword) => requestJson(`${API_BASE_URL}/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() })
 };

@@ -32,5 +32,6 @@ public class WarehouseReceiptDTO {
     private String paymentRequestCode;
     private Long paymentRequestId;
     private List<PurchaseOrderItemDTO> products;
+    private List<WarehouseReceiptItemDTO> items;
 
 }

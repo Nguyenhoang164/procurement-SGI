@@ -2,10 +2,12 @@ package com.sgiprocurement.service;
 
 import com.sgiprocurement.model.PurchaseOrder;
 import com.sgiprocurement.model.PurchaseOrderItem;
+import com.sgiprocurement.model.Product;
 import com.sgiprocurement.dto.PurchaseOrderDTO;
 import com.sgiprocurement.dto.PurchaseOrderItemDTO;
 import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.ExchangeRateConfigRepository;
+import com.sgiprocurement.repository.ProductRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class PurchaseOrderService {
 
     @Autowired
     private ExchangeRateConfigRepository exchangeRateConfigRepository;
+
+    @Autowired
+    private ProductRepository productRepository;
 
     public List<PurchaseOrderDTO> getAllPurchaseOrders() {
         return purchaseOrderRepository.findAll()
@@ -103,13 +108,16 @@ public class PurchaseOrderService {
         return convertToDTO(updated);
     }
 
-    public PurchaseOrderDTO reject(Long id) {
+    public PurchaseOrderDTO reject(Long id, String reason, String rejectedBy) {
         PurchaseOrder po = purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + id));
         if ("COMPLETED".equals(po.getStatus()) || "REJECTED".equals(po.getStatus())) {
             throw new IllegalStateException("Don hang da ket thuc, khong the tu choi");
         }
         po.setStatus("REJECTED");
+        po.setRejectedBy(rejectedBy);
+        po.setRejectedAt(LocalDateTime.now());
+        po.setRejectReason(reason);
         PurchaseOrder updated = purchaseOrderRepository.save(po);
         return convertToDTO(updated);
     }
@@ -134,6 +142,7 @@ public class PurchaseOrderService {
         po.setPosCode(dto.getPosCode());
         po.setProductName(dto.getProductName());
         po.setProductShortCode(dto.getProductShortCode());
+        po.setProductType(dto.getProductType());
         po.setSupplierName(dto.getSupplierName());
         po.setOrderedQty(dto.getOrderedQty());
         po.setUnitPrice(dto.getUnitPrice());
@@ -171,6 +180,29 @@ public class PurchaseOrderService {
 
         PurchaseOrder updated = purchaseOrderRepository.save(po);
         return convertToDTO(updated);
+    }
+
+    @Transactional
+    public int importPurchaseOrders(List<PurchaseOrderDTO> orders) {
+        int count = 0;
+        for (PurchaseOrderDTO dto : orders) {
+            PurchaseOrder po = convertToEntity(dto);
+            if (po.getStatus() == null) po.setStatus("COMPLETED");
+            if (po.getCreatedAt() == null) po.setCreatedAt(java.time.LocalDateTime.now());
+            po.setUpdatedAt(java.time.LocalDateTime.now());
+
+            if (po.getItems() != null) {
+                for (PurchaseOrderItem item : po.getItems()) {
+                    item.setPurchaseOrder(po);
+                    calculateItemAmounts(item);
+                }
+            }
+
+            costCalculatorService.calculateCosts(po);
+            purchaseOrderRepository.save(po);
+            count++;
+        }
+        return count;
     }
 
     public void deletePurchaseOrder(Long id) {
@@ -211,6 +243,7 @@ public class PurchaseOrderService {
         dto.setPosCode(po.getPosCode());
         dto.setProductName(po.getProductName());
         dto.setProductShortCode(po.getProductShortCode());
+        dto.setProductType(po.getProductType());
         dto.setSupplierName(po.getSupplierName());
         dto.setOrderedQty(po.getOrderedQty());
         dto.setUnitPrice(po.getUnitPrice());
@@ -227,6 +260,7 @@ public class PurchaseOrderService {
         dto.setTotalGoodsAmount(po.getTotalGoodsAmount());
         dto.setUnitCostFullVnd(po.getUnitCostFullVnd());
         dto.setRecentUnitPrice(po.getRecentUnitPrice());
+        dto.setLanding(po.getLanding());
         dto.setSpec(po.getSpec());
         dto.setCountry(po.getCountry());
         dto.setShippingMethod(po.getShippingMethod());
@@ -239,6 +273,9 @@ public class PurchaseOrderService {
         dto.setDepositVnd(po.getDepositVnd());
         dto.setRemainingPaymentVnd(po.getRemainingPaymentVnd());
         dto.setStatus(po.getStatus());
+        dto.setRejectedBy(po.getRejectedBy());
+        dto.setRejectedAt(po.getRejectedAt());
+        dto.setRejectReason(po.getRejectReason());
         dto.setPaymentStatus(po.getPaymentStatus());
         dto.setCreatedBy(po.getCreatedBy());
         dto.setCreatedAt(po.getCreatedAt());
@@ -259,6 +296,7 @@ public class PurchaseOrderService {
         po.setPosCode(dto.getPosCode());
         po.setProductName(dto.getProductName());
         po.setProductShortCode(dto.getProductShortCode());
+        po.setProductType(dto.getProductType());
         po.setSupplierName(dto.getSupplierName());
         po.setOrderedQty(dto.getOrderedQty());
         po.setUnitPrice(dto.getUnitPrice());
@@ -274,6 +312,7 @@ public class PurchaseOrderService {
         po.setTotalGoodsCostVnd(dto.getTotalGoodsCostVnd());
         po.setTotalGoodsAmount(dto.getTotalGoodsAmount());
         po.setRecentUnitPrice(dto.getRecentUnitPrice());
+        po.setLanding(dto.getLanding());
         po.setSpec(dto.getSpec());
         po.setCountry(dto.getCountry());
         po.setShippingMethod(dto.getShippingMethod());
@@ -307,6 +346,7 @@ public class PurchaseOrderService {
         dto.setPosCode(item.getPosCode());
         dto.setProductName(item.getProductName());
         dto.setProductShortCode(item.getProductShortCode());
+        dto.setProductType(item.getProductType());
         dto.setOrderedQty(item.getOrderedQty());
         dto.setUnitPrice(item.getUnitPrice());
         dto.setCurrency(item.getCurrency());
@@ -315,6 +355,7 @@ public class PurchaseOrderService {
         dto.setTotalAmountVnd(item.getTotalAmountVnd());
         dto.setSpec(item.getSpec());
         dto.setSourceLink(item.getSourceLink());
+        populateCostFromProduct(dto, item.getPosCode());
         return dto;
     }
 
@@ -324,6 +365,7 @@ public class PurchaseOrderService {
         item.setPosCode(dto.getPosCode());
         item.setProductName(dto.getProductName());
         item.setProductShortCode(dto.getProductShortCode());
+        item.setProductType(dto.getProductType());
         item.setOrderedQty(dto.getOrderedQty());
         item.setUnitPrice(dto.getUnitPrice());
         item.setCurrency(dto.getCurrency());
@@ -332,7 +374,31 @@ public class PurchaseOrderService {
         item.setTotalAmountVnd(dto.getTotalAmountVnd());
         item.setSpec(dto.getSpec());
         item.setSourceLink(dto.getSourceLink());
+        item.setWeightedAvgCostVnd(dto.getWeightedAvgCostVnd());
+        item.setLatestUnitCostVnd(dto.getLatestUnitCostVnd());
+        item.setLatestOrderCode(dto.getLatestOrderCode());
+        item.setLatestCostDate(dto.getLatestCostDate());
         return item;
     }
 
+    private void populateCostFromProduct(PurchaseOrderItemDTO dto, String posCode) {
+        if (posCode == null) return;
+        try {
+            Product product = productRepository.findByPosCode(posCode).orElse(null);
+            if (product != null) {
+                if (dto.getWeightedAvgCostVnd() == null) dto.setWeightedAvgCostVnd(product.getWeightedAvgCostVnd());
+                if (dto.getLatestUnitCostVnd() == null) dto.setLatestUnitCostVnd(product.getLatestUnitCostVnd());
+                if (dto.getLatestOrderCode() == null) dto.setLatestOrderCode(product.getLatestOrderCode());
+                if (dto.getLatestCostDate() == null) dto.setLatestCostDate(product.getLatestCostDate());
+            }
+        } catch (Exception e) {
+            // silently ignore â€” cost fields are optional reference data
+        }
+    }
+
 }
+
+
+
+
+

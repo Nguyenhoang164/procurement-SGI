@@ -4,6 +4,7 @@ import com.sgiprocurement.dto.ProductCostDTO;
 import com.sgiprocurement.dto.CostAlertDTO;
 import com.sgiprocurement.model.Product;
 import com.sgiprocurement.model.PurchaseOrder;
+import com.sgiprocurement.model.PurchaseOrderItem;
 import com.sgiprocurement.model.CostAlert;
 import com.sgiprocurement.repository.ProductRepository;
 import com.sgiprocurement.repository.CostAlertRepository;
@@ -40,21 +41,76 @@ public class ProductCostService {
     }
 
     /**
-     * Cập nhật giá vốn bình quân gia quyền sau khi nhận hàng (sau khi kế toán đã xác nhận thanh toán).
-     * Kiểm tra và tạo cảnh báo nếu có biến động giá vượt ngưỡng cho phép.
+     * Cập nhật giá vốn bình quân gia quyền sau khi nhận hàng.
+     * Hỗ trợ đơn hàng có nhiều sản phẩm (PurchaseOrderItem).
      */
-    public void applyReceiptFromPurchaseOrder(PurchaseOrder po, int receivedQty) {
-        if (po == null || po.getPosCode() == null || receivedQty <= 0) {
-            return;
+    public void applyReceiptFromPurchaseOrder(PurchaseOrder po, int totalReceivedQty) {
+        if (po == null || totalReceivedQty <= 0) return;
+
+        if (po.getItems() != null && !po.getItems().isEmpty()) {
+            BigDecimal totalQty = BigDecimal.ZERO;
+            for (PurchaseOrderItem item : po.getItems()) {
+                if (item.getOrderedQty() != null) {
+                    totalQty = totalQty.add(BigDecimal.valueOf(item.getOrderedQty()));
+                }
+            }
+            if (totalQty.compareTo(BigDecimal.ZERO) <= 0) return;
+
+            for (PurchaseOrderItem item : po.getItems()) {
+                if (item.getPosCode() == null) continue;
+                BigDecimal itemRatio = item.getOrderedQty() != null
+                        ? BigDecimal.valueOf(item.getOrderedQty()).divide(totalQty, 4, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+                int itemReceivedQty = itemRatio.multiply(BigDecimal.valueOf(totalReceivedQty))
+                        .setScale(0, RoundingMode.HALF_UP).intValue();
+                if (itemReceivedQty <= 0) continue;
+                applySingleItem(item, itemReceivedQty, po.getPoCode(), po.getUpdatedAt());
+            }
+        } else {
+            if (po.getPosCode() == null) return;
+            PurchaseOrderItem fakeItem = new PurchaseOrderItem();
+            fakeItem.setPosCode(po.getPosCode());
+            fakeItem.setUnitPrice(po.getUnitPrice());
+            fakeItem.setExchangeRate(po.getExchangeRate());
+            fakeItem.setOrderedQty(po.getOrderedQty());
+            applySingleItem(fakeItem, totalReceivedQty, po.getPoCode(), po.getUpdatedAt());
         }
+    }
 
-        Product product = productRepository.findByPosCode(po.getPosCode())
-                .orElseThrow(() -> new IllegalStateException(
-                        "Không tìm thấy sản phẩm với mã POS: " + po.getPosCode()));
+    /**
+     * Cập nhật giá vốn với số lượng nhận thực tế theo từng sản phẩm (từ receipt items).
+     */
+    public void applyReceiptFromPurchaseOrder(PurchaseOrder po, java.util.Map<Long, Integer> itemReceivedMap) {
+        if (po == null || itemReceivedMap == null || itemReceivedMap.isEmpty()) return;
 
-        BigDecimal lotUnitCost = po.getUnitCostFullVnd() != null
-                ? po.getUnitCostFullVnd().setScale(0, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        if (po.getItems() != null && !po.getItems().isEmpty()) {
+            for (PurchaseOrderItem item : po.getItems()) {
+                if (item.getPosCode() == null) continue;
+                Integer itemReceivedQty = itemReceivedMap.get(item.getId());
+                if (itemReceivedQty == null || itemReceivedQty <= 0) continue;
+                applySingleItem(item, itemReceivedQty, po.getPoCode(), po.getUpdatedAt());
+            }
+        }
+    }
+
+    private void applySingleItem(PurchaseOrderItem item, int receivedQty, String poCode, java.time.LocalDateTime updatedAt) {
+        if (item.getPosCode() == null || receivedQty <= 0) return;
+
+        Product product = productRepository.findByPosCode(item.getPosCode())
+                .orElse(null);
+        if (product == null) return;
+
+        BigDecimal lotUnitCost;
+        if (item.getTotalAmountVnd() != null && item.getOrderedQty() != null && item.getOrderedQty() > 0) {
+            lotUnitCost = item.getTotalAmountVnd()
+                    .divide(BigDecimal.valueOf(item.getOrderedQty()), 0, RoundingMode.HALF_UP);
+        } else if (item.getUnitPrice() != null && item.getExchangeRate() != null) {
+            lotUnitCost = item.getUnitPrice()
+                    .multiply(item.getExchangeRate())
+                    .setScale(0, RoundingMode.HALF_UP);
+        } else {
+            lotUnitCost = BigDecimal.ZERO;
+        }
 
         int oldQty = product.getTotalQty() != null ? product.getTotalQty() : 0;
         BigDecimal oldAvg = product.getWeightedAvgCostVnd() != null
@@ -72,14 +128,14 @@ public class ProductCostService {
                     .divide(BigDecimal.valueOf(newTotalQty), 0, RoundingMode.HALF_UP);
         }
 
-        // Update product with new costs
         product.setLotCount((product.getLotCount() != null ? product.getLotCount() : 0) + 1);
         product.setTotalQty(newTotalQty);
         product.setLatestUnitCostVnd(lotUnitCost);
         product.setWeightedAvgCostVnd(newAvg);
+        product.setLatestOrderCode(poCode);
+        product.setLatestCostDate(updatedAt != null ? updatedAt : java.time.LocalDateTime.now());
         productRepository.save(product);
 
-        // Check for cost variance and create alert if needed
         checkAndCreateCostAlert(product, oldAvg, lotUnitCost);
     }
 
@@ -137,6 +193,8 @@ public class ProductCostService {
         dto.setLatestUnitCostVnd(latest);
         dto.setWeightedAvgCostVnd(avg);
         dto.setCostDifferenceVnd(diff);
+        dto.setLatestOrderCode(product.getLatestOrderCode());
+        dto.setLatestCostDate(product.getLatestCostDate());
         return dto;
     }
 

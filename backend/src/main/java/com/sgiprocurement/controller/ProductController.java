@@ -31,13 +31,16 @@ public class ProductController {
 
     // SEARCH products
     @GetMapping("/search")
-    public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam String query) {
+    public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam(required = false) String query) {
+        if (query == null || query.isBlank()) {
+            return ResponseEntity.ok(List.of());
+        }
         List<ProductDTO> products = productService.searchProducts(query);
         return ResponseEntity.ok(products);
     }
 
     // GET product by ID
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public ResponseEntity<ProductDTO> getProductById(@PathVariable Long id) {
         ProductDTO product = productService.getProductById(id);
         return ResponseEntity.ok(product);
@@ -45,6 +48,7 @@ public class ProductController {
 
     // CREATE new product
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> createProduct(@Valid @RequestBody ProductDTO productDTO) {
         ProductDTO createdProduct = productService.createProduct(productDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
@@ -76,14 +80,14 @@ public class ProductController {
 
     // IMPORT products from JSON array
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<ProductImportResult> importProducts(@RequestBody List<ProductDTO> products) {
         ProductImportResult result = productService.importProducts(products);
         return ResponseEntity.ok(result);
     }
 
     // UPDATE product
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProductDTO> updateProduct(
             @PathVariable Long id,
@@ -93,7 +97,8 @@ public class ProductController {
     }
 
     // DELETE product
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
@@ -101,18 +106,19 @@ public class ProductController {
 
     // BATCH DELETE products
     @PostMapping("/batch-delete")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> batchDelete(@RequestBody List<Long> ids) {
         productService.batchDelete(ids);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/{id}/combos")
+    @GetMapping("/{id:\\d+}/combos")
     public ResponseEntity<List<ProductComboDTO>> getCombos(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getCombos(id));
     }
 
-    @PostMapping("/{id}/combos")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PostMapping("/{id:\\d+}/combos")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<ProductComboDTO> createCombo(
             @PathVariable Long id,
             @Valid @RequestBody ProductComboDTO dto) {
@@ -120,8 +126,8 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @PutMapping("/{id}/combos/{comboId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PutMapping("/{id:\\d+}/combos/{comboId:\\d+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<ProductComboDTO> updateCombo(
             @PathVariable Long id,
             @PathVariable Long comboId,
@@ -129,8 +135,8 @@ public class ProductController {
         return ResponseEntity.ok(productService.updateCombo(id, comboId, dto));
     }
 
-    @DeleteMapping("/{id}/combos/{comboId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @DeleteMapping("/{id:\\d+}/combos/{comboId:\\d+}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<Void> deleteCombo(@PathVariable Long id, @PathVariable Long comboId) {
         productService.deleteCombo(id, comboId);
         return ResponseEntity.noContent().build();

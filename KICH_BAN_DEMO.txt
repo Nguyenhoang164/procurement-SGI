@@ -1,0 +1,280 @@
+# KỊCH BẢN DEMO HỆ THỐNG MUA SẮM SGI
+
+## 1. Thông tin đăng nhập
+
+| Vai trò | Username | Password |
+|---------|----------|----------|
+| Admin | admin | admin@123 |
+| Manager | manager | manager@123 |
+| User | user | user@123 |
+
+> **Lưu ý:** Nếu chưa có tài khoản Manager/User, đăng nhập bằng Admin -> vào chức năng quản lý user để tạo mới.
+
+---
+
+## 2. Luồng demo chính
+
+### Bước 1: Đăng nhập
+
+1. Mở trình duyệt, truy cập `http://localhost:3000`
+2. Nhập `username = admin`, `password = admin@123`
+3. ✅ **Kết quả:** Đăng nhập thành công, chuyển đến màn hình Dashboard
+
+---
+
+### Bước 2: Quản lý sản phẩm (Products)
+
+| action | Mô tả |
+|--------|-------|
+| **Thêm sản phẩm mới** | Vào menu **Products** -> click **Add Product** -> nhập thông tin: |
+| Tên sản phẩm | `Durex Pro Extra` |
+| Mã POS | click **Generate Code** tự động sinh mã |
+| Market | `VN` |
+| Spec | `Size 52mm, hộp 12 cái` |
+| Unit | `Box` |
+| -> click **Save** | |
+
+✅ **Kết quả:** Sản phẩm hiển thị trong danh sách với mã POS tự động sinh (VD: `DP-VN-0001`).
+
+Lặp lại để tạo thêm 2 sản phẩm:
+| Tên sản phẩm | Market | Spec |
+|--------------|--------|------|
+| `Samsung Galaxy Tab A9` | `VN` | `8GB RAM, 128GB` |
+| `Nước rửa tay Lifebuoy` | `VN` | `Chai 500ml` |
+
+✅ **Kết quả:** Danh sách có 3 sản phẩm.
+
+---
+
+### Bước 3: Lập kế hoạch tuần (Weekly Plan)
+
+| action | Mô tả |
+|--------|-------|
+| Vào menu **Weekly Plans** -> click **Add Plan** |
+| POS Code | Chọn `DP-VN-0001` |
+| Suggested Qty | `500` |
+| Spec | `Size 52mm, hộp 12 cái` |
+| Country | `Thailand` |
+| Shipping Method | `SEA` |
+| Recent Unit Price | `2.50` |
+| Note | `Kế hoạch tháng 1` |
+| -> click **Save** | |
+
+✅ **Kết quả:** Kế hoạch tạo với trạng thái `DRAFT`.
+
+Tạo thêm:
+| POS Code | Qty | Country | Shipping |
+|----------|-----|---------|----------|
+| `SAMSUNG-VN-0001` | `100` | `Vietnam` | `AIR` |
+| `LB-VN-0001` | `1000` | `Vietnam` | `LAND` |
+
+**Duyệt kế hoạch:**
+1. Chọn kế hoạch `DP-VN-0001` -> click **Submit** -> trạng thái `PENDING_L1`
+2. Click **Approve L1** -> trạng thái `PENDING_L2`
+3. Click **Approve L2** -> trạng thái `APPROVED`
+
+✅ **Kết quả:** Kế hoạch được duyệt hoàn toàn.
+
+---
+
+### Bước 4: Tạo đơn đặt hàng (Purchase Order)
+
+| action | Mô tả |
+|--------|-------|
+| Vào menu **Purchase Orders** -> click **Add PO** |
+| POS Code | Chọn `DP-VN-0001` |
+| Supplier | `Thai Condom Co., Ltd` |
+| Ordered Qty | `500` |
+| Unit Price | `2.50` |
+| Currency | `USD` |
+| Exchange Rate | `25450` |
+| Int'l Shipping Unit Price | `50` |
+| Package Measurement | `2.5 CBM` |
+| Domestic Shipping | `500000` |
+| Order Fee | `200000` |
+| Local Delivery Fee | `300000` |
+| Country | `Thailand` |
+| Shipping Method | `SEA` |
+| Order Date | Chọn hôm nay |
+| Payment Method | `T/T` |
+| -> click **Save** | |
+
+✅ **Kết quả:** PO tạo thành công, các chi phí tự động tính:
+- Tổng giá hàng (VND) = `31,812,500`
+- Tổng chi phí = `33,437,500`
+- Giá vốn 1 SP = `66,875.00`
+
+Tạo thêm:
+| POS Code | Qty | Unit Price | Supplier |
+|----------|-----|------------|----------|
+| `SAMSUNG-VN-0001` | `100` | `350.00` | `Samsung Vina` |
+| `LB-VN-0001` | `1000` | `0.80` | `Unilever VN` |
+
+**Duyệt đơn hàng:**
+1. Click **Approve L1** -> ✅ Không được (lỗi "Chỉ duyệt ở trạng thái DRAFT")
+2. Click **Approve L1** trên PO đầu tiên -> ✅ Chuyển `APPROVED`
+3. Click **Approve L2** -> ✅ Vẫn `APPROVED`
+
+✅ **Kết quả:** PO được duyệt, sẵn sàng lập đề nghị thanh toán.
+
+---
+
+### Bước 5: Lập đề nghị thanh toán (Payment Request)
+
+| action | Mô tả |
+|--------|-------|
+| Vào menu **Payment Requests** -> click **Add Request** |
+| PO | Chọn PO `DP-VN-0001` (mới duyệt) |
+| Type | `FULL_PAYMENT` |
+| Amount | `33437500` |
+| -> click **Save** | |
+
+✅ **Kết quả:** DNTT tạo với trạng thái `PENDING_L1`, PO chuyển `payment_status = PENDING_L1`.
+
+**Upload minh chứng (nếu có):**
+1. Click vào DNTT vừa tạo
+2. Click **Upload Attachments**
+3. Chọn file PDF/JPG bất kỳ
+4. ✅ File được upload, danh sách file hiển thị
+
+**Duyệt đề nghị thanh toán:**
+1. Click **Approve L1** -> ✅ `PENDING_L2`
+2. Click **Approve L2** -> ✅ `APPROVED`
+3. Click **Pay (Mark as Paid)** -> ✅ `PAID`
+
+✅ **Kết quả:** 
+- DNTT: `PAID` 
+- PO: `payment_status = PAID`, `status = IN_TRANSIT`
+
+---
+
+### Bước 6: Nhập kho (Warehouse Receipt)
+
+| action | Mô tả |
+|--------|-------|
+| Vào menu **Warehouse Receipts** -> tab **Pending Receives** |
+| ✅ Thấy PO `DP-VN-0001` trong danh sách chờ nhập kho |
+| Click **Receive** |
+| Received Qty | `500` |
+| Inspector | `Nguyễn Văn A` |
+| Condition | `Hàng mới 100%, bao bì nguyên vẹn` |
+| -> click **Confirm** | |
+
+✅ **Kết quả:**
+- PO chuyển `status = COMPLETED`
+- Phiếu nhập kho được tạo
+- Giá vốn sản phẩm được cập nhật
+
+**Kiểm tra giá vốn:**
+1. Vào menu **Product Costs**
+2. ✅ Thấy `DP-VN-0001`: Lot Count = 1, Latest Unit Cost, Weighted Avg Cost
+
+---
+
+### Bước 7: Xem báo cáo chi phí (Product Costs)
+
+| action | Mô tả |
+|--------|-------|
+| Vào menu **Product Costs** |
+| ✅ Xem danh sách sản phẩm đã có lô hàng |
+| Các cột: POS Code, Product Name, Lot Count, Total Qty, Latest Cost, Avg Cost, Diff |
+
+---
+
+## 3. Kịch bản test lỗi (cần test)
+
+### 3.1 Nhập kho vượt số lượng
+- Chọn PO đã nhập kho -> Nhập `receivedQty > orderedQty`
+- ✅ **Lỗi:** "Số lượng nhận không được vượt quá số lượng đặt"
+
+### 3.2 Nhập kho khi chưa thanh toán
+- Tạo PO mới (chưa duyệt) -> thử nhập kho
+- ✅ **Lỗi:** "Đơn hàng chưa được kế toán xác nhận thanh toán"
+
+### 3.3 Duyệt PO sai trạng thái
+- PO đã `APPROVED` -> click **Approve L1**
+- ✅ **Lỗi:** "Chỉ duyệt đơn hàng ở trạng thái DRAFT"
+
+### 3.4 Lập DNTT khi PO chưa duyệt
+- Tạo DNTT với PO đang `DRAFT`
+- ✅ **Lỗi:** "Chỉ lập DNTT cho đơn hàng đã duyệt"
+
+### 3.5 Login sai
+- Nhập sai password
+- ✅ **Lỗi:** "Invalid username or password"
+
+---
+
+## 4. Danh sách API endpoints (để test bằng Postman)
+
+### Auth
+```
+POST   /api/v1/auth/login       { "username": "admin", "password": "admin@123" }
+```
+
+### Products
+```
+GET    /api/v1/products
+GET    /api/v1/products/search?query=
+GET    /api/v1/products/{id}
+POST   /api/v1/products          { "productName": "...", "marketCode": "VN" }
+PUT    /api/v1/products/{id}
+DELETE /api/v1/products/{id}
+GET    /api/v1/products/generate-code?productName=&market=
+```
+
+### Purchase Orders
+```
+GET    /api/v1/purchase-orders
+GET    /api/v1/purchase-orders/{id}
+POST   /api/v1/purchase-orders   { "posCode": "...", "orderedQty": 100, "unitPrice": 10 }
+PUT    /api/v1/purchase-orders/{id}
+DELETE /api/v1/purchase-orders/{id}
+POST   /api/v1/purchase-orders/{id}/approve-l1
+POST   /api/v1/purchase-orders/{id}/approve-l2
+POST   /api/v1/purchase-orders/{id}/reject
+POST   /api/v1/purchase-orders/{id}/status?status=
+```
+
+### Weekly Plans
+```
+GET    /api/v1/weekly-plans
+GET    /api/v1/weekly-plans/{id}
+POST   /api/v1/weekly-plans      { "posCode": "...", "suggestedQty": 50 }
+PUT    /api/v1/weekly-plans/{id}
+DELETE /api/v1/weekly-plans/{id}
+POST   /api/v1/weekly-plans/{id}/submit
+POST   /api/v1/weekly-plans/{id}/approve-l1
+POST   /api/v1/weekly-plans/{id}/approve-l2
+POST   /api/v1/weekly-plans/{id}/reject
+```
+
+### Payment Requests
+```
+GET    /api/v1/payment-requests
+GET    /api/v1/payment-requests/{id}
+POST   /api/v1/payment-requests  { "poId": 1, "type": "FULL_PAYMENT", "amountVnd": 10000000 }
+PUT    /api/v1/payment-requests/{id}
+DELETE /api/v1/payment-requests/{id}
+POST   /api/v1/payment-requests/{id}/approve-l1
+POST   /api/v1/payment-requests/{id}/approve-l2
+POST   /api/v1/payment-requests/{id}/reject?reason=
+POST   /api/v1/payment-requests/{id}/pay
+POST   /api/v1/payment-requests/{id}/attachments (multipart)
+```
+
+### Warehouse Receipts
+```
+GET    /api/v1/warehouse-receipts
+GET    /api/v1/warehouse-receipts/{id}
+GET    /api/v1/warehouse-receipts/pending
+POST   /api/v1/warehouse-receipts/receive  { "poId": 1, "receivedQty": 100, "inspector": "...", "conditionDescription": "..." }
+POST   /api/v1/warehouse-receipts          { "poId": 1, "receivedQty": 100 }
+PUT    /api/v1/warehouse-receipts/{id}
+DELETE /api/v1/warehouse-receipts/{id}
+```
+
+### Product Costs
+```
+GET    /api/v1/product-costs
+```

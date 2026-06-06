@@ -1,0 +1,3 @@
+ALTER TABLE products
+  ADD COLUMN latest_order_code VARCHAR(50) DEFAULT NULL,
+  ADD COLUMN latest_cost_date DATETIME DEFAULT NULL;

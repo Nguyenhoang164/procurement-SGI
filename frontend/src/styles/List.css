@@ -1,195 +1,37 @@
-.list-container {
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-}
+/* List pages use shared shell styles from App.css */
 
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  gap: 20px;
-}
-
-.list-header h1 {
-  margin: 0;
-  color: #2c3e50;
-  font-size: 24px;
-}
-
-.table-wrapper {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow-x: auto;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.table th {
-  background-color: #f5f7fa;
-  padding: 12px;
-  text-align: left;
-  font-weight: 600;
-  color: #2c3e50;
-  border-bottom: 2px solid #ddd;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid #ecf0f1;
-  font-size: 14px;
-}
-
-.table tr:last-child td {
-  border-bottom: none;
-}
-
-.table tr:hover {
-  background-color: #f9fafb;
-}
-
-.table td.money {
-  color: #27ae60;
-  font-weight: 500;
-}
-
+/* Badge styles for alert types */
 .badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 20px;
+  padding: 2px 8px;
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 500;
+  text-transform: uppercase;
 }
 
-.badge-draft {
-  background-color: #ecf0f1;
-  color: #34495e;
+/* Badge colors for alert types */
+.badge-high_variance {
+  background-color: #fff5f5;
+  color: #ff4d4d;
 }
 
-.badge-pending {
-  background-color: #fff3cd;
-  color: #856404;
+.badge-low_variance {
+  background-color: #f0fff4;
+  color: #52c41a;
 }
 
-.badge-approved {
-  background-color: #d1ecf1;
-  color: #0c5460;
+/* Styles for cost variance indicators */
+.cost-alert-up {
+  color: #ff4d4d;
 }
 
-.badge-in_transit {
-  background-color: #e7d4f5;
-  color: #721e7d;
+.cost-alert-down {
+  color: #52c41a;
 }
 
-.badge-completed {
-  background-color: #d4edda;
-  color: #155724;
-}
-
-.btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.btn-primary {
-  background-color: #3498db;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #2980b9;
-}
-
-.btn-secondary {
-  background-color: #95a5a6;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background-color: #7f8c8d;
-}
-
-.btn-sm {
+/* Style for the action button in the table */
+.btn-view {
   padding: 4px 8px;
   font-size: 12px;
-  margin-right: 5px;
-}
-
-.btn-view {
-  background-color: #3498db;
-  color: white;
-}
-
-.btn-view:hover {
-  background-color: #2980b9;
-}
-
-.btn-edit {
-  background-color: #f39c12;
-  color: white;
-}
-
-.btn-edit:hover {
-  background-color: #d68910;
-}
-
-.btn-delete {
-  background-color: #e74c3c;
-  color: white;
-}
-
-.btn-delete:hover {
-  background-color: #c0392b;
-}
-
-.loading,
-.empty-state {
-  padding: 40px;
-  text-align: center;
-  color: #7f8c8d;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-}
-
-.empty-state {
-  font-size: 16px;
-}
-
-.error-message {
-  background-color: #f8d7da;
-  color: #721c24;
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  border-left: 4px solid #f5c6cb;
-}
-
-@media (max-width: 768px) {
-  .list-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .table {
-    font-size: 12px;
-  }
-
-  .table th,
-  .table td {
-    padding: 8px;
-  }
 }

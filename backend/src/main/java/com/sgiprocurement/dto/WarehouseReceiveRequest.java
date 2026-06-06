@@ -1,8 +1,8 @@
 package com.sgiprocurement.dto;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class WarehouseReceiveRequest {
@@ -10,8 +10,6 @@ public class WarehouseReceiveRequest {
     @NotNull
     private Long poId;
 
-    @NotNull
-    @Positive
     private Integer receivedQty;
 
     private String inspector;
@@ -25,5 +23,7 @@ public class WarehouseReceiveRequest {
     private Integer expectedQty;
 
     private String goodsCondition;
+
+    private List<WarehouseReceiveItemRequest> items;
 
 }

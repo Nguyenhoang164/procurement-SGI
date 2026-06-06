@@ -13,7 +13,7 @@ export function useCreateOrder() {
       setLoading(false);
       return created;
     } catch (err) {
-      setError(err.message || 'Create order failed');
+      setError(err.message || 'Tạo đơn hàng thất bại');
       setLoading(false);
       throw err;
     }
@@ -34,7 +34,7 @@ export function useOrders() {
       setLoading(false);
       return data;
     } catch (err) {
-      setError(err.message || 'Fetch orders failed');
+      setError(err.message || 'Tải danh sách đơn hàng thất bại');
       setLoading(false);
       throw err;
     }

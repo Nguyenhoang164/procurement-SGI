@@ -113,7 +113,7 @@ class PaymentRequestControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void reject_shouldReject() throws Exception {
-        when(paymentRequestService.reject(eq(1L), any())).thenReturn(createDTO());
+        when(paymentRequestService.reject(eq(1L), any(), any())).thenReturn(createDTO());
 
         mockMvc.perform(post("/v1/payment-requests/1/reject")
                         .param("reason", "Not needed"))
@@ -123,7 +123,7 @@ class PaymentRequestControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void markAsPaid_shouldPay() throws Exception {
-        when(paymentRequestService.markAsPaid(1L, null)).thenReturn(createDTO());
+        when(paymentRequestService.markAsPaid(eq(1L), any(), isNull())).thenReturn(createDTO());
 
         mockMvc.perform(post("/v1/payment-requests/1/pay"))
                 .andExpect(status().isOk());

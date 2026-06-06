@@ -1,0 +1,139 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import '../styles/Form.css';
+import { userAPI } from '../services/userApi';
+
+const ROLE_LABELS = {
+  ADMIN: 'Admin',
+  CEO: 'CEO',
+  WAREHOUSE: 'Thủ kho',
+  ACCOUNTANT: 'Kế toán',
+  CHIEF_ACCOUNTANT: 'Kế toán trưởng',
+  SALES: 'Nhân viên kinh doanh',
+  SALES_MANAGER: 'Trưởng phòng kinh doanh',
+  PENDING: 'Chờ phân quyền'
+};
+
+function UserList() {
+  const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await userAPI.getAll();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleDelete = async (id, username) => {
+    if (!window.confirm(`Xác nhận xóa tài khoản "${username}"?`)) return;
+    try {
+      await userAPI.delete(id);
+      fetchUsers();
+    } catch (err) {
+      alert('Lỗi xóa: ' + err.message);
+    }
+  };
+
+  const handleDeactivate = async (id, username, active) => {
+    const action = active ? 'vô hiệu hóa' : 'kích hoạt lại';
+    if (!window.confirm(`Xác nhận ${action} tài khoản "${username}"?`)) return;
+    try {
+      if (active) {
+        await userAPI.deactivate(id);
+      } else {
+        await userAPI.update(id, { active: true });
+      }
+      fetchUsers();
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
+  return (
+    <div className="page-screen">
+      <div className="page-topbar">
+        <div className="page-title-group">
+          <h1 className="page-title">Quản lý tài khoản</h1>
+          <p className="page-subtitle">Danh sách người dùng tham gia hệ thống</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={() => navigate('/users/new')}>
+            + Thêm tài khoản
+          </button>
+        </div>
+      </div>
+
+      <div className="page-content">
+        {error ? <div className="error-message">{error}</div> : null}
+
+        {loading ? (
+          <p>Đang tải...</p>
+        ) : (
+          <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>STT</th>
+                <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Tên đăng nhập</th>
+                <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Vai trò</th>
+                <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Thị trường</th>
+                <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Trạng thái</th>
+                <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u, idx) => (
+                <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => navigate(`/users/${u.id}`)}>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{idx + 1}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{u.username}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{ROLE_LABELS[u.role] || u.role}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{u.market || '—'}</td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '2px 10px',
+                      borderRadius: 12,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: u.active ? '#d1fae5' : '#fee2e2',
+                      color: u.active ? '#065f46' : '#991b1b'
+                    }}>
+                      {u.active ? 'Hoạt động' : 'Vô hiệu'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
+                    <button className="btn btn-sm btn-outline" style={{ marginRight: 6 }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`/users/edit/${u.id}`); }}>
+                      Sửa
+                    </button>
+                    <button className="btn btn-sm btn-outline"
+                      onClick={(e) => { e.stopPropagation(); handleDeactivate(u.id, u.username, u.active); }}>
+                      {u.active ? 'Vô hiệu' : 'Kích hoạt'}
+                    </button>
+                    <button className="btn btn-sm btn-danger" style={{ marginLeft: 6 }}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(u.id, u.username); }}>
+                      Xóa
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default UserList;

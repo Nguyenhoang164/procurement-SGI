@@ -23,6 +23,8 @@ public class WeeklyPlanDTO {
 
     private String country;
 
+    private String tradeRoute;
+
     private String shippingMethod;
 
     private java.math.BigDecimal recentUnitPrice;

@@ -1,6 +1,7 @@
 package com.sgiprocurement.service;
 
 import com.sgiprocurement.dto.LoginRequest;
+import com.sgiprocurement.dto.RegisterRequest;
 import com.sgiprocurement.dto.AuthResponse;
 import com.sgiprocurement.model.User;
 import com.sgiprocurement.repository.UserRepository;
@@ -65,6 +66,27 @@ public class AuthService {
             admin.setUpdatedAt(LocalDateTime.now());
             userRepository.save(admin);
         }
+    }
+
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username already exists");
+        }
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setRole("PENDING");
+        user.setMarket(request.getMarket());
+        user.setActive(true);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+        User saved = userRepository.save(user);
+
+        String token = jwtTokenProvider.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
+        return new AuthResponse(
+                token, "Bearer", saved.getId(),
+                saved.getUsername(), saved.getRole(), saved.getMarket()
+        );
     }
 
 }

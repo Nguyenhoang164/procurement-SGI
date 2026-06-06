@@ -36,6 +36,9 @@ public class PurchaseOrder {
     @Column(length = 100)
     private String productShortCode;
 
+    @Column(name = "product_type", length = 20)
+    private String productType;
+
     @Column(length = 255)
     private String supplierName;
 
@@ -80,6 +83,9 @@ public class PurchaseOrder {
     @Column(precision = 10, scale = 2)
     private BigDecimal recentUnitPrice = BigDecimal.ZERO;
 
+    @Column(length = 200)
+    private String landing;
+
     @Column(length = 255)
     private String spec;
 
@@ -116,6 +122,15 @@ public class PurchaseOrder {
     @Column(precision = 15, scale = 0)
     private BigDecimal remainingPaymentVnd = BigDecimal.ZERO;
 
+    @Column(name = "rejected_by", length = 100)
+    private String rejectedBy;
+
+    @Column(name = "rejected_at")
+    private LocalDateTime rejectedAt;
+
+    @Column(name = "reject_reason", length = 500)
+    private String rejectReason;
+
     @Column(nullable = false, length = 50)
     private String status = "DRAFT";
 
@@ -146,3 +161,5 @@ public class PurchaseOrder {
     }
 
 }
+
+

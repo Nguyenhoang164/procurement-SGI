@@ -29,6 +29,8 @@ public class ProductDTO {
 
     private String sourceLink;
 
+    private String productType;
+
     private List<ProductImageDTO> images;
 
     private LocalDateTime createdAt;

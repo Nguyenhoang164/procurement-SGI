@@ -172,6 +172,11 @@ public class WaybillService {
     }
 
     private WaybillDTO convertToDTO(Waybill waybill) {
+        List<PaymentRequestWaybill> links = paymentRequestWaybillRepository.findByWaybillId(waybill.getId());
+        List<Long> prIds = links.stream().map(PaymentRequestWaybill::getPaymentRequestId).collect(Collectors.toList());
+        if (waybill.getPaymentRequestId() != null && !prIds.contains(waybill.getPaymentRequestId())) {
+            prIds.add(0, waybill.getPaymentRequestId());
+        }
         return new WaybillDTO(
                 waybill.getId(),
                 waybill.getWaybillCode(),
@@ -185,7 +190,8 @@ public class WaybillService {
                 waybill.getCreatedAt(),
                 waybill.getUpdatedAt(),
                 waybill.getPaymentRequestId(),
-                waybill.getProducts()
+                waybill.getProducts(),
+                prIds
         );
     }
 

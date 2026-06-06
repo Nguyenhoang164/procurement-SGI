@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -56,6 +57,9 @@ public class PaymentRequestService {
     @Autowired
     private WarehouseReceiptRepository warehouseReceiptRepository;
 
+    @Autowired
+    private BankAccountRepository bankAccountRepository;
+
     public List<PaymentRequestDTO> getAllPaymentRequests() {
         return paymentRequestRepository.findAll()
                 .stream()
@@ -67,6 +71,13 @@ public class PaymentRequestService {
         PaymentRequest pr = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment request not found with id: " + id));
         return convertToDTO(pr);
+    }
+
+    public List<PaymentRequestDTO> searchPaymentRequests(String keyword) {
+        return paymentRequestRepository.searchByKeyword(keyword)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<PaymentRequestDTO> getPaymentRequestsByPoId(Long poId) {
@@ -84,10 +95,18 @@ public class PaymentRequestService {
     }
 
     public PaymentRequestDTO createPaymentRequest(PaymentRequestDTO dto) {
-        if (dto.getPoId() != null) {
+        if (dto.getPoId() != null && !"VAN_CHUYEN".equals(dto.getType())) {
             PurchaseOrder po = purchaseOrderRepository.findById(dto.getPoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + dto.getPoId()));
             validatePurchaseOrderCanCreatePayment(po);
+        }
+
+        if (dto.getReferencePaymentRequestId() != null) {
+            PaymentRequest ref = paymentRequestRepository.findById(dto.getReferencePaymentRequestId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Reference payment request not found with id: " + dto.getReferencePaymentRequestId()));
+            if (ref.getExchangeRateDiffVnd() != null && ref.getExchangeRateDiffVnd().compareTo(BigDecimal.ZERO) > 0) {
+                dto.setExchangeRateDiffVnd(ref.getExchangeRateDiffVnd());
+            }
         }
 
         PaymentRequest pr = convertToEntity(dto);
@@ -123,7 +142,7 @@ public class PaymentRequestService {
             }
         }
 
-        if (dto.getPoId() != null) {
+        if (dto.getPoId() != null && dto.getPoId() > 0) {
             syncLinkedPurchaseOrderPaymentStatus(dto.getPoId(), saved.getStatus());
         }
 
@@ -138,7 +157,23 @@ public class PaymentRequestService {
             throw new IllegalStateException("Yeu cau khong o trang thai cho duyet L1");
         }
 
+        pr.setStatus("ACCOUNTING_CHECK");
+        PaymentRequest updated = paymentRequestRepository.save(pr);
+        syncLinkedPaymentStatus(updated.getId(), updated.getStatus());
+        return convertToDTO(updated);
+    }
+
+    public PaymentRequestDTO accountingCheck(Long id, String checkedBy) {
+        PaymentRequest pr = paymentRequestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment request not found with id: " + id));
+
+        if (!"ACCOUNTING_CHECK".equals(pr.getStatus())) {
+            throw new IllegalStateException("Yeu cau khong o trang thai cho ke toan kiem tra");
+        }
+
         pr.setStatus("PENDING_L2");
+        pr.setAccountingCheckedBy(checkedBy);
+        pr.setAccountingCheckedAt(LocalDateTime.now());
         PaymentRequest updated = paymentRequestRepository.save(pr);
         syncLinkedPaymentStatus(updated.getId(), updated.getStatus());
         return convertToDTO(updated);
@@ -169,6 +204,8 @@ public class PaymentRequestService {
         pr.setRejectReason(reason);
         if ("PENDING_L1".equals(currentStatus)) {
             pr.setRejectedLevel("L1");
+        } else if ("ACCOUNTING_CHECK".equals(currentStatus)) {
+            pr.setRejectedLevel("ACCOUNTING");
         } else if ("PENDING_L2".equals(currentStatus)) {
             pr.setRejectedLevel("L2");
         } else {
@@ -179,7 +216,7 @@ public class PaymentRequestService {
         return convertToDTO(updated);
     }
 
-    public PaymentRequestDTO markAsPaid(Long id, String confirmedBy) {
+    public PaymentRequestDTO markAsPaid(Long id, String confirmedBy, Long bankAccountId) {
         PaymentRequest pr = paymentRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment request not found with id: " + id));
 
@@ -187,56 +224,64 @@ public class PaymentRequestService {
             throw new IllegalStateException("Yeu cau chua duoc phe duyet hoan toan");
         }
 
-        PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId())
-                .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + pr.getPoId()));
-        validatePurchaseOrderCanMarkPaid(po);
-
-        Set<Long> poIdSet = new HashSet<>();
-        if (pr.getPoId() != null) poIdSet.add(pr.getPoId());
-        List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository
-                .findByPaymentRequestId(pr.getId());
-        for (PaymentRequestPurchaseOrder link : poLinks) {
-            poIdSet.add(link.getPoId());
+        if (bankAccountId != null) {
+            bankAccountRepository.findById(bankAccountId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Bank account not found with id: " + bankAccountId));
+            pr.setBankAccountId(bankAccountId);
         }
 
-        for (Long poId : poIdSet) {
-            PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(poId).orElse(null);
-            if (purchaseOrder == null) continue;
+        // Only create waybills for non-MUA_HANG and non-VAN_CHUYEN types
+        if (!"MUA_HANG".equals(pr.getType()) && !"VAN_CHUYEN".equals(pr.getType())) {
+            PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + pr.getPoId()));
+            validatePurchaseOrderCanMarkPaid(po);
 
-            List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderId(poId);
-            List<Map<String, Object>> productList = new ArrayList<>();
-            for (PurchaseOrderItem item : items) {
-                Map<String, Object> p = new HashMap<>();
-                p.put("posCode", item.getPosCode());
-                p.put("productName", item.getProductName());
-                p.put("productShortCode", item.getProductShortCode());
-                p.put("orderedQty", item.getOrderedQty());
-                p.put("unitPrice", item.getUnitPrice());
-                p.put("totalAmountVnd", item.getTotalAmountVnd());
-                productList.add(p);
+            Set<Long> poIdSet = new HashSet<>();
+            if (pr.getPoId() != null) poIdSet.add(pr.getPoId());
+            List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository
+                    .findByPaymentRequestId(pr.getId());
+            for (PaymentRequestPurchaseOrder link : poLinks) {
+                poIdSet.add(link.getPoId());
             }
 
-            String productsJson = null;
-            try {
-                productsJson = objectMapper.writeValueAsString(productList);
-            } catch (Exception e) {
-                productsJson = "[]";
+            for (Long poId : poIdSet) {
+                PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(poId).orElse(null);
+                if (purchaseOrder == null) continue;
+
+                List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderId(poId);
+                for (PurchaseOrderItem item : items) {
+                    String productsJson = "[]";
+                    try {
+                        List<Map<String, Object>> productList = new ArrayList<>();
+                        Map<String, Object> p = new HashMap<>();
+                        p.put("posCode", item.getPosCode());
+                        p.put("productName", item.getProductName());
+                        p.put("productShortCode", item.getProductShortCode());
+                        p.put("orderedQty", item.getOrderedQty());
+                        p.put("unitPrice", item.getUnitPrice());
+                        p.put("totalAmountVnd", item.getTotalAmountVnd());
+                        productList.add(p);
+                        productsJson = objectMapper.writeValueAsString(productList);
+                    } catch (Exception e) {
+                        productsJson = "[{\"posCode\":\"" + item.getPosCode() + "\",\"productName\":\"" + (item.getProductName() != null ? item.getProductName() : "") + "\"}]";
+                    }
+
+                    Waybill waybill = new Waybill();
+                    waybill.setWaybillCode("WB-" + System.currentTimeMillis() + "-" + poId + "-" + item.getId());
+                    waybill.setCarrier(purchaseOrder.getShippingMethod());
+                    waybill.setOrigin(purchaseOrder.getCountry());
+                    waybill.setExpectedQty(item.getOrderedQty());
+                    waybill.setStatus("PENDING");
+                    waybill.setPaymentRequestId(pr.getId());
+                    waybill.setProducts(productsJson);
+                    Waybill saved = waybillRepository.save(waybill);
+
+                    PaymentRequestWaybill link = new PaymentRequestWaybill();
+                    link.setPaymentRequestId(pr.getId());
+                    link.setWaybillId(saved.getId());
+                    paymentRequestWaybillRepository.save(link);
+                }
             }
-
-            Waybill waybill = new Waybill();
-            waybill.setWaybillCode("WB-" + System.currentTimeMillis() + "-" + poId);
-            waybill.setCarrier(purchaseOrder.getShippingMethod());
-            waybill.setOrigin(purchaseOrder.getCountry());
-            waybill.setExpectedQty(purchaseOrder.getOrderedQty());
-            waybill.setStatus("PENDING");
-            waybill.setPaymentRequestId(pr.getId());
-            waybill.setProducts(productsJson);
-            Waybill saved = waybillRepository.save(waybill);
-
-            PaymentRequestWaybill link = new PaymentRequestWaybill();
-            link.setPaymentRequestId(pr.getId());
-            link.setWaybillId(saved.getId());
-            paymentRequestWaybillRepository.save(link);
         }
 
         pr.setStatus("PAID");
@@ -279,6 +324,12 @@ public class PaymentRequestService {
         }
         if (dto.getNote() != null) {
             pr.setNote(dto.getNote());
+        }
+        if (dto.getReferencePaymentRequestId() != null) {
+            pr.setReferencePaymentRequestId(dto.getReferencePaymentRequestId());
+        }
+        if (dto.getBankAccountId() != null) {
+            pr.setBankAccountId(dto.getBankAccountId());
         }
 
         PaymentRequest updated = paymentRequestRepository.save(pr);
@@ -332,13 +383,13 @@ public class PaymentRequestService {
             syncLinkedPurchaseOrderPaymentStatus(link.getPoId(), paymentStatus);
         }
         PaymentRequest pr = paymentRequestRepository.findById(paymentRequestId).orElse(null);
-        if (pr != null && pr.getPoId() != null) {
+        if (pr != null && pr.getPoId() != null && pr.getPoId() > 0) {
             syncLinkedPurchaseOrderPaymentStatus(pr.getPoId(), paymentStatus);
         }
     }
 
     private void syncLinkedPurchaseOrderPaymentStatus(Long poId, String paymentStatus) {
-        if (poId == null || paymentStatus == null) {
+        if (poId == null || poId <= 0 || paymentStatus == null) {
             return;
         }
         PurchaseOrder po = purchaseOrderRepository.findById(poId)
@@ -392,6 +443,12 @@ public class PaymentRequestService {
         dto.setRejectedAt(pr.getRejectedAt());
         dto.setRejectReason(pr.getRejectReason());
         dto.setRejectedLevel(pr.getRejectedLevel());
+        dto.setReferencePaymentRequestId(pr.getReferencePaymentRequestId());
+        dto.setBankAccountId(pr.getBankAccountId());
+        dto.setAccountingCheckedBy(pr.getAccountingCheckedBy());
+        dto.setAccountingCheckedAt(pr.getAccountingCheckedAt());
+        dto.setSourceDnttIds(pr.getSourceDnttIds());
+        dto.setShipmentItems(pr.getShipmentItems());
 
         List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository
                 .findByPaymentRequestId(pr.getId());
@@ -485,6 +542,12 @@ public class PaymentRequestService {
         pr.setRejectedAt(dto.getRejectedAt());
         pr.setRejectReason(dto.getRejectReason());
         pr.setRejectedLevel(dto.getRejectedLevel());
+        pr.setReferencePaymentRequestId(dto.getReferencePaymentRequestId());
+        pr.setBankAccountId(dto.getBankAccountId());
+        pr.setAccountingCheckedBy(dto.getAccountingCheckedBy());
+        pr.setAccountingCheckedAt(dto.getAccountingCheckedAt());
+        pr.setSourceDnttIds(dto.getSourceDnttIds());
+        pr.setShipmentItems(dto.getShipmentItems());
         return pr;
     }
 

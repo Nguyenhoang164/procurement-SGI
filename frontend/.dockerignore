@@ -1,0 +1,7 @@
+.git
+.gitignore
+.idea
+node_modules
+build
+*.md
+frontend-3000.log

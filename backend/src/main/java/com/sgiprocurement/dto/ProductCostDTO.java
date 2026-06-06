@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -17,5 +18,7 @@ public class ProductCostDTO {
     private BigDecimal latestUnitCostVnd;
     private BigDecimal weightedAvgCostVnd;
     private BigDecimal costDifferenceVnd;
+    private String latestOrderCode;
+    private LocalDateTime latestCostDate;
 
 }

@@ -55,6 +55,34 @@ public class FileStorageService {
         return "/files/payment-requests/" + paymentRequestId + "/" + storedName;
     }
 
+    public String storeWarehouseReceiptImage(Long receiptId, MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File khong hop le");
+        }
+
+        String originalName = file.getOriginalFilename();
+        String extension = extractExtension(originalName);
+        if (!ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new IllegalArgumentException("Dinh dang file khong duoc ho tro: " + extension);
+        }
+
+        Path targetDir = uploadRoot.resolve("warehouse-receipts").resolve(String.valueOf(receiptId));
+        Files.createDirectories(targetDir);
+
+        String storedName = UUID.randomUUID() + "_" + sanitizeFilename(originalName);
+        Path targetPath = targetDir.resolve(storedName).normalize();
+
+        if (!targetPath.startsWith(targetDir)) {
+            throw new IllegalArgumentException("Ten file khong hop le");
+        }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        return "/files/warehouse-receipts/" + receiptId + "/" + storedName;
+    }
+
     private String extractExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";

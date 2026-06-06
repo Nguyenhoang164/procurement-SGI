@@ -19,43 +19,43 @@ public class WaybillController {
     private WaybillService waybillService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<WaybillDTO>> getAllWaybills() {
         return ResponseEntity.ok(waybillService.getAllWaybills());
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<WaybillDTO>> searchWaybills(@RequestParam String keyword) {
         return ResponseEntity.ok(waybillService.searchByCode(keyword));
     }
 
     @GetMapping("/by-payment-request/{paymentRequestId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<WaybillDTO>> getWaybillsByPaymentRequestId(@PathVariable Long paymentRequestId) {
         return ResponseEntity.ok(waybillService.getWaybillsByPaymentRequestId(paymentRequestId));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WaybillDTO> getWaybillById(@PathVariable Long id) {
         return ResponseEntity.ok(waybillService.getWaybillById(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
     public ResponseEntity<WaybillDTO> createWaybill(@Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(waybillService.createWaybill(dto));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
     public ResponseEntity<WaybillDTO> updateWaybill(@PathVariable Long id, @Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.ok(waybillService.updateWaybill(id, dto));
     }
 
     @PutMapping("/{id}/confirm")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
     public ResponseEntity<WaybillDTO> confirmDelivery(@PathVariable Long id) {
         return ResponseEntity.ok(waybillService.confirmDelivery(id));
     }

@@ -24,6 +24,7 @@ public class PurchaseOrderDTO {
     private String productName;
 
     private String productShortCode;
+    private String productType;
 
     private String supplierName;
 
@@ -57,6 +58,8 @@ public class PurchaseOrderDTO {
 
     private BigDecimal recentUnitPrice = BigDecimal.ZERO;
 
+    private String landing;
+
     private String spec;
 
     private String country;
@@ -79,6 +82,10 @@ public class PurchaseOrderDTO {
 
     private BigDecimal remainingPaymentVnd = BigDecimal.ZERO;
 
+    private String rejectedBy;
+    private LocalDateTime rejectedAt;
+    private String rejectReason;
+
     private String status;
 
     private String paymentStatus;
@@ -92,3 +99,5 @@ public class PurchaseOrderDTO {
     private List<PurchaseOrderItemDTO> items;
 
 }
+
+

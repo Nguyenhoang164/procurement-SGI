@@ -19,28 +19,28 @@ public class WeeklyPlanController {
     private WeeklyPlanService weeklyPlanService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<WeeklyPlanDTO>> getAllWeeklyPlans() {
         List<WeeklyPlanDTO> plans = weeklyPlanService.getAllWeeklyPlans();
         return ResponseEntity.ok(plans);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> getWeeklyPlanById(@PathVariable Long id) {
         WeeklyPlanDTO plan = weeklyPlanService.getWeeklyPlanById(id);
         return ResponseEntity.ok(plan);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> createWeeklyPlan(@Valid @RequestBody WeeklyPlanDTO dto) {
         WeeklyPlanDTO created = weeklyPlanService.createWeeklyPlan(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> updateWeeklyPlan(
             @PathVariable Long id,
             @Valid @RequestBody WeeklyPlanDTO dto) {
@@ -56,14 +56,14 @@ public class WeeklyPlanController {
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> submitForApproval(@PathVariable Long id) {
         WeeklyPlanDTO submitted = weeklyPlanService.submitForApproval(id);
         return ResponseEntity.ok(submitted);
     }
 
     @PostMapping("/{id}/approve-l1")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> approveL1(@PathVariable Long id) {
         WeeklyPlanDTO approved = weeklyPlanService.approveL1(id);
         return ResponseEntity.ok(approved);
@@ -77,7 +77,7 @@ public class WeeklyPlanController {
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     public ResponseEntity<WeeklyPlanDTO> reject(@PathVariable Long id) {
         WeeklyPlanDTO rejected = weeklyPlanService.reject(id);
         return ResponseEntity.ok(rejected);

@@ -3,15 +3,15 @@ import '../styles/ProductItem.css';
 
 function ProductItem({ product, onDelete, onEdit }) {
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
+    if (window.confirm('Bạn chắc chắn muốn xóa sản phẩm này?')) {
       try {
         const response = await fetch(`/api/products/${product.id}`, {
           method: 'DELETE'
         });
-        if (!response.ok) throw new Error('Failed to delete product');
+        if (!response.ok) throw new Error('Xóa sản phẩm thất bại');
         onDelete(product.id);
       } catch (error) {
-        console.error('Error deleting product:', error);
+        console.error('Lỗi khi xóa sản phẩm:', error);
       }
     }
   };
@@ -20,18 +20,18 @@ function ProductItem({ product, onDelete, onEdit }) {
     <div className="product-item">
       <div className="product-info">
         <h3>{product.name}</h3>
-        <p className="description">{product.description || 'No description'}</p>
+        <p className="description">{product.description || 'Chưa có mô tả'}</p>
         <div className="product-details">
           <span className="price">${product.price.toFixed(2)}</span>
-          <span className="quantity">Stock: {product.quantity}</span>
+          <span className="quantity">Tồn kho: {product.quantity}</span>
         </div>
       </div>
       <div className="product-actions">
         <button className="btn btn-edit" onClick={() => onEdit(product.id)}>
-          Edit
+          Sửa
         </button>
         <button className="btn btn-delete" onClick={handleDelete}>
-          Delete
+          Xóa
         </button>
       </div>
     </div>

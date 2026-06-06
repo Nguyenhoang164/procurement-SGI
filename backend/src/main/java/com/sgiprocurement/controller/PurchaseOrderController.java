@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/purchase-orders")
@@ -19,28 +20,28 @@ public class PurchaseOrderController {
     private PurchaseOrderService purchaseOrderService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<PurchaseOrderDTO>> getAllPurchaseOrders() {
         List<PurchaseOrderDTO> orders = purchaseOrderService.getAllPurchaseOrders();
         return ResponseEntity.ok(orders);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> getPurchaseOrderById(@PathVariable Long id) {
         PurchaseOrderDTO order = purchaseOrderService.getPurchaseOrderById(id);
         return ResponseEntity.ok(order);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> createPurchaseOrder(@Valid @RequestBody PurchaseOrderDTO dto) {
         PurchaseOrderDTO created = purchaseOrderService.createPurchaseOrder(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> updatePurchaseOrder(
             @PathVariable Long id,
             @Valid @RequestBody PurchaseOrderDTO dto) {
@@ -56,14 +57,14 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> submitForApproval(@PathVariable Long id) {
         PurchaseOrderDTO submitted = purchaseOrderService.submitForApproval(id);
         return ResponseEntity.ok(submitted);
     }
 
     @PostMapping("/{id}/approve-l1")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> approveL1(@PathVariable Long id) {
         PurchaseOrderDTO approved = purchaseOrderService.approveL1(id);
         return ResponseEntity.ok(approved);
@@ -77,23 +78,32 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<PurchaseOrderDTO> reject(@PathVariable Long id) {
-        PurchaseOrderDTO rejected = purchaseOrderService.reject(id);
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    public ResponseEntity<PurchaseOrderDTO> reject(@PathVariable Long id,
+            @RequestParam(required = false) String reason,
+            @RequestParam(required = false) String rejectedBy) {
+        PurchaseOrderDTO rejected = purchaseOrderService.reject(id, reason, rejectedBy);
         return ResponseEntity.ok(rejected);
     }
 
     @PostMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> updateStatus(@PathVariable Long id, @RequestParam String status) {
         PurchaseOrderDTO updated = purchaseOrderService.updateStatus(id, status);
         return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<PurchaseOrderDTO>> search(@RequestParam String keyword) {
         return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword));
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
+    public ResponseEntity<Map<String, Object>> importPurchaseOrders(@RequestBody List<PurchaseOrderDTO> orders) {
+        int count = purchaseOrderService.importPurchaseOrders(orders);
+        return ResponseEntity.ok(Map.of("imported", count, "message", "Đã import " + count + " đơn hàng"));
     }
 
 }

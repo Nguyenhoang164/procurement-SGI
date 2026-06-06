@@ -22,6 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.Mockito;
+
 @ExtendWith(MockitoExtension.class)
 class PaymentRequestServiceTest {
 
@@ -48,6 +50,12 @@ class PaymentRequestServiceTest {
 
     @Mock
     private ObjectMapper objectMapper;
+
+    @Mock
+    private WarehouseReceiptRepository warehouseReceiptRepository;
+
+    @Mock
+    private BankAccountRepository bankAccountRepository;
 
     @InjectMocks
     private PaymentRequestService paymentRequestService;
@@ -81,6 +89,12 @@ class PaymentRequestServiceTest {
         paymentRequestDTO.setPoId(1L);
         paymentRequestDTO.setType("FULL_PAYMENT");
         paymentRequestDTO.setAmountVnd(new BigDecimal("10000000"));
+
+        Mockito.lenient().when(paymentRequestPurchaseOrderRepository.findByPaymentRequestId(any())).thenReturn(List.of());
+        Mockito.lenient().when(paymentRequestWaybillRepository.findByPaymentRequestId(any())).thenReturn(List.of());
+        Mockito.lenient().when(waybillRepository.findByPaymentRequestId(any())).thenReturn(List.of());
+        Mockito.lenient().when(warehouseReceiptRepository.findAllByPoId(any())).thenReturn(List.of());
+        Mockito.lenient().when(warehouseReceiptRepository.findAllByWaybillId(any())).thenReturn(List.of());
     }
 
     @Test
@@ -136,6 +150,8 @@ class PaymentRequestServiceTest {
         });
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        when(paymentRequestPurchaseOrderRepository.findByPaymentRequestId(any())).thenReturn(List.of());
+
         PaymentRequestDTO result = paymentRequestService.createPaymentRequest(paymentRequestDTO);
 
         assertNotNull(result);
@@ -153,16 +169,17 @@ class PaymentRequestServiceTest {
     }
 
     @Test
-    void approveL1_shouldSetPendingL2() {
+    void approveL1_shouldSetAccountingCheck() {
         paymentRequest.setStatus("PENDING_L1");
         when(paymentRequestRepository.findById(1L)).thenReturn(Optional.of(paymentRequest));
         when(paymentRequestRepository.save(any(PaymentRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(approvedPO));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(paymentRequestPurchaseOrderRepository.findByPaymentRequestId(1L)).thenReturn(List.of());
 
         PaymentRequestDTO result = paymentRequestService.approveL1(1L);
 
-        assertEquals("PENDING_L2", result.getStatus());
+        assertEquals("ACCOUNTING_CHECK", result.getStatus());
     }
 
     @Test
@@ -201,10 +218,9 @@ class PaymentRequestServiceTest {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(approvedPO));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PaymentRequestDTO result = paymentRequestService.reject(1L, "Not needed");
+        PaymentRequestDTO result = paymentRequestService.reject(1L, "Not needed", null);
 
         assertEquals("REJECTED", result.getStatus());
-        assertTrue(result.getNote().contains("Not needed"));
     }
 
     @Test
@@ -214,7 +230,7 @@ class PaymentRequestServiceTest {
         when(purchaseOrderRepository.findById(1L)).thenReturn(Optional.of(approvedPO));
         when(purchaseOrderRepository.save(any(PurchaseOrder.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        PaymentRequestDTO result = paymentRequestService.reject(1L, null);
+        PaymentRequestDTO result = paymentRequestService.reject(1L, null, null);
 
         assertEquals("REJECTED", result.getStatus());
     }
@@ -236,7 +252,7 @@ class PaymentRequestServiceTest {
         });
         when(paymentRequestWaybillRepository.save(any())).thenReturn(null);
 
-        PaymentRequestDTO result = paymentRequestService.markAsPaid(1L, null);
+        PaymentRequestDTO result = paymentRequestService.markAsPaid(1L, null, null);
 
         assertEquals("PAID", result.getStatus());
     }
@@ -246,7 +262,7 @@ class PaymentRequestServiceTest {
         paymentRequest.setStatus("PENDING_L1");
         when(paymentRequestRepository.findById(1L)).thenReturn(Optional.of(paymentRequest));
 
-        assertThrows(IllegalStateException.class, () -> paymentRequestService.markAsPaid(1L, null));
+        assertThrows(IllegalStateException.class, () -> paymentRequestService.markAsPaid(1L, null, null));
     }
 
     @Test

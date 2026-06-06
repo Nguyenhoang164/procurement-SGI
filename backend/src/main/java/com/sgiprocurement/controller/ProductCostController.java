@@ -23,19 +23,19 @@ public class ProductCostController {
     private ProductCostService productCostService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
     public ResponseEntity<List<ProductCostDTO>> getAllProductCosts() {
         return ResponseEntity.ok(productCostService.getAllProductCosts());
     }
 
     @GetMapping("/alerts")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
     public ResponseEntity<List<CostAlertDTO>> getAllCostAlerts() {
         return ResponseEntity.ok(productCostService.getAllCostAlerts());
     }
 
     @GetMapping("/alerts/{posCode}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
     public ResponseEntity<List<CostAlertDTO>> getCostAlertsByPosCode(@PathVariable String posCode) {
         return ResponseEntity.ok(productCostService.getCostAlertsByPosCode(posCode));
     }

@@ -1,12 +1,17 @@
 package com.sgiprocurement.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sgiprocurement.model.WarehouseReceipt;
 import com.sgiprocurement.model.PurchaseOrder;
 import com.sgiprocurement.model.Product;
 import com.sgiprocurement.dto.WarehouseReceiptDTO;
+import com.sgiprocurement.dto.WarehouseReceiptItemDTO;
 import com.sgiprocurement.dto.PendingReceiveDTO;
 import com.sgiprocurement.dto.WarehouseReceiveRequest;
+import com.sgiprocurement.dto.WarehouseReceiveItemRequest;
 import com.sgiprocurement.repository.WarehouseReceiptRepository;
+import com.sgiprocurement.repository.WarehouseReceiptItemRepository;
 import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.ProductRepository;
 import com.sgiprocurement.repository.PaymentRequestRepository;
@@ -15,6 +20,7 @@ import com.sgiprocurement.repository.PurchaseOrderItemRepository;
 import com.sgiprocurement.repository.PaymentRequestPurchaseOrderRepository;
 import com.sgiprocurement.model.PaymentRequest;
 import com.sgiprocurement.model.PaymentRequestPurchaseOrder;
+import com.sgiprocurement.model.WarehouseReceiptItem;
 import com.sgiprocurement.model.Waybill;
 import com.sgiprocurement.model.PurchaseOrderItem;
 import com.sgiprocurement.dto.WaybillBriefDTO;
@@ -23,12 +29,15 @@ import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,6 +68,51 @@ public class WarehouseReceiptService {
 
     @Autowired
     private PurchaseOrderItemRepository purchaseOrderItemRepository;
+
+    @Autowired
+    private WarehouseReceiptItemRepository warehouseReceiptItemRepository;
+
+    @Autowired
+    private FileStorageService fileStorageService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private static final int MAX_IMAGES = 3;
+    private static final long MAX_TOTAL_SIZE_BYTES = 20L * 1024 * 1024;
+
+    public WarehouseReceiptDTO uploadImages(Long id, MultipartFile[] files) throws IOException {
+        WarehouseReceipt receipt = warehouseReceiptRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse receipt not found with id: " + id));
+
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("Chua chon file de tai len");
+        }
+
+        if (files.length > MAX_IMAGES) {
+            throw new IllegalArgumentException("Chi duoc tai len toi da " + MAX_IMAGES + " anh");
+        }
+
+        long totalSize = 0;
+        for (MultipartFile file : files) {
+            totalSize += file.getSize();
+        }
+        if (totalSize > MAX_TOTAL_SIZE_BYTES) {
+            throw new IllegalArgumentException("Tong dung luong anh vuot qua 20MB");
+        }
+
+        List<String> urls = parseAttachmentUrls(receipt.getAttachments());
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                urls.add(fileStorageService.storeWarehouseReceiptImage(id, file));
+            }
+        }
+        receipt.setAttachments(serializeAttachmentUrls(urls));
+        WarehouseReceipt updated = warehouseReceiptRepository.save(receipt);
+        WarehouseReceiptDTO dto = convertToDTO(updated);
+        enrichReceiptDTO(dto);
+        return dto;
+    }
 
     public List<PendingReceiveDTO> getPendingReceives() {
         List<PendingReceiveDTO> result = new ArrayList<>();
@@ -138,6 +192,7 @@ public class WarehouseReceiptService {
         }
 
         int totalReceived = 0;
+        int totalReceivedQty = 0;
 
         if (po != null) {
             boolean isPaid = "PAID".equals(po.getPaymentStatus());
@@ -187,7 +242,13 @@ public class WarehouseReceiptService {
                 }
             }
 
-            if (po.getOrderedQty() != null && totalReceived + request.getReceivedQty() > po.getOrderedQty()) {
+            if (request.getItems() != null && !request.getItems().isEmpty()) {
+                totalReceivedQty = request.getItems().stream().mapToInt(WarehouseReceiveItemRequest::getReceivedQty).sum();
+            } else {
+                totalReceivedQty = request.getReceivedQty() != null ? request.getReceivedQty() : 0;
+            }
+
+            if (po.getOrderedQty() != null && totalReceived + totalReceivedQty > po.getOrderedQty()) {
                 throw new IllegalArgumentException("Tong so luong nhan vuot qua so luong dat (" + po.getOrderedQty() + ")");
             }
         }
@@ -207,8 +268,10 @@ public class WarehouseReceiptService {
             receipt.setWaybillId(wbId);
             receipt.setWaybillCode(request.getWaybillCode() != null ? request.getWaybillCode() : (waybill != null ? waybill.getWaybillCode() : null));
             receipt.setPoId(po != null ? po.getId() : (waybill != null ? -waybill.getId() : requestedPoId));
+        } else if (po != null) {
+            receipt.setPoId(po.getId());
         }
-        receipt.setReceivedQty(request.getReceivedQty());
+        receipt.setReceivedQty(totalReceivedQty);
         receipt.setReceivedDate(LocalDateTime.now());
         receipt.setInspector(request.getInspector());
         receipt.setCondition(request.getConditionDescription());
@@ -218,8 +281,11 @@ public class WarehouseReceiptService {
 
         WarehouseReceipt saved = warehouseReceiptRepository.save(receipt);
 
+        // Save individual receipt items
+        List<WarehouseReceiptItem> savedItems = saveReceiptItems(saved, request, po);
+
         if (po != null) {
-            int newTotal = totalReceived + request.getReceivedQty();
+            int newTotal = totalReceived + totalReceivedQty;
             if (po.getOrderedQty() != null && newTotal >= po.getOrderedQty()) {
                 po.setStatus("COMPLETED");
                 po.setExpectedWarehouseArrivalDate(LocalDate.now());
@@ -271,7 +337,15 @@ public class WarehouseReceiptService {
                 }
             }
 
-            productCostService.applyReceiptFromPurchaseOrder(po, request.getReceivedQty());
+            if (po.getItems() != null && !po.getItems().isEmpty() && savedItems != null && !savedItems.isEmpty()) {
+                java.util.Map<Long, Integer> itemReceivedMap = new java.util.HashMap<>();
+                for (WarehouseReceiptItem ri : savedItems) {
+                    itemReceivedMap.put(ri.getPoItemId(), ri.getReceivedQty());
+                }
+                productCostService.applyReceiptFromPurchaseOrder(po, itemReceivedMap);
+            } else {
+                productCostService.applyReceiptFromPurchaseOrder(po, totalReceivedQty);
+            }
         }
 
         return convertToDTO(saved);
@@ -294,8 +368,22 @@ public class WarehouseReceiptService {
     }
 
     private void enrichReceiptDTO(WarehouseReceiptDTO dto) {
-        if (dto.getPoId() != null && dto.getPoId() > 0) {
-            purchaseOrderRepository.findById(dto.getPoId()).ifPresent(po -> {
+        Long targetPoId = dto.getPoId();
+        if (targetPoId == null || targetPoId <= 0) {
+            if (dto.getWaybillId() != null) {
+                targetPoId = waybillRepository.findById(dto.getWaybillId())
+                        .flatMap(wb -> {
+                            if (wb.getPaymentRequestId() != null) {
+                                return paymentRequestRepository.findById(wb.getPaymentRequestId())
+                                        .map(PaymentRequest::getPoId);
+                            }
+                            return Optional.empty();
+                        }).orElse(null);
+            }
+        }
+        if (targetPoId != null && targetPoId > 0) {
+            Long fetchPoId = targetPoId;
+            purchaseOrderRepository.findById(fetchPoId).ifPresent(po -> {
                 dto.setPoCode("PO-" + po.getId());
                 dto.setPosCode(po.getPosCode());
                 List<PurchaseOrderItem> poItems = purchaseOrderItemRepository.findByPurchaseOrderId(po.getId());
@@ -512,8 +600,125 @@ public class WarehouseReceiptService {
             dto.setWaybills(List.of(wbdto));
         }
 
-        dto.setProducts(List.of());
+        if (prId != null) {
+            PaymentRequest pr = paymentRequestRepository.findById(prId).orElse(null);
+            if (pr != null) {
+                List<Long> allPoIds = new ArrayList<>();
+                if (pr.getPoId() != null) allPoIds.add(pr.getPoId());
+                List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository.findByPaymentRequestId(pr.getId());
+                for (PaymentRequestPurchaseOrder link : poLinks) {
+                    if (!allPoIds.contains(link.getPoId())) allPoIds.add(link.getPoId());
+                }
+                if (!allPoIds.isEmpty()) {
+                    PurchaseOrder firstPo = purchaseOrderRepository.findById(allPoIds.get(0)).orElse(null);
+                    if (firstPo != null) {
+                        List<PurchaseOrderItem> poItems = purchaseOrderItemRepository.findByPurchaseOrderId(firstPo.getId());
+                        dto.setProducts(poItems.stream().map(item -> {
+                            PurchaseOrderItemDTO pdto = new PurchaseOrderItemDTO();
+                            pdto.setId(item.getId());
+                            pdto.setPosCode(item.getPosCode());
+                            pdto.setProductName(item.getProductName());
+                            pdto.setProductShortCode(item.getProductShortCode());
+                            pdto.setOrderedQty(item.getOrderedQty());
+                            pdto.setUnitPrice(item.getUnitPrice());
+                            pdto.setCurrency(item.getCurrency());
+                            pdto.setSpec(item.getSpec());
+                            return pdto;
+                        }).collect(Collectors.toList()));
+                    }
+                }
+            }
+        }
+        if (dto.getProducts() == null) {
+            dto.setProducts(List.of());
+        }
         return dto;
+    }
+
+    private List<WarehouseReceiptItem> saveReceiptItems(WarehouseReceipt receipt, WarehouseReceiveRequest request, PurchaseOrder po) {
+        List<WarehouseReceiptItem> itemsToSave = new ArrayList<>();
+        if (request.getItems() != null && !request.getItems().isEmpty()) {
+            for (WarehouseReceiveItemRequest itemReq : request.getItems()) {
+                WarehouseReceiptItem item = new WarehouseReceiptItem();
+                item.setReceiptId(receipt.getId());
+                item.setPoItemId(itemReq.getPoItemId());
+                item.setReceivedQty(itemReq.getReceivedQty());
+                item.setGoodsCondition(itemReq.getGoodsCondition());
+                item.setConditionDescription(itemReq.getConditionDescription());
+                itemsToSave.add(item);
+            }
+        } else if (po != null) {
+            List<PurchaseOrderItem> poItems = purchaseOrderItemRepository.findByPurchaseOrderId(po.getId());
+            if (poItems.size() == 1) {
+                WarehouseReceiptItem item = new WarehouseReceiptItem();
+                item.setReceiptId(receipt.getId());
+                item.setPoItemId(poItems.get(0).getId());
+                item.setReceivedQty(receipt.getReceivedQty());
+                item.setGoodsCondition(receipt.getGoodsCondition());
+                item.setConditionDescription(receipt.getCondition());
+                itemsToSave.add(item);
+            }
+        }
+        if (!itemsToSave.isEmpty()) {
+            return warehouseReceiptItemRepository.saveAll(itemsToSave);
+        }
+        return itemsToSave;
+    }
+
+    private WarehouseReceiptItemDTO toItemDTO(WarehouseReceiptItem item) {
+        WarehouseReceiptItemDTO dto = new WarehouseReceiptItemDTO();
+        dto.setId(item.getId());
+        dto.setReceiptId(item.getReceiptId());
+        dto.setPoItemId(item.getPoItemId());
+        dto.setReceivedQty(item.getReceivedQty());
+        dto.setGoodsCondition(item.getGoodsCondition());
+        dto.setConditionDescription(item.getConditionDescription());
+        dto.setImages(item.getImages());
+        purchaseOrderItemRepository.findById(item.getPoItemId()).ifPresent(poi -> {
+            dto.setPosCode(poi.getPosCode());
+            dto.setProductName(poi.getProductName());
+            dto.setProductShortCode(poi.getProductShortCode());
+            dto.setOrderedQty(poi.getOrderedQty());
+            dto.setSpec(poi.getSpec());
+        });
+        return dto;
+    }
+
+    @Transactional
+    public WarehouseReceiptItemDTO uploadItemImages(Long receiptId, Long itemId, MultipartFile[] files) throws IOException {
+        WarehouseReceiptItem item = warehouseReceiptItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Receipt item not found with id: " + itemId));
+
+        if (!item.getReceiptId().equals(receiptId)) {
+            throw new IllegalArgumentException("Item does not belong to this receipt");
+        }
+
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("Chua chon file de tai len");
+        }
+
+        if (files.length > 3) {
+            throw new IllegalArgumentException("Chi duoc tai len toi da 3 anh cho moi san pham");
+        }
+
+        long totalSize = 0;
+        for (MultipartFile file : files) {
+            totalSize += file.getSize();
+        }
+        if (totalSize > 20 * 1024 * 1024) {
+            throw new IllegalArgumentException("Tong dung luong anh vuot qua 20MB");
+        }
+
+        List<String> urls = parseAttachmentUrls(item.getImages());
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                urls.add(fileStorageService.storeWarehouseReceiptImage(receiptId, file));
+            }
+        }
+        item.setImages(serializeAttachmentUrls(urls));
+        warehouseReceiptItemRepository.save(item);
+
+        return toItemDTO(item);
     }
 
     private WarehouseReceiptDTO convertToDTO(WarehouseReceipt receipt) {
@@ -532,6 +737,10 @@ public class WarehouseReceiptService {
         dto.setWaybillCode(receipt.getWaybillCode());
         dto.setExpectedQty(receipt.getExpectedQty());
         dto.setGoodsCondition(receipt.getGoodsCondition());
+        List<WarehouseReceiptItem> items = warehouseReceiptItemRepository.findByReceiptId(receipt.getId());
+        if (items != null && !items.isEmpty()) {
+            dto.setItems(items.stream().map(this::toItemDTO).collect(Collectors.toList()));
+        }
         return dto;
     }
 
@@ -586,7 +795,6 @@ public class WarehouseReceiptService {
                     primaryPo.setExpectedWarehouseArrivalDate(java.time.LocalDate.now());
                     purchaseOrderRepository.save(primaryPo);
                 }
-                productCostService.applyReceiptFromPurchaseOrder(primaryPo, receipt.getReceivedQty());
             }
 
             return convertToDTO(saved);
@@ -607,5 +815,33 @@ public class WarehouseReceiptService {
 
         WarehouseReceipt saved = warehouseReceiptRepository.save(receipt);
         return convertToDTO(saved);
+    }
+
+    private List<String> parseAttachmentUrls(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            if (raw.trim().startsWith("[")) {
+                return objectMapper.readValue(raw, new TypeReference<List<String>>() {});
+            }
+            List<String> legacy = new ArrayList<>();
+            for (String part : raw.split(",")) {
+                if (!part.isBlank()) {
+                    legacy.add(part.trim());
+                }
+            }
+            return legacy;
+        } catch (IOException e) {
+            throw new IllegalStateException("Khong doc duoc danh sach anh", e);
+        }
+    }
+
+    private String serializeAttachmentUrls(List<String> urls) {
+        try {
+            return objectMapper.writeValueAsString(urls);
+        } catch (IOException e) {
+            throw new IllegalStateException("Khong luu duoc danh sach anh", e);
+        }
     }
 }

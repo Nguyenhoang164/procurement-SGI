@@ -1,0 +1,394 @@
+================================================================================
+  HỆ THỐNG PHÂN QUYỀN & QUẢN LÝ TÀI KHOẢN — SGI PROCUREMENT
+================================================================================
+
+Mục lục:
+  1. Các tác nhân (Role) tham gia hệ thống
+  2. Hiện trạng hệ thống tài khoản
+  3. Kế hoạch hoàn thiện tính năng quản lý tài khoản
+  4. Danh sách tài khoản seed cho tất cả các Role
+  5. Chuẩn bị đẩy code lên server
+  6. File cần tạo/sửa
+
+
+================================================================================
+1. CÁC TÁC NHÂN (ROLE) THAM GIA HỆ THỐNG
+================================================================================
+
+Hệ thống có 7 tác nhân, được lưu dưới cột `role` (VARCHAR(50)) trong bảng `users`:
+
+  STT | Tác nhân (Role)       | Mã lưu DB       | Mô tả
+  ----|-----------------------|-----------------|---------------------------------------
+   1  | Admin                 | ADMIN           | Quản trị toàn bộ hệ thống
+   2  | CEO                   | CEO             | Giám đốc điều hành — xem toàn bộ
+       |                       |                 | báo cáo, phê duyệt cấp cao
+   3  | Thủ kho               | WAREHOUSE       | Quản lý nhập kho, vận đơn, tồn kho
+   4  | Kế toán               | ACCOUNTANT      | Lập DNTT, xác nhận thanh toán,
+       |                       |                 | quản lý ngân hàng, tỷ giá
+   5  | Kế toán trưởng        | CHIEF_ACCOUNTANT| Phê duyệt thanh toán, kiểm tra
+       |                       |                 | kế toán, cảnh báo giá vốn
+   6  | Nhân viên kinh doanh  | SALES           | Tạo đơn hàng, kế hoạch tuần,
+       |                       |                 | theo dõi đơn hàng
+   7  | Trưởng phòng KD       | SALES_MANAGER   | Phê duyệt đơn hàng, quản lý
+       |                       |                 | giá vốn, tuyến hàng
+
+Quyền hạn chi tiết theo module:
+
+  Module / Chức năng          | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACC | SALES | SALES_MGR
+  ----------------------------|-------|-----|-----------|------------|-----------|-------|-----------
+  Dashboard / Thống kê        |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  Kế hoạch tuần (tạo/sửa)     |  X    |  -  |     -     |     -      |    -      |   X   |    X
+  Kế hoạch tuần (xem)         |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  Đơn hàng PO (tạo/sửa)       |  X    |  -  |     -     |     -      |    -      |   X   |    X
+  Đơn hàng PO (phê duyệt)     |  X    |  -  |     -     |     -      |    -      |   -   |    X
+  Đơn hàng PO (xem)           |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  DNTT (tạo)                  |  X    |  -  |     -     |     X      |    X      |   -   |    -
+  DNTT (xác nhận thanh toán)  |  X    |  -  |     -     |     X      |    X      |   -   |    -
+  DNTT (kiểm tra kế toán)     |  X    |  -  |     -     |     -      |    X      |   -   |    -
+  DNTT (xem)                  |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  Nhận hàng / Kho             |  X    |  X  |     X     |     X      |    X      |   -   |    -
+  Vận đơn (tạo/sửa)           |  X    |  -  |     X     |     -      |    -      |   -   |    -
+  Vận đơn (xem)               |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  Giá vốn SP (xem)            |  X    |  X  |     -     |     X      |    X      |   -   |    X
+  Cảnh báo giá                |  X    |  -  |     -     |     -      |    X      |   -   |    X
+  Danh mục SP (tạo/sửa)       |  X    |  -  |     -     |     -      |    -      |   -   |    -
+  Danh mục SP (xem)           |  X    |  X  |     X     |     X      |    X      |   X   |    X
+  Tỷ giá (cấu hình)           |  X    |  -  |     -     |     X      |    X      |   -   |    -
+  Tỷ giá (xem)                |  X    |  X  |     -     |     X      |    X      |   -   |    -
+  Tuyến hàng (cấu hình)       |  X    |  -  |     -     |     -      |    -      |   -   |    X
+  Tuyến hàng (xem)            |  X    |  X  |     -     |     X      |    X      |   X   |    X
+  TK Ngân hàng (tạo/sửa)      |  X    |  -  |     -     |     X      |    X      |   -   |    -
+  TK Ngân hàng (xem)          |  X    |  X  |     -     |     X      |    X      |   -   |    -
+  Quản lý tài khoản           |  X    |  X  |     -     |     -      |    -      |   -   |    -
+  Thông báo                   |  X    |  X  |     X     |     X      |    X      |   X   |    X
+
+  (X = có quyền, - = không có quyền)
+
+
+================================================================================
+2. HIỆN TRẠNG HỆ THỐNG TÀI KHOẢN
+================================================================================
+
+  2.1 Đã có:
+  ─────────
+  - Entity User (id, username, password, role, market, active, createdAt,
+    updatedAt)
+  - UserRepository: findByUsername, existsByUsername (kế thừa JpaRepository
+    -> có sẵn findAll, findById, save, delete)
+  - AuthService: login(), createAdminUser()
+  - AuthController: POST /v1/auth/login
+  - Security: JWT (HS512, 24h), filter chain, CORS localhost:3000
+  - Flyway migration: V1__init_schema.sql (tạo bảng users),
+    V2__align_users_market_length.sql (sửa độ dài market)
+  - @PreAuthorize("hasRole('ADMIN')") ở một số controller
+
+  2.2 Vấn đề cần xử lý:
+  ─────────────────────
+  - Code hiện tại đang dùng 3 role cũ: ADMIN, MANAGER, USER
+  - Cần chuyển sang 7 role mới: ADMIN, CEO, WAREHOUSE, ACCOUNTANT,
+    CHIEF_ACCOUNTANT, SALES, SALES_MANAGER
+  - Tất cả @PreAuthorize, frontend check role cần cập nhật tương ứng
+
+  2.3 Chưa có / Cần bổ sung:
+  ──────────────────────────
+  - [ ] API tạo tài khoản:        POST   /v1/users
+  - [ ] API danh sách tài khoản:  GET    /v1/users
+  - [ ] API chi tiết tài khoản:   GET    /v1/users/{id}
+  - [ ] API cập nhật tài khoản:   PUT    /v1/users/{id}
+  - [ ] API xóa / deactivate:     DELETE /v1/users/{id}
+  - [ ] DTO UserRequest (username, password, role, market, active)
+  - [ ] DTO UserResponse (id, username, role, market, active, createdAt,
+        updatedAt) - KHÔNG trả password
+  - [ ] UserService (CRUD)
+  - [ ] UserController
+  - [ ] Cập nhật @PreAuthorize cho tất cả controller theo 7 role mới
+  - [ ] Frontend: trang UserList (danh sách tài khoản)
+  - [ ] Frontend: trang UserForm (tạo/sửa tài khoản)
+  - [ ] Frontend: trang UserDetail (xem chi tiết tài khoản)
+  - [ ] Frontend: thêm route /users, /users/new, /users/:id
+  - [ ] Frontend: cập nhật role checks (paymentUtils.js, các page)
+
+
+================================================================================
+3. KẾ HOẠCH HOÀN THIỆN TÍNH NĂNG QUẢN LÝ TÀI KHOẢN
+================================================================================
+
+  3.1 Backend — UserService / UserController
+  ──────────────────────────────────────────
+
+  a) Tạo file: dto/UserRequest.java
+     ┌─────────────────────────────────────────────────────────────┐
+     │ public class UserRequest {                                  │
+     │   @NotBlank String username;                                │
+     │   @NotBlank String password;     // chỉ khi create          │
+     │   @NotBlank String role;         // 7 roles                 │
+     │   String market;                                            │
+     │   Boolean active;                                           │
+     │ }                                                            │
+     └─────────────────────────────────────────────────────────────┘
+
+  b) Tạo file: dto/UserResponse.java
+     ┌─────────────────────────────────────────────────────────────┐
+     │ public class UserResponse {                                 │
+     │   Long id; String username; String role;                    │
+     │   String market; Boolean active;                            │
+     │   LocalDateTime createdAt; LocalDateTime updatedAt;         │
+     │ }                                                            │
+     └─────────────────────────────────────────────────────────────┘
+
+  c) Tạo file: service/UserService.java
+     ┌─────────────────────────────────────────────────────────────┐
+     │ - getAllUsers()     → List<UserResponse>                    │
+     │ - getUserById(id)   → UserResponse                          │
+     │ - createUser(req)   → UserResponse  (BCrypt password)       │
+     │ - updateUser(id,req)→ UserResponse  (chỉ update nếu có)     │
+     │ - deactivateUser(id)→ void          (set active = false)    │
+     │ - deleteUser(id)    → void          (xóa hẳn, admin only)   │
+     └─────────────────────────────────────────────────────────────┘
+
+  d) Tạo file: controller/UserController.java
+     ┌─────────────────────────────────────────────────────────────┐
+     │ @RestController                                              │
+     │ @RequestMapping("/v1/users")                                 │
+     │ public class UserController {                                │
+     │   GET    /v1/users              → getAllUsers                │
+     │   GET    /v1/users/{id}         → getUserById               │
+     │   POST   /v1/users              → createUser (ADMIN/CEO)     │
+     │   PUT    /v1/users/{id}         → updateUser (ADMIN/CEO)     │
+     │   DELETE /v1/users/{id}         → deleteUser (ADMIN only)    │
+     │ }                                                             │
+     └─────────────────────────────────────────────────────────────┘
+
+  e) Cập nhật @PreAuthorize cho tất cả controller
+     ┌─────────────────────────────────────────────────────────────┐
+     │ Rule chung:                                                  │
+     │ - Xem (GET):   hasAnyRole('ADMIN','CEO','ACCOUNTANT',       │
+     │                 'CHIEF_ACCOUNTANT','SALES','SALES_MANAGER',  │
+     │                 'WAREHOUSE')                                 │
+     │ - Tạo/Sửa/Xóa nghiệp vụ: tùy module theo bảng quyền ở mục 1 │
+     │                                                              │
+     │ Ví dụ DNTT:                                                  │
+     │   POST   → hasAnyRole('ADMIN','ACCOUNTANT','CHIEF_ACCOUNTANT')│
+     │   PUT    → hasAnyRole('ADMIN','ACCOUNTANT','CHIEF_ACCOUNTANT')│
+     │   DELETE → hasRole('ADMIN')                                   │
+     │                                                              │
+     │ Ví dụ Đơn hàng:                                               │
+     │   POST   → hasAnyRole('ADMIN','SALES','SALES_MANAGER')       │
+     │   PUT    → hasAnyRole('ADMIN','SALES','SALES_MANAGER')       │
+     │   DELETE → hasRole('ADMIN')                                   │
+     │                                                              │
+     │ Ví dụ Kho/Vận đơn:                                            │
+     │   POST   → hasAnyRole('ADMIN','WAREHOUSE')                   │
+     │   PUT    → hasAnyRole('ADMIN','WAREHOUSE')                   │
+     └─────────────────────────────────────────────────────────────┘
+
+  3.2 Frontend — Quản lý tài khoản
+  ────────────────────────────────
+
+  a) Tạo file: src/services/userApi.js
+     ┌─────────────────────────────────────────────────────────────┐
+     │ import api from './api';                                     │
+     │ const BASE = '/v1/users';                                    │
+     │ export default {                                             │
+     │   getAll:  ()       => api.get(BASE),                        │
+     │   getById: (id)     => api.get(`${BASE}/${id}`),             │
+     │   create:  (data)   => api.post(BASE, data),                 │
+     │   update:  (id,data)=> api.put(`${BASE}/${id}`, data),       │
+     │   remove:  (id)     => api.delete(`${BASE}/${id}`),          │
+     │ };                                                            │
+     └─────────────────────────────────────────────────────────────┘
+
+  b) Tạo file: src/pages/UserList.js
+     - Bảng danh sách tài khoản
+     - Cột: STT, Username, Role (hiển thị tên tiếng Việt), Market,
+       Active (trạng thái), Hành động (Sửa/Xóa)
+     - Nút "Thêm tài khoản" → /users/new
+     - Click hàng → /users/{id}
+     - Chỉ ADMIN/CEO mới truy cập được
+
+  c) Tạo file: src/pages/UserForm.js
+     - Form tạo / sửa tài khoản
+     - Fields: username, password (chỉ khi tạo), role (select 7 roles),
+       market, active (checkbox)
+     - Validation: username không trùng, password >= 6 ký tự
+     - Dropdown role hiển thị tên tiếng Việt:
+       ADMIN              → Admin
+       CEO                → CEO
+       WAREHOUSE          → Thủ kho
+       ACCOUNTANT         → Kế toán
+       CHIEF_ACCOUNTANT   → Kế toán trưởng
+       SALES              → Nhân viên kinh doanh
+       SALES_MANAGER      → Trưởng phòng kinh doanh
+
+  d) Tạo file: src/pages/UserDetail.js
+     - Xem chi tiết thông tin tài khoản
+     - Hiển thị: ID, Username, Role (tên Việt), Market, Active,
+       Ngày tạo, Ngày cập nhật
+     - Nút "Quay lại" và "Chỉnh sửa"
+
+  e) Sửa src/App.js
+     - Thêm routes:
+       /users          → UserList
+       /users/new      → UserForm
+       /users/:id      → UserDetail
+       /users/edit/:id → UserForm
+
+  f) Sửa Navigation.js
+     - Thêm menu "Tài khoản" trong section "Hệ thống"
+     - Chỉ hiển thị khi user có role ADMIN hoặc CEO
+
+  g) Sửa paymentUtils.js và các page có check role
+     - canCreatePayment(user):
+       ['ADMIN','ACCOUNTANT','CHIEF_ACCOUNTANT']
+     - canAccountingCheck(user):
+       ['ADMIN','CHIEF_ACCOUNTANT']
+     - Các check role khác cập nhật theo bảng quyền ở mục 1
+
+
+================================================================================
+4. DANH SÁCH TÀI KHOẢN SEED (TẤT CẢ 7 ROLE)
+================================================================================
+
+  STT | Username              | Password       | Role              | Market
+  ----|-----------------------|----------------|-------------------|----------------
+   1  | admin                 | admin@123      | ADMIN             | All Markets
+   2  | ceo                   | ceo@123        | CEO               | All Markets
+   3  | thukho                | kho@123        | WAREHOUSE         | Vietnam
+   4  | ketoan                | kt@123         | ACCOUNTANT        | Vietnam
+   5  | ketoantruong          | ktt@123        | CHIEF_ACCOUNTANT  | All Markets
+   6  | nvkinhdoanh           | nvkd@123       | SALES             | Vietnam
+   7  | truongphongkd         | tpkd@123       | SALES_MANAGER     | Vietnam
+
+  → Tổng cộng: 7 tài khoản, bao phủ đủ 7 role.
+
+  Nên dùng Flyway migration V3__seed_users.sql để seed.
+
+  Mã hash BCrypt tham khảo (tạo bằng BCrypt online với cost=10):
+    admin@123  → $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+    ceo@123    → $2a$10$7QYTIGKJXq2SlnKhxBJ6UuFxBBycMFsmCxAnbH.Zw5F.oLG36YFYe
+    kho@123    → $2a$10$3sXdO2Hw3GzUQFH2YnB/aOqNpPxR0n3sXdO2Hw3GzUQFH2YnB/aO
+    kt@123     → $2a$10$5sXdO2Hw3GzUQFH2YnB/aOqNpPxR0n3sXdO2Hw3GzUQFH2YnB/aO
+    ktt@123    → $2a$10$7sXdO2Hw3GzUQFH2YnB/aOqNpPxR0n3sXdO2Hw3GzUQFH2YnB/aO
+    nvkd@123   → $2a$10$9sXdO2Hw3GzUQFH2YnB/aOqNpPxR0n3sXdO2Hw3GzUQFH2YnB/aO
+    tpkd@123   → $2a$10$1sXdO2Hw3GzUQFH2YnB/aOqNpPxR0n3sXdO2Hw3GzUQFH2YnB/aO
+
+  (Lưu ý: Cần generate BCrypt hash thực tế trước khi tạo file V3__seed_users.sql)
+
+
+================================================================================
+5. CHUẨN BỊ ĐẨY CODE LÊN SERVER
+================================================================================
+
+  5.1 Backend
+  ──────────
+  [ ] Kiểm tra application.properties:
+      - spring.datasource.url: đổi DB_HOST, DB_PORT, DB_NAME cho production
+      - spring.datasource.username/password: dùng biến môi trường
+        (DB_USERNAME, DB_PASSWORD) hoặc cấu hình riêng cho server
+      - jwt.secret: thay bằng secret mạnh hơn cho production
+      - CORS: thêm origin domain server (https://sgi.example.com)
+        vào SecurityConfig.java
+
+  [ ] Đảm bảo Flyway migration chạy đúng thứ tự:
+      - V1__init_schema.sql  (tạo bảng)
+      - V2__align_users_market_length.sql (sửa market)
+      - V3__seed_users.sql   (seed 7 tài khoản)
+
+  [ ] Build:
+      cd backend
+      ./gradlew clean build -x test
+      → JAR: build/libs/sgi-procurement-backend-0.0.1-SNAPSHOT.jar
+
+  [ ] Upload directory:
+      - app.upload.dir=${user.home}/.sgi-procurement/uploads
+      - Đảm bảo thư mục tồn tại và có quyền ghi
+
+  5.2 Frontend
+  ──────────
+  [ ] Sửa baseURL trong src/services/api.js:
+      - Từ: http://localhost:8080/api
+      - Thành: URL server thật (https://sgi-api.example.com)
+
+  [ ] Build:
+      cd frontend
+      npm install
+      npm run build
+      → thư mục build/ (file tĩnh)
+
+  [ ] Deploy frontend:
+      - Copy build/ lên web server (Nginx, Apache)
+      - Hoặc đưa vào src/main/resources/static/ của Spring Boot
+
+  5.3 Kiểm tra trước khi push
+  ──────────────────────────
+  [ ] Backend compile không lỗi:
+      ./gradlew compileJava
+
+  [ ] Frontend build không lỗi:
+      npm run build
+
+  [ ] Chạy Backend local, test login với từng tài khoản
+  [ ] Test quyền: admin tạo user, CEO xem user, các role khác không
+      truy cập được /v1/users
+
+  5.4 Git
+  ──────
+  [ ] git status
+  [ ] git add .
+  [ ] git commit -m "feat: hoàn thiện quản lý tài khoản + 7 roles"
+  [ ] git push origin <branch>
+
+
+================================================================================
+6. DANH SÁCH FILE CẦN TẠO/SỬA
+================================================================================
+
+  File mới (Backend):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ src/main/java/com/sgiprocurement/dto/UserRequest.java              │
+  │ src/main/java/com/sgiprocurement/dto/UserResponse.java             │
+  │ src/main/java/com/sgiprocurement/service/UserService.java          │
+  │ src/main/java/com/sgiprocurement/controller/UserController.java    │
+  │ src/main/resources/db/migration/V3__seed_users.sql                 │
+  └────────────────────────────────────────────────────────────────────┘
+
+  File sửa (Backend) — cập nhật @PreAuthorize theo 7 roles:
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ controller/PurchaseOrderController.java                            │
+  │ controller/PaymentRequestController.java                           │
+  │ controller/WeeklyPlanController.java                               │
+  │ controller/ProductController.java                                  │
+  │ controller/WarehouseReceiptController.java                         │
+  │ controller/WaybillController.java                                  │
+  │ controller/BankAccountController.java                              │
+  │ controller/ExchangeRateConfigController.java                       │
+  │ controller/TradeRouteController.java                               │
+  │ controller/ProductCostController.java                              │
+  │ controller/CostCommentController.java                              │
+  │ config/SecurityConfig.java          (thêm permit /v1/users nếu cần)│
+  └────────────────────────────────────────────────────────────────────┘
+
+  File mới (Frontend):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ src/services/userApi.js                                            │
+  │ src/pages/UserList.js                                              │
+  │ src/pages/UserForm.js                                              │
+  │ src/pages/UserDetail.js                                            │
+  └────────────────────────────────────────────────────────────────────┘
+
+  File sửa (Frontend):
+  ┌────────────────────────────────────────────────────────────────────┐
+  │ src/App.js                  → thêm routes cho Users                │
+  │ src/components/Navigation.js → thêm menu "Tài khoản"              │
+  │ src/utils/paymentUtils.js   → cập nhật role check                 │
+  │ src/pages/PaymentRequestDetail.js → cập nhật role check           │
+  │ src/pages/PurchaseOrderList.js     → cập nhật role check          │
+  │ src/pages/PurchaseOrderDetail.js   → cập nhật role check          │
+  │ src/pages/ProductForm.js           → cập nhật role check          │
+  │ src/services/api.js         → cập nhật baseURL cho production     │
+  └────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+HẾT
+================================================================================

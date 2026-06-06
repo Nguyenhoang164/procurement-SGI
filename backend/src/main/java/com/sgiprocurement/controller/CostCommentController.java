@@ -19,13 +19,13 @@ public class CostCommentController {
     private CostCommentService costCommentService;
 
     @GetMapping("/po/{poId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<List<CostCommentDTO>> getByPoId(@PathVariable Long poId) {
         return ResponseEntity.ok(costCommentService.getCommentsByPoId(poId));
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
     public ResponseEntity<CostCommentDTO> createComment(@Valid @RequestBody CostCommentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(costCommentService.createComment(dto));
     }

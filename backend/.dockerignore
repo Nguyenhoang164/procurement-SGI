@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+.gradle
+build
+target
+*.md
+test_write.txt
+tmp-login.json
+tmp-test.txt
+fastagent.jsonl
+.fast-agent
+doc nâng cấp

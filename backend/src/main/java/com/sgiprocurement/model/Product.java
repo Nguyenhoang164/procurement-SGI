@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "products")
-@Data // Tự động tạo getter, setter, toString...
+@Data // Tá»± Ä‘á»™ng táº¡o getter, setter, toString...
 @NoArgsConstructor
 @AllArgsConstructor
 public class Product {
@@ -51,8 +51,17 @@ public class Product {
     @Column(name = "weighted_avg_cost_vnd", precision = 15, scale = 0)
     private BigDecimal weightedAvgCostVnd = BigDecimal.ZERO;
 
+    @Column(name = "latest_order_code", length = 50)
+    private String latestOrderCode;
+
+    @Column(name = "latest_cost_date")
+    private LocalDateTime latestCostDate;
+
     @Column(name = "source_link", length = 500)
     private String sourceLink;
+
+    @Column(name = "product_type", length = 20)
+    private String productType;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -72,3 +81,5 @@ public class Product {
     }
 
 }
+
+

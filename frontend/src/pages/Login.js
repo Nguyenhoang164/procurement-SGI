@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../styles/Login.css';
 import { authAPI } from '../services/api';
 
@@ -17,6 +17,11 @@ function Login({ onLogin }) {
 
     try {
       const response = await authAPI.login(username, password);
+      if (response.role === 'PENDING') {
+        setError('Tài khoản của bạn chưa được phân quyền. Vui lòng đợi Admin xét duyệt.');
+        setLoading(false);
+        return;
+      }
       onLogin(response.token, {
         userId: response.userId,
         username: response.username,
@@ -25,7 +30,7 @@ function Login({ onLogin }) {
       });
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại tài khoản.');
     } finally {
       setLoading(false);
     }
@@ -66,6 +71,10 @@ function Login({ onLogin }) {
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <Link to="/register" style={{ color: '#2563eb', fontSize: 14 }}>Đăng ký tài khoản mới</Link>
+        </div>
 
         <p className="login-hint">Demo: admin / admin@123</p>
       </div>

@@ -91,6 +91,7 @@ public class ProductService {
         product.setUnit(productDTO.getUnit());
         product.setStatus(productDTO.getStatus());
         product.setSourceLink(productDTO.getSourceLink());
+        product.setProductType(productDTO.getProductType());
 
         Product updatedProduct = productRepository.save(product);
 
@@ -126,11 +127,11 @@ public class ProductService {
             try {
                 String name = dto.getProductName();
                 if (name == null || name.trim().isEmpty()) {
-                    result.addError("Dòng " + rowNum + ": Tên sản phẩm không được để trống");
+                    result.addError("DĂ²ng " + rowNum + ": TĂªn sáº£n pháº©m khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng");
                     continue;
                 }
                 if (productRepository.findByProductName(name.trim()).isPresent()) {
-                    result.addError("Dòng " + rowNum + ": Sản phẩm \"" + name.trim() + "\" đã tồn tại");
+                    result.addError("DĂ²ng " + rowNum + ": Sáº£n pháº©m \"" + name.trim() + "\" Ä‘Ă£ tá»“n táº¡i");
                     continue;
                 }
                 Product product = new Product();
@@ -139,6 +140,7 @@ public class ProductService {
                 product.setSpec(dto.getSpec());
                 product.setUnit(dto.getUnit());
                 product.setSourceLink(dto.getSourceLink());
+                product.setProductType(dto.getProductType());
                 product.setStatus("ACTIVE");
 
                 String code = productNamingService.generatePosCode(
@@ -149,7 +151,7 @@ public class ProductService {
                 productRepository.save(product);
                 result.setSuccessCount(result.getSuccessCount() + 1);
             } catch (Exception e) {
-                result.addError("Dòng " + rowNum + ": " + e.getMessage());
+                result.addError("DĂ²ng " + rowNum + ": " + e.getMessage());
             }
         }
 
@@ -280,6 +282,7 @@ public class ProductService {
         dto.setUnit(product.getUnit());
         dto.setStatus(product.getStatus());
         dto.setSourceLink(product.getSourceLink());
+        dto.setProductType(product.getProductType());
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
         List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
@@ -300,6 +303,7 @@ public class ProductService {
         p.setUnit(productDTO.getUnit());
         p.setStatus(productDTO.getStatus() != null ? productDTO.getStatus() : "ACTIVE");
         p.setSourceLink(productDTO.getSourceLink());
+        p.setProductType(productDTO.getProductType());
         p.setCreatedAt(productDTO.getCreatedAt());
         p.setUpdatedAt(productDTO.getUpdatedAt());
         return p;
@@ -338,3 +342,6 @@ public class ProductService {
     }
 
 }
+
+
+

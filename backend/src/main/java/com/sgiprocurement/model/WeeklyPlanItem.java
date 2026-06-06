@@ -36,6 +36,9 @@ public class WeeklyPlanItem {
     @Column(length = 100)
     private String country;
 
+    @Column(name = "trade_route", length = 100)
+    private String tradeRoute;
+
     @Column(name = "shipping_method", length = 50)
     private String shippingMethod;
 
@@ -53,5 +56,8 @@ public class WeeklyPlanItem {
 
     @Column(name = "priority_level", length = 20)
     private String priorityLevel;
+
+    @Column(length = 200)
+    private String landing;
 
 }

@@ -66,6 +66,7 @@ public class WeeklyPlanService {
         plan.setSuggestedQty(dto.getSuggestedQty());
         plan.setSpec(dto.getSpec());
         plan.setCountry(dto.getCountry());
+        plan.setTradeRoute(dto.getTradeRoute());
         plan.setShippingMethod(dto.getShippingMethod());
         plan.setRecentUnitPrice(dto.getRecentUnitPrice());
         plan.setNote(dto.getNote());
@@ -132,6 +133,7 @@ public class WeeklyPlanService {
         dto.setSuggestedQty(plan.getSuggestedQty());
         dto.setSpec(plan.getSpec());
         dto.setCountry(plan.getCountry());
+        dto.setTradeRoute(plan.getTradeRoute());
         dto.setShippingMethod(plan.getShippingMethod());
         dto.setRecentUnitPrice(plan.getRecentUnitPrice());
         dto.setNote(plan.getNote());
@@ -155,6 +157,7 @@ public class WeeklyPlanService {
         plan.setSuggestedQty(dto.getSuggestedQty());
         plan.setSpec(dto.getSpec());
         plan.setCountry(dto.getCountry());
+        plan.setTradeRoute(dto.getTradeRoute());
         plan.setShippingMethod(dto.getShippingMethod());
         plan.setRecentUnitPrice(dto.getRecentUnitPrice());
         plan.setNote(dto.getNote());
@@ -180,12 +183,14 @@ public class WeeklyPlanService {
         dto.setProductType(item.getProductType());
         dto.setSuggestedQty(item.getSuggestedQty());
         dto.setCountry(item.getCountry());
+        dto.setTradeRoute(item.getTradeRoute());
         dto.setShippingMethod(item.getShippingMethod());
         dto.setReferencePrice(item.getReferencePrice());
         dto.setCurrency(item.getCurrency());
         dto.setSpec(item.getSpec());
         dto.setSourceLink(item.getSourceLink());
         dto.setPriorityLevel(item.getPriorityLevel());
+        dto.setLanding(item.getLanding());
         return dto;
     }
 
@@ -197,12 +202,14 @@ public class WeeklyPlanService {
         item.setProductType(dto.getProductType());
         item.setSuggestedQty(dto.getSuggestedQty());
         item.setCountry(dto.getCountry());
+        item.setTradeRoute(dto.getTradeRoute());
         item.setShippingMethod(dto.getShippingMethod());
         item.setReferencePrice(dto.getReferencePrice());
         item.setCurrency(dto.getCurrency());
         item.setSpec(dto.getSpec());
         item.setSourceLink(dto.getSourceLink());
         item.setPriorityLevel(dto.getPriorityLevel());
+        item.setLanding(dto.getLanding());
         return item;
     }
 
