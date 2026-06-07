@@ -46,7 +46,7 @@ function Dashboard() {
   const trendData = (weeklyTrend || []).map(t => ({
     name: t.week,
     'Số đơn': t.count
-  })).reverse();
+  }));
 
   const pieData = (sourceBreakdown || []).map(s => ({
     name: s.label,
