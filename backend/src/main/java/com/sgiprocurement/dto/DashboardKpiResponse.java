@@ -14,7 +14,10 @@ public class DashboardKpiResponse {
     private List<StatCard> statCards;
     private List<RecentOrder> recentOrders;
     private List<WeeklyTrend> weeklyTrend;
+    private List<WeeklyTrend> planTrend;
+    private List<WeeklyTrend> paymentTrend;
     private List<SourceData> sourceBreakdown;
+    private List<ProductTrend> topProducts;
 
     @Data
     @NoArgsConstructor
@@ -44,6 +47,15 @@ public class DashboardKpiResponse {
     public static class WeeklyTrend {
         private String week;
         private long count;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductTrend {
+        private String posCode;
+        private String productName;
+        private long totalQty;
     }
 
     @Data

@@ -42,6 +42,9 @@ public class DashboardService {
     @Autowired
     private WeeklyPlanRepository weeklyPlanRepository;
 
+    @Autowired
+    private PurchaseOrderItemRepository purchaseOrderItemRepository;
+
     private static final List<String> COLORS = List.of(
         "#2563eb", "#059669", "#d97706", "#7c3aed",
         "#dc2626", "#0891b2", "#db2777", "#65a30d"
@@ -96,9 +99,12 @@ public class DashboardService {
                 .collect(Collectors.toList());
 
         List<WeeklyTrend> weeklyTrend = buildMonthlyTrend();
+        List<WeeklyTrend> planTrend = buildMonthlyPlanTrend();
+        List<WeeklyTrend> paymentTrend = buildMonthlyPaymentTrend();
         List<SourceData> sourceBreakdown = buildSourceBreakdown();
+        List<ProductTrend> topProducts = buildTopProducts();
 
-        return new DashboardKpiResponse(role, statCards, recentOrders, weeklyTrend, sourceBreakdown);
+        return new DashboardKpiResponse(role, statCards, recentOrders, weeklyTrend, planTrend, paymentTrend, sourceBreakdown, topProducts);
     }
 
     private List<StatCard> buildStatCards(String role,
@@ -252,6 +258,52 @@ public class DashboardService {
             trends.add(new WeeklyTrend(label, count));
         }
         return trends;
+    }
+
+    private List<WeeklyTrend> buildMonthlyPlanTrend() {
+        List<WeeklyTrend> trends = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+        for (int i = 5; i >= 0; i--) {
+            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
+            LocalDate monthEnd = monthStart.plusMonths(1);
+            long count = weeklyPlanRepository.countByCreatedAtBetween(monthStart.atStartOfDay(), monthEnd.atStartOfDay());
+            trends.add(new WeeklyTrend(monthNames[monthStart.getMonthValue() - 1], count));
+        }
+        return trends;
+    }
+
+    private List<WeeklyTrend> buildMonthlyPaymentTrend() {
+        List<WeeklyTrend> trends = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+        for (int i = 5; i >= 0; i--) {
+            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
+            LocalDate monthEnd = monthStart.plusMonths(1);
+            long count = paymentRequestRepository.countByCreatedAtBetween(monthStart.atStartOfDay(), monthEnd.atStartOfDay());
+            trends.add(new WeeklyTrend(monthNames[monthStart.getMonthValue() - 1], count));
+        }
+        return trends;
+    }
+
+    private List<ProductTrend> buildTopProducts() {
+        List<com.sgiprocurement.model.PurchaseOrderItem> allItems = purchaseOrderItemRepository.findAll();
+        Map<String, ProductTrend> map = new LinkedHashMap<>();
+        for (com.sgiprocurement.model.PurchaseOrderItem item : allItems) {
+            String key = item.getPosCode();
+            if (key == null || key.isBlank()) continue;
+            ProductTrend existing = map.get(key);
+            if (existing == null) {
+                map.put(key, new ProductTrend(key, item.getProductName(), item.getOrderedQty() != null ? item.getOrderedQty() : 0));
+            } else {
+                existing.setTotalQty(existing.getTotalQty() + (item.getOrderedQty() != null ? item.getOrderedQty() : 0));
+                if (item.getProductName() != null) existing.setProductName(item.getProductName());
+            }
+        }
+        return map.values().stream()
+                .sorted((a, b) -> Long.compare(b.getTotalQty(), a.getTotalQty()))
+                .limit(5)
+                .collect(Collectors.toList());
     }
 
     private List<SourceData> buildSourceBreakdown() {

@@ -41,12 +41,27 @@ function Dashboard() {
 
   if (!data) return null;
 
-  const { statCards, recentOrders, weeklyTrend, sourceBreakdown } = data;
+  const { statCards, recentOrders, weeklyTrend, planTrend, paymentTrend, sourceBreakdown, topProducts } = data;
 
   const trendData = (weeklyTrend || []).map(t => ({
     name: t.week,
-    'Số đơn': t.count
+    'Đơn hàng': t.count
   }));
+  const planData = (planTrend || []).map(t => ({
+    name: t.week,
+    'KH tuần': t.count
+  }));
+  const paymentData = (paymentTrend || []).map(t => ({
+    name: t.week,
+    'DNTT': t.count
+  }));
+
+  const topProductData = (topProducts || []).map(p => ({
+    name: (p.productName || p.posCode || '').length > 25
+      ? (p.productName || p.posCode || '').substring(0, 22) + '...'
+      : (p.productName || p.posCode || ''),
+    'SL': p.totalQty
+  })).reverse();
 
   const pieData = (sourceBreakdown || []).map(s => ({
     name: s.label,
@@ -77,21 +92,48 @@ function Dashboard() {
         </div>
 
         {hasCharts && (
-          <div className="chart-grid">
+          <div className="chart-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
             {trendData.length > 0 && (
               <div className="chart-card">
-                <div className="surface-title">Xu hướng đơn hàng 6 tháng</div>
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <div className="surface-title">Đơn hàng theo tháng</div>
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={trendData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
-                      formatter={(value) => [value, 'Số đơn']}
-                    />
-                    <Bar dataKey="Số đơn" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                  </BarChart>
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
+                    <Line type="monotone" dataKey="Đơn hàng" stroke="#2563eb" strokeWidth={2} dot={{ r: 3, fill: '#2563eb' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {planData.length > 0 && (
+              <div className="chart-card">
+                <div className="surface-title">KH tuần theo tháng</div>
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={planData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
+                    <Line type="monotone" dataKey="KH tuần" stroke="#059669" strokeWidth={2} dot={{ r: 3, fill: '#059669' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {paymentData.length > 0 && (
+              <div className="chart-card">
+                <div className="surface-title">DNTT theo tháng</div>
+                <ResponsiveContainer width="100%" height={160}>
+                  <LineChart data={paymentData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
+                    <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
+                    <Line type="monotone" dataKey="DNTT" stroke="#d97706" strokeWidth={2} dot={{ r: 3, fill: '#d97706' }} />
+                  </LineChart>
                 </ResponsiveContainer>
               </div>
             )}
@@ -136,19 +178,17 @@ function Dashboard() {
           </div>
         )}
 
-        {trendData.length > 0 && (
+        {topProductData.length > 0 && (
           <div className="chart-card" style={{ marginBottom: 16 }}>
-            <div className="surface-title">Biểu đồ xu hướng đơn hàng theo tháng</div>
-            <ResponsiveContainer width="100%" height={120}>
-              <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+            <div className="surface-title">Top sản phẩm đặt nhiều nhất</div>
+            <ResponsiveContainer width="100%" height={180}>
+              <BarChart data={topProductData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                <YAxis hide />
-                <Tooltip
-                  contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
-                />
-                <Line type="monotone" dataKey="Số đơn" stroke="#2563eb" strokeWidth={2} dot={{ r: 3, fill: '#2563eb' }} />
-              </LineChart>
+                <XAxis type="number" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={120} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }} />
+                <Bar dataKey="SL" fill="#7c3aed" radius={[0, 4, 4, 0]} maxBarSize={20} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
