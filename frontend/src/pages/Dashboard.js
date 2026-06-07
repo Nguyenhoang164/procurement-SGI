@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { dashboardAPI } from '../services/api';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid
 } from 'recharts';
 
 const COLORS = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#65a30d'];
@@ -46,7 +46,7 @@ function Dashboard() {
   const trendData = (weeklyTrend || []).map(t => ({
     name: t.week,
     'Số đơn': t.count
-  }));
+  })).reverse();
 
   const pieData = (sourceBreakdown || []).map(s => ({
     name: s.label,
@@ -80,7 +80,7 @@ function Dashboard() {
           <div className="chart-grid">
             {trendData.length > 0 && (
               <div className="chart-card">
-                <div className="surface-title">Xu hướng đơn hàng 8 tuần</div>
+                <div className="surface-title">Xu hướng đơn hàng 6 tháng</div>
                 <ResponsiveContainer width="100%" height={180}>
                   <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -138,7 +138,7 @@ function Dashboard() {
 
         {trendData.length > 0 && (
           <div className="chart-card" style={{ marginBottom: 16 }}>
-            <div className="surface-title">Biểu đồ xu hướng</div>
+            <div className="surface-title">Biểu đồ xu hướng đơn hàng theo tháng</div>
             <ResponsiveContainer width="100%" height={120}>
               <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

@@ -95,7 +95,7 @@ public class DashboardService {
                 .map(this::toRecentOrder)
                 .collect(Collectors.toList());
 
-        List<WeeklyTrend> weeklyTrend = buildWeeklyTrend();
+        List<WeeklyTrend> weeklyTrend = buildMonthlyTrend();
         List<SourceData> sourceBreakdown = buildSourceBreakdown();
 
         return new DashboardKpiResponse(role, statCards, recentOrders, weeklyTrend, sourceBreakdown);
@@ -238,15 +238,17 @@ public class DashboardService {
         }
     }
 
-    private List<WeeklyTrend> buildWeeklyTrend() {
+    private List<WeeklyTrend> buildMonthlyTrend() {
         List<WeeklyTrend> trends = new ArrayList<>();
-        LocalDate today = LocalDate.now();
-        for (int i = 7; i >= 0; i--) {
-            LocalDate weekStart = today.minusWeeks(i).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            LocalDate weekEnd = weekStart.plusDays(7);
+        LocalDate now = LocalDate.now();
+        String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+        for (int i = 5; i >= 0; i--) {
+            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
+            LocalDate monthEnd = monthStart.plusMonths(1);
             long count = purchaseOrderRepository.countByCreatedAtBetween(
-                    weekStart.atStartOfDay(), weekEnd.atStartOfDay());
-            String label = "T" + (i + 1);
+                    monthStart.atStartOfDay(), monthEnd.atStartOfDay());
+            int monthValue = monthStart.getMonthValue();
+            String label = monthNames[monthValue - 1];
             trends.add(new WeeklyTrend(label, count));
         }
         return trends;
