@@ -3,6 +3,16 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import '../styles/Navigation.css';
 
+const ROLE_MENU = {
+  ADMIN: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
+  CEO: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
+  WAREHOUSE: ['dashboard', 'notifications', 'waybills', 'warehouse', 'purchase-orders', 'payments', 'weekly-plans', 'products'],
+  ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills'],
+  CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills'],
+  SALES: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes'],
+  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes']
+};
+
 function Navigation({ user, onLogout }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,7 +21,8 @@ function Navigation({ user, onLogout }) {
   const location = useLocation();
   const { unreadCount } = useNotifications();
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'CEO';
+  const role = user?.role || 'PENDING';
+  const allowed = ROLE_MENU[role] || [];
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -35,40 +46,57 @@ function Navigation({ user, onLogout }) {
   const navSections = [
     {
       label: 'Tổng quan',
+      key: 'overview',
       items: [
-        { to: '/dashboard', label: 'Bảng điều khiển', short: 'DB' },
-        { to: '/notifications', label: 'Thông báo', short: 'TB', badge: unreadCount }
+        { to: '/dashboard', label: 'Bảng điều khiển', key: 'dashboard', short: 'DB' },
+        { to: '/notifications', label: 'Thông báo', key: 'notifications', short: 'TB', badge: unreadCount }
       ]
     },
     {
       label: 'Mua hàng',
+      key: 'purchasing',
       items: [
-        { to: '/weekly-plans', label: 'Kế hoạch tuần', short: 'KH' },
-        { to: '/purchase-orders', label: 'Đơn hàng', short: 'PO' },
-        { to: '/payments', label: 'Đề nghị TT', short: 'TT' }
+        { to: '/weekly-plans', label: 'Kế hoạch tuần', key: 'weekly-plans', short: 'KH' },
+        { to: '/purchase-orders', label: 'Đơn hàng', key: 'purchase-orders', short: 'PO' },
+        { to: '/payments', label: 'Đề nghị TT', key: 'payments', short: 'TT' }
       ]
     },
-     {
-       label: 'Kho & Tài chính',
-       items: [
-         { to: '/warehouse', label: 'Nhận hàng', short: 'WH' },
-         { to: '/waybills', label: 'Vận đơn', short: 'VB' },
-         { to: '/costs', label: 'Giá vốn SP', short: 'GV' },
-         { to: '/cost-alerts', label: 'Cảnh báo giá', short: 'CG' }
-       ]
-     },
+    {
+      label: 'Kho & Tài chính',
+      key: 'warehouse',
+      items: [
+        { to: '/warehouse', label: 'Nhận hàng', key: 'warehouse', short: 'WH' },
+        { to: '/waybills', label: 'Vận đơn', key: 'waybills', short: 'VB' },
+        { to: '/costs', label: 'Giá vốn SP', key: 'costs', short: 'GV' },
+        { to: '/cost-alerts', label: 'Cảnh báo giá', key: 'cost-alerts', short: 'CG' }
+      ]
+    },
+    {
+      label: 'Danh mục',
+      key: 'catalog',
+      items: [
+        { to: '/products', label: 'Sản phẩm', key: 'products', short: 'SP' },
+        { to: '/admin/exchange-rates', label: 'Tỷ giá', key: 'exchange-rates', short: 'TG' },
+        { to: '/bank-accounts', label: 'TK Ngân hàng', key: 'bank-accounts', short: 'NH' },
+        { to: '/admin/trade-routes', label: 'Tuyến hàng', key: 'trade-routes', short: 'TH' }
+      ]
+    },
     {
       label: 'Hệ thống',
+      key: 'system',
       items: [
-        { to: '/products', label: 'Danh mục SP', short: 'SP' },
-        { to: '/admin/exchange-rates', label: 'Tỷ giá', short: 'TG' },
-        { to: '/bank-accounts', label: 'TK Ngân hàng', short: 'NH' },
-        { to: '/admin/trade-routes', label: 'Tuyến hàng', short: 'TH' },
-        ...(isAdmin ? [{ to: '/users', label: 'Tài khoản', short: 'TK' }] : []),
-        { to: '/admin', label: 'Cấu hình', short: 'AD' }
+        { to: '/users', label: 'Tài khoản', key: 'users', short: 'TK' },
+        { to: '/admin', label: 'Cấu hình', key: 'admin', short: 'AD' }
       ]
     }
   ];
+
+  const filteredSections = navSections
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => allowed.includes(item.key))
+    }))
+    .filter(section => section.items.length > 0);
 
   const pageName = navSections
     .flatMap((section) => section.items)
@@ -100,8 +128,8 @@ function Navigation({ user, onLogout }) {
         </div>
 
       <div className="sidebar-nav">
-        {navSections.map((section) => (
-          <div className="sidebar-section" key={section.label}>
+        {filteredSections.map((section) => (
+          <div className="sidebar-section" key={section.key}>
             <div className="sidebar-section-label">{section.label}</div>
             {section.items.map((item) => (
               <NavLink

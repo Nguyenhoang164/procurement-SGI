@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardAPI } from '../services/api';
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
+} from 'recharts';
+
+const COLORS = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#65a30d'];
 
 function Dashboard() {
   const [data, setData] = useState(null);
@@ -37,9 +43,18 @@ function Dashboard() {
 
   const { statCards, recentOrders, weeklyTrend, sourceBreakdown } = data;
 
-  const maxBarValue = weeklyTrend && weeklyTrend.length > 0
-    ? Math.max(...weeklyTrend.map(t => t.count || 1), 1)
-    : 1;
+  const trendData = (weeklyTrend || []).map(t => ({
+    name: t.week,
+    'Số đơn': t.count
+  }));
+
+  const pieData = (sourceBreakdown || []).map(s => ({
+    name: s.label,
+    value: s.count
+  }));
+
+  const hasCharts = trendData.length > 0 || pieData.length > 0;
+  const hasRecentOrders = recentOrders && recentOrders.length > 0;
 
   return (
     <div className="page-screen">
@@ -61,45 +76,84 @@ function Dashboard() {
           ))}
         </div>
 
-        {weeklyTrend && weeklyTrend.length > 0 && sourceBreakdown && sourceBreakdown.length > 0 && (
+        {hasCharts && (
           <div className="chart-grid">
-            <div className="chart-card">
-              <div className="surface-title">Xu hướng 8 tuần</div>
-              <div className="mini-bars">
-                {weeklyTrend.map((item, index) => (
-                  <div
-                    key={index}
-                    className="mini-bar"
-                    style={{ height: `${(item.count / maxBarValue) * 72}px` }}
-                    title={`Tuần ${item.week}: ${item.count} đơn`}
-                  />
-                ))}
+            {trendData.length > 0 && (
+              <div className="chart-card">
+                <div className="surface-title">Xu hướng đơn hàng 8 tuần</div>
+                <ResponsiveContainer width="100%" height={180}>
+                  <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
+                      formatter={(value) => [value, 'Số đơn']}
+                    />
+                    <Bar dataKey="Số đơn" fill="#2563eb" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-            </div>
+            )}
 
-            <div className="chart-card">
-              <div className="surface-title">Theo nguồn nhập</div>
-              <div className="source-list">
-                {sourceBreakdown.map((item) => (
-                  <div className="source-row" key={item.label}>
-                    <div className="source-meta">
-                      <span>{item.label}</span>
-                      <span>{item.percentage}%</span>
-                    </div>
-                    <div className="source-track">
-                      <div
-                        className="source-fill"
-                        style={{ width: `${item.percentage}%`, background: item.color }}
+            {pieData.length > 0 && (
+              <div className="chart-card">
+                <div className="surface-title">Phân bổ theo nguồn nhập</div>
+                <div style={{ display: 'flex', alignItems: 'center', height: 180 }}>
+                  <ResponsiveContainer width="55%" height={160}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={38}
+                        outerRadius={68}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
+                        formatter={(value, name) => [value, name]}
                       />
-                    </div>
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 4 }}>
+                    {pieData.map((entry, index) => (
+                      <div key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: 3, background: COLORS[index % COLORS.length], flexShrink: 0 }} />
+                        <span style={{ color: '#6b7280', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</span>
+                        <span style={{ fontWeight: 600, color: '#111827' }}>{entry.value}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        {recentOrders && recentOrders.length > 0 && (
+        {trendData.length > 0 && (
+          <div className="chart-card" style={{ marginBottom: 16 }}>
+            <div className="surface-title">Biểu đồ xu hướng</div>
+            <ResponsiveContainer width="100%" height={120}>
+              <LineChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis hide />
+                <Tooltip
+                  contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb', fontSize: 12 }}
+                />
+                <Line type="monotone" dataKey="Số đơn" stroke="#2563eb" strokeWidth={2} dot={{ r: 3, fill: '#2563eb' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {hasRecentOrders && (
           <div className="table-card">
             <div className="table-toolbar">
               <h2>Đơn hàng gần đây</h2>
