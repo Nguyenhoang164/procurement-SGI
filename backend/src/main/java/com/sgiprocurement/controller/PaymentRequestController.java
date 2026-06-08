@@ -24,35 +24,35 @@ public class PaymentRequestController {
     private PaymentRequestService paymentRequestService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<PaymentRequestDTO>> getAllPaymentRequests() {
         List<PaymentRequestDTO> requests = paymentRequestService.getAllPaymentRequests();
         return ResponseEntity.ok(requests);
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<PaymentRequestDTO>> searchPaymentRequests(@RequestParam String keyword) {
         List<PaymentRequestDTO> results = paymentRequestService.searchPaymentRequests(keyword);
         return ResponseEntity.ok(results);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> getPaymentRequestById(@PathVariable Long id) {
         PaymentRequestDTO request = paymentRequestService.getPaymentRequestById(id);
         return ResponseEntity.ok(request);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> createPaymentRequest(@Valid @RequestBody PaymentRequestDTO dto) {
         PaymentRequestDTO created = paymentRequestService.createPaymentRequest(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> updatePaymentRequest(
             @PathVariable Long id,
             @Valid @RequestBody PaymentRequestDTO dto) {
@@ -108,7 +108,7 @@ public class PaymentRequestController {
     }
 
     @GetMapping("/{id}/exchange-rate-diff")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<Map<String, Object>> getExchangeRateDiffByReference(@PathVariable Long id) {
         PaymentRequestDTO pr = paymentRequestService.getPaymentRequestById(id);
         Map<String, Object> result = new java.util.HashMap<>();
@@ -137,7 +137,7 @@ public class PaymentRequestController {
     }
 
     @PostMapping(path = "/{id}/attachments", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> uploadAttachments(
             @PathVariable Long id,
             @RequestPart("files") MultipartFile[] files) throws IOException {

@@ -80,7 +80,7 @@ public class ProductController {
 
     // IMPORT products from JSON array
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<ProductImportResult> importProducts(@RequestBody List<ProductDTO> products) {
         ProductImportResult result = productService.importProducts(products);
         return ResponseEntity.ok(result);
@@ -118,7 +118,7 @@ public class ProductController {
     }
 
     @PostMapping("/{id:\\d+}/combos")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<ProductComboDTO> createCombo(
             @PathVariable Long id,
             @Valid @RequestBody ProductComboDTO dto) {
@@ -127,7 +127,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id:\\d+}/combos/{comboId:\\d+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<ProductComboDTO> updateCombo(
             @PathVariable Long id,
             @PathVariable Long comboId,
@@ -136,7 +136,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id:\\d+}/combos/{comboId:\\d+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<Void> deleteCombo(@PathVariable Long id, @PathVariable Long comboId) {
         productService.deleteCombo(id, comboId);
         return ResponseEntity.noContent().build();

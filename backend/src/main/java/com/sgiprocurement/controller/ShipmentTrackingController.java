@@ -19,7 +19,7 @@ public class ShipmentTrackingController {
     private ShipmentTrackingService shipmentTrackingService;
 
     @GetMapping("/waybill/{waybillId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<ShipmentTrackingDTO>> getByWaybillId(@PathVariable Long waybillId) {
         return ResponseEntity.ok(shipmentTrackingService.getTrackingsByWaybillId(waybillId));
     }

@@ -182,6 +182,17 @@ public class DashboardService {
                         "Sản phẩm đang kinh doanh", "#0891b2"));
                 break;
 
+            case "PURCHASING":
+                cards.add(new StatCard("Đơn tháng này", String.valueOf(poThisMonth),
+                        "Đơn hàng đã tạo", "#2563eb"));
+                cards.add(new StatCard("Chờ duyệt PO", String.valueOf(poPendingApproval),
+                        "Cần phê duyệt", "#dc2626"));
+                cards.add(new StatCard("DNTT tháng này", String.valueOf(prThisMonth),
+                        "Đề nghị thanh toán", "#059669"));
+                cards.add(new StatCard("Sản phẩm", String.valueOf(totalProducts),
+                        "Sản phẩm trong hệ thống", "#0891b2"));
+                break;
+
             case "SALES_MANAGER":
                 cards.add(new StatCard("Chờ duyệt PO", String.valueOf(poPendingApproval),
                         "Cần phê duyệt L1", "#dc2626"));

@@ -6,6 +6,7 @@ export const ROLES = {
   CHIEF_ACCOUNTANT: 'CHIEF_ACCOUNTANT',
   SALES: 'SALES',
   SALES_MANAGER: 'SALES_MANAGER',
+  PURCHASING: 'PURCHASING',
   PENDING: 'PENDING'
 };
 
@@ -34,18 +35,18 @@ export function canCrudProducts(user) { return isAdmin(user); }
 export function canImportProducts(user) { return true; }
 
 // Purchase Orders
-export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
-export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canDeletePO(user) { return isAdmin(user); }
-export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
-export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canApprovePO_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canRejectPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canSendPOToAccounting(user) { return isAdmin(user); }
 
 // Payment Requests
-export function canCreatePayment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
-export function canEditPaymentByRole(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
+export function canCreatePayment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canEditPaymentByRole(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canDeletePayment(user) { return isAdmin(user); }
 export function canApprovePR_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
 export function canApprovePR_L2(user) { return isAdmin(user); }
@@ -58,17 +59,17 @@ export function canConfirmPaymentPR(user) { return hasRole(user, ROLES.ADMIN, RO
 export function canUpdateExchangeRates(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
 
 // Cost Comments
-export function canAddCostComment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER); }
+export function canAddCostComment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 
 // Waybills
-export function canCrudWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE); }
+export function canCrudWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canConfirmWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE); }
 
 // Warehouse Receipts
 export function canCrudWarehouseReceipt(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE); }
 
 // Weekly Plans
-export function canCrudWeeklyPlan(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canCrudWeeklyPlan(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canDeleteWeeklyPlan(user) { return isAdmin(user); }
 export function canApproveWP_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canApproveWP_L2(user) { return isAdmin(user); }

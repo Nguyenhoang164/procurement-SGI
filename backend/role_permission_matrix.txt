@@ -15,11 +15,20 @@ ketoan            | kt@123        | ACCOUNTANT        | Vietnam
 ketoantruong      | ktt@123       | CHIEF_ACCOUNTANT  | All Markets
 nvkinhdoanh       | nvkd@123      | SALES             | Vietnam
 truongphongkd     | tpkd@123      | SALES_MANAGER     | Vietnam
+nvmuahang         | mh@123        | PURCHASING        | Vietnam
 userpending       | pending@123   | PENDING           | Vietnam
 
 API Endpoint: POST /v1/auth/login
 Body JSON: { "username": "...", "password": "..." }
-
+- Tạo nhóm cho phép phân quyền bằng việc add
+* Đổi tên tài khoản username
+* Màn hình hướng dẫn thao tác trên web đối với từng user
+* Tất cả user có thể comment thông tin cho từng data
+* Migrate data theo year
+- Lưu vết
+- Gửi thông báo về lark + api lark
+                        + data thông tin gửi sang lark
+* Tìm kiếm nâng cao + data khóa chính cho tất cả các trang
 
 II. DANH SÁCH ROLE TRONG HỆ THỐNG
 ================================================================================
@@ -31,7 +40,8 @@ II. DANH SÁCH ROLE TRONG HỆ THỐNG
 5. CHIEF_ACCOUNTANT - Kế toán trưởng (như kế toán + kiểm tra kế toán)
 6. SALES            - Nhân viên kinh doanh (tạo đơn hàng, kế hoạch tuần)
 7. SALES_MANAGER    - Trưởng phòng kinh doanh (như SALES + phê duyệt)
-8. PENDING          - Người dùng chờ kích hoạt (không có quyền truy cập)
+8. PURCHASING       - Nhân viên mua hàng (tạo PO, đề nghị thanh toán, vận đơn)
+9. PENDING          - Người dùng chờ kích hoạt (không có quyền truy cập)
 9. MANAGER          - (chỉ dùng trong GlobalSearch, không seed)
 10. USER            - (chỉ dùng trong GlobalSearch, không seed)
 
@@ -60,14 +70,14 @@ Chú thích:
    *Tác dụng:* ADMIN/CEO tạo tài khoản cho nhân viên, phân quyền, vô hiệu hóa
    hoặc xóa người dùng. Các role khác KHÔNG được truy cập trang này.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [--]      | [--]       | [--]       | [--]  | [--]
-   Xem chi tiết            | [R]   | [R] | [--]      | [--]       | [--]       | [--]  | [--]
-   Thêm người dùng         | [C]   | [C] | [--]      | [--]       | [--]       | [--]  | [--]
-   Sửa người dùng          | [U]   | [U] | [--]      | [--]       | [--]       | [--]  | [--]
-   Deactivate              | [U]   | [U] | [--]      | [--]       | [--]       | [--]  | [--]
-   Xóa người dùng          | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Xem chi tiết            | [R]   | [R] | [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Thêm người dùng         | [C]   | [C] | [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Sửa người dùng          | [U]   | [U] | [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Deactivate              | [U]   | [U] | [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Xóa người dùng          | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === B. QUẢN LÝ SẢN PHẨM (Products) ===
@@ -77,17 +87,17 @@ Chú thích:
    *Tác dụng:* Tất cả role đều có thể xem sản phẩm và combo. Chỉ ADMIN mới
    thêm/sửa/xóa sản phẩm. Import Excel và quản lý combo thì tất cả role đều làm được.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem combos              | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm sản phẩm           | [C]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Sửa sản phẩm            | [U]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Xóa sản phẩm            | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Import Excel            | [I]   | [I] | [I]       | [I]        | [I]        | [I]   | [I]
-   Batch delete            | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Combo CRUD              | [CUD] | [CUD]| [CUD]    | [CUD]      | [CUD]      | [CUD] | [CUD]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem combos              | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm sản phẩm           | [C]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Sửa sản phẩm            | [U]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Xóa sản phẩm            | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Import Excel            | [I]   | [I] | [I]       | [I]        | [I]        | [I]   | [I]       | [I]
+   Batch delete            | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Combo CRUD              | [CUD] | [CUD]| [CUD]    | [CUD]      | [CUD]      | [CUD] | [CUD]     | [CUD]
    Generate code           | [PUBLIC - không cần đăng nhập]
 
 
@@ -103,47 +113,48 @@ Chú thích:
    Bước 2: SALES_MGR Approve L1 (hoặc Reject)
    Bước 3: ADMIN send to Accounting
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [C]   | [C]
-   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [U]   | [U]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Import Excel            | [I]   | [--]| [--]      | [--]       | [--]       | [I]   | [I]
-   Submit                  | [S]   | [--]| [--]      | [--]       | [--]       | [S]   | [S]
-   Approve L1              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [AP]
-   Reject / Update Status  | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [AP]
-   Send to Accounting      | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [C]   | [C]       | [C]
+   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [U]   | [U]       | [U]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Import Excel            | [I]   | [--]| [--]      | [--]       | [--]       | [I]   | [I]       | [I]
+   Submit                  | [S]   | [--]| [--]      | [--]       | [--]       | [S]   | [S]       | [S]
+   Approve L1              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [AP]      | [--]
+   Reject / Update Status  | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [AP]      | [--]
+   Send to Accounting      | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === D. YÊU CẦU THANH TOÁN (Payment Requests) ===
    Endpoint: /v1/payment-requests
    *Mô tả:* Yêu cầu chi tiền thanh toán cho đơn hàng - quy trình từ tạo yêu cầu
    → phê duyệt L1 → kiểm tra kế toán → phê duyệt L2 → chi trả → xác nhận.
-   *Người chịu trách nhiệm chính:* ACCOUNTANT, CHIEF_ACCOUNTANT
-   *Tác dụng:* ACCOUNTANT/CHIEF_ACCT tạo, sửa, phê duyệt L1, chi trả, từ chối.
+   *Người chịu trách nhiệm chính:* ACCOUNTANT, CHIEF_ACCOUNTANT, SALES, PURCHASING
+   *Tác dụng:* ACCOUNTANT/CHIEF_ACCT/SALES/PURCHASING tạo, sửa đề nghị thanh toán.
+   ACCOUNTANT/CHIEF_ACCT phê duyệt L1, chi trả, từ chối.
    CHIEF_ACCT có thêm bước Accounting Check. ADMIN phê duyệt L2. Các role khác chỉ xem.
 
    Bước 1: ACCOUNTANT/CHIEF_ACCT tạo PR -> Approve L1 -> Pay -> Confirm Payment
    Bước 2: CHIEF_ACCT thực hiện Accounting Check (nếu cần)
    Bước 3: ADMIN Approve L2 (nếu cần)
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem diff tỷ giá         | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]
-   Sửa                     | [U]   | [--]| [--]      | [U]        | [U]        | [--]  | [--]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Approve L1              | [AP]  | [--]| [--]      | [AP]       | [AP]       | [--]  | [--]
-   Approve L2              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Accounting Check        | [AP]  | [--]| [--]      | [--]       | [AP]       | [--]  | [--]
-   Reject                  | [RJ]  | [--]| [--]      | [RJ]       | [RJ]       | [--]  | [--]
-   Pay                     | [PY]  | [--]| [--]      | [PY]       | [PY]       | [--]  | [--]
-   Confirm Payment         | [PY]  | [--]| [--]      | [PY]       | [PY]       | [--]  | [--]
-   Upload Attachments      | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem diff tỷ giá         | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [--]      | [C]        | [C]        | [C]   | [C]       | [C]
+   Sửa                     | [U]   | [--]| [--]      | [U]        | [U]        | [U]   | [U]       | [U]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Approve L1              | [AP]  | [--]| [--]      | [AP]       | [AP]       | [--]  | [--]      | [--]
+   Approve L2              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Accounting Check        | [AP]  | [--]| [--]      | [--]       | [AP]       | [--]  | [--]      | [--]
+   Reject                  | [RJ]  | [--]| [--]      | [RJ]       | [RJ]       | [--]  | [--]      | [--]
+   Pay                     | [PY]  | [--]| [--]      | [PY]       | [PY]       | [--]  | [--]      | [--]
+   Confirm Payment         | [PY]  | [--]| [--]      | [PY]       | [PY]       | [--]  | [--]      | [--]
+   Upload Attachments      | [C]   | [--]| [--]      | [C]        | [C]        | [C]   | [C]       | [C]
 
 
 === E. TỶ GIÁ NGOẠI TỆ (Exchange Rates) ===
@@ -153,11 +164,11 @@ Chú thích:
    *Tác dụng:* ACCOUNTANT/CHIEF_ACCT xem và cập nhật tỷ giá hàng ngày.
    ADMIN/CEO xem. WAREHOUSE/SALES/SALES_MGR không có quyền.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [--]
-   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [--]
-   Cập nhật                | [U]   | [--]| [--]      | [U]        | [U]        | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [--]      | [--]
+   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [--]      | [--]
+   Cập nhật                | [U]   | [--]| [--]      | [U]        | [U]        | [--]  | [--]      | [--]
 
 
 === F. COMMENTS CHI PHÍ (Cost Comments) ===
@@ -167,10 +178,10 @@ Chú thích:
    *Tác dụng:* Tất cả role đều xem được comment. ACCOUNTANT/CHIEF_ACCT/SALES_MGR
    có thể thêm comment về chi phí để trao đổi giữa các phòng ban.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem comments theo PO    | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm comment            | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [C]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem comments theo PO    | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm comment            | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [C]       | [C]
 
 
 === G. GIÁ SẢN PHẨM (Product Costs) ===
@@ -180,11 +191,11 @@ Chú thích:
    *Tác dụng:* Chỉ xem, không thêm/sửa/xóa. Dùng để giám sát giá cả.
    WAREHOUSE và SALES không xem được.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]
-   Xem alerts              | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]
-   Xem alert by POS code   | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]       | [--]
+   Xem alerts              | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]       | [--]
+   Xem alert by POS code   | [R]   | [R] | [--]      | [R]        | [R]        | [--]  | [R]       | [--]
 
 
 === H. THEO DÕI LÔ HÀNG (Shipment Tracking) ===
@@ -194,10 +205,10 @@ Chú thích:
    *Tác dụng:* WAREHOUSE tạo tracking để cập nhật trạng thái lô hàng.
    Các role khác (trừ ADMIN) đều chỉ xem được.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem theo waybill        | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem theo waybill        | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === I. TUYẾN ĐƯỜNG VẬN CHUYỂN (Trade Routes) ===
@@ -207,13 +218,13 @@ Chú thích:
    *Tác dụng:* SALES_MANAGER thêm/sửa tuyến đường vận chuyển. ADMIN xóa.
    Các role còn lại (trừ WAREHOUSE) chỉ xem.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách/active    | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [--]  | [C]
-   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [--]  | [U]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách/active    | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [--]  | [C]       | [--]
+   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [--]  | [U]       | [--]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === J. TÀI KHOẢN NGÂN HÀNG (Bank Accounts) ===
@@ -223,34 +234,35 @@ Chú thích:
    *Tác dụng:* ACCOUNTANT/CHIEF_ACCT thêm/sửa/xóa tài khoản ngân hàng, upload
    QR code. Các role khác (trừ WAREHOUSE) chỉ xem thông tin.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]
-   Xem bank names          | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]
-   Thêm bank name          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]
-   Thêm tài khoản          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]
-   Upload QR code          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]
-   Sửa                     | [U]   | [--]| [--]      | [U]        | [U]        | [--]  | [--]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem bank names          | [R]   | [R] | [--]      | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm bank name          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]      | [--]
+   Thêm tài khoản          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]      | [--]
+   Upload QR code          | [C]   | [--]| [--]      | [C]        | [C]        | [--]  | [--]      | [--]
+   Sửa                     | [U]   | [--]| [--]      | [U]        | [U]        | [--]  | [--]      | [--]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === K. VẬN ĐƠN (Waybills) ===
    Endpoint: /v1/waybills
    *Mô tả:* Quản lý vận đơn (Bill of Lading) cho từng lô hàng vận chuyển.
-   *Người chịu trách nhiệm chính:* WAREHOUSE
+   *Người chịu trách nhiệm chính:* WAREHOUSE, SALES, PURCHASING
    *Tác dụng:* WAREHOUSE thêm/sửa/xác nhận vận đơn khi hàng về đến kho.
+   SALES/PURCHASING thêm/sửa vận đơn để theo dõi lô hàng đã đặt.
    Các role khác chỉ xem thông tin vận đơn.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem theo payment req    | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
-   Sửa                     | [U]   | [--]| [U]       | [--]       | [--]       | [--]  | [--]
-   Xác nhận (confirm)      | [CF]  | [--]| [CF]      | [--]       | [--]       | [--]  | [--]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách/tìm kiếm  | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem theo payment req    | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [C]       | [--]       | [--]       | [C]   | [C]       | [C]
+   Sửa                     | [U]   | [--]| [U]       | [--]       | [--]       | [U]   | [U]       | [U]
+   Xác nhận (confirm)      | [CF]  | [--]| [CF]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === L. PHIẾU NHẬP KHO (Warehouse Receipts) ===
@@ -260,17 +272,17 @@ Chú thích:
    *Tác dụng:* WAREHOUSE tạo phiếu nhập kho, nhập hàng, upload ảnh biên lai
    và ảnh từng item. Các role khác chỉ xem.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem pending             | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Receive (nhập hàng)     | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
-   Thêm phiếu              | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
-   Upload images (receipt) | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
-   Upload images (item)    | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]
-   Sửa                     | [U]   | [--]| [U]       | [--]       | [--]       | [--]  | [--]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem pending             | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Receive (nhập hàng)     | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]      | [--]
+   Thêm phiếu              | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]      | [--]
+   Upload images (receipt) | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]      | [--]
+   Upload images (item)    | [C]   | [--]| [C]       | [--]       | [--]       | [--]  | [--]      | [--]
+   Sửa                     | [U]   | [--]| [U]       | [--]       | [--]       | [--]  | [--]      | [--]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 === M. KẾ HOẠCH NHẬP HÀNG (Weekly Plans) ===
@@ -285,17 +297,17 @@ Chú thích:
    Bước 2: SALES Approve L1 (tự duyệt) hoặc SALES_MGR Approve L1
    Bước 3: ADMIN Approve L2 (nếu cần)
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Xem danh sách           | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]
-   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [C]   | [C]
-   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [U]   | [U]
-   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Submit                  | [S]   | [S] | [S]       | [S]        | [S]        | [S]   | [S]
-   Approve L1              | [AP]  | [--]| [--]      | [--]       | [--]       | [AP]  | [AP]
-   Approve L2              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]
-   Reject                  | [RJ]  | [--]| [--]      | [--]       | [--]       | [--]  | [RJ]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Xem danh sách           | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Xem chi tiết            | [R]   | [R] | [R]       | [R]        | [R]        | [R]   | [R]       | [R]
+   Thêm                    | [C]   | [--]| [--]      | [--]       | [--]       | [C]   | [C]       | [C]
+   Sửa                     | [U]   | [--]| [--]      | [--]       | [--]       | [U]   | [U]       | [U]
+   Xóa                     | [D]   | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Submit                  | [S]   | [S] | [S]       | [S]        | [S]        | [S]   | [S]       | [S]
+   Approve L1              | [AP]  | [--]| [--]      | [--]       | [--]       | [AP]  | [AP]      | [--]
+   Approve L2              | [AP]  | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
+   Reject                  | [RJ]  | [--]| [--]      | [--]       | [--]       | [--]  | [RJ]      | [--]
 
 
 === N. TÌM KIẾM TOÀN CỤC (Global Search) ===
@@ -305,9 +317,9 @@ Chú thích:
    *Tác dụng:* Chỉ ADMIN mới có quyền tìm kiếm toàn bộ hệ thống.
    Các role khác không có quyền này.
 
-   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR
-  -------------------------|-------|-----|-----------|------------|------------|-------|----------
-   Tìm kiếm toàn bộ hệ thống | [R] | [--]| [--]      | [--]       | [--]       | [--]  | [--]
+   Tính năng               | ADMIN | CEO | WAREHOUSE | ACCOUNTANT | CHIEF_ACCT | SALES | SALES_MGR | PURCHASING
+  -------------------------|-------|-----|-----------|------------|------------|-------|-----------|-----------
+   Tìm kiếm toàn bộ hệ thống | [R] | [--]| [--]      | [--]       | [--]       | [--]  | [--]      | [--]
 
 
 ================================================================================
@@ -354,7 +366,9 @@ SALES (Nhân viên kinh doanh)
   - Xem: Products, POs, Payment Requests, Waybills, Warehouse Receipts, Weekly Plans
   - Xem: Shipment Tracking, Trade Routes, Bank Accounts, Cost Comments
   - Quản lý: Purchase Orders (CRUD, Submit, Import)
+  - Quản lý: Payment Requests (CRUD, Upload Attachments)
   - Quản lý: Weekly Plans (CRUD, Submit, Approve L1)
+  - Quản lý: Waybills (CRUD)
   - Import sản phẩm, combo CRUD
   - Market: Vietnam
 
@@ -365,6 +379,17 @@ SALES_MANAGER (Trưởng phòng kinh doanh)
     - Tạo/Sửa Trade Routes
     - Tạo Cost Comments
     - Xem Product Costs
+  - Market: Vietnam
+
+PURCHASING (Nhân viên mua hàng)
+  - Xem: Products, POs, Payment Requests, Waybills, Warehouse Receipts, Weekly Plans
+  - Xem: Shipment Tracking, Trade Routes, Bank Accounts, Cost Comments
+  - Quản lý: Purchase Orders (CRUD, Submit, Import)
+  - Quản lý: Payment Requests (CRUD, Upload Attachments)
+  - Quản lý: Weekly Plans (CRUD, Submit)
+  - Quản lý: Waybills (CRUD)
+  - Import sản phẩm, combo CRUD
+  - Tạo Cost Comments
   - Market: Vietnam
 
 PENDING (Chờ kích hoạt)
@@ -384,11 +409,14 @@ V. LƯU Ý CHO DESIGN GIAO DIỆN
    Product Costs, POs (xem), Waybills (xem), Products (xem).
    Hiện nút CRUD cho Payment Requests, Exchange Rates, Bank Accounts.
 5. CHIEF_ACCOUNTANT: Giống ACCOUNTANT + thêm Accounting Check.
-6. SALES: Menu gồm Purchase Orders, Weekly Plans, Products (xem),
-   Trade Routes (xem), Bank Accounts (xem).
-   Hiện nút CRUD cho PO và Weekly Plans.
+6. SALES: Menu gồm Purchase Orders, Weekly Plans, Payment Requests,
+   Waybills, Products (xem), Trade Routes (xem), Bank Accounts (xem).
+   Hiện nút CRUD cho PO, Weekly Plans, Payment Requests, Waybills.
 7. SALES_MANAGER: Giống SALES + thêm Approve/Reject PO & Weekly Plans,
    Tạo/Sửa Trade Routes.
-8. PENDING: Trang thông báo "chờ kích hoạt" hoặc redirect về login.
+8. PURCHASING: Menu gồm Purchase Orders, Weekly Plans, Payment Requests,
+   Waybills, Products (xem), Trade Routes (xem), Bank Accounts (xem).
+   Hiện nút CRUD cho PO, Weekly Plans, Payment Requests, Waybills.
+9. PENDING: Trang thông báo "chờ kích hoạt" hoặc redirect về login.
 
 ================================================================================

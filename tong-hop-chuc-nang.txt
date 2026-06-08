@@ -1,0 +1,181 @@
+====================================================================
+  TỔNG HỢP CHỨC NĂNG MỚI & CHỨC NĂNG DỰ ĐỊNH ĐỢT SAU
+  Hệ thống Mua hàng SGI (SGI Procurement System)
+  Ngày: 07/06/2026
+====================================================================
+
+I. CHỨC NĂNG MỚI ĐÃ HOÀN THÀNH (ĐỢT VỪA QUA)
+====================================================================
+
+1. QUẢN LÝ NGƯỜI DÙNG & PHÂN QUYỀN (RBAC)
+   - 9 vai trò: ADMIN, CEO, WAREHOUSE, ACCOUNTANT, CHIEF_ACCOUNTANT,
+     SALES, SALES_MANAGER, MANAGER, USER, PENDING
+   - CRUD người dùng (UserList, UserForm, UserDetail)
+   - Phân quyền chi tiết theo module (Read/Create/Update/Delete/Submit/
+     Approve/Reject/Pay/Confirm)
+   - Menu điều hướng theo vai trò (Navigation.js)
+   - File: role_permission_matrix.txt (323 dòng)
+
+2. QUẢN LÝ TÀI KHOẢN NGÂN HÀNG
+   - CRUD tài khoản ngân hàng
+   - Upload QR code cho từng tài khoản
+   - Quản lý danh sách ngân hàng (BankNameConfig)
+   - Giao diện: BankAccountList, BankAccountForm
+
+3. QUẢN LÝ TUYẾN ĐƯỜNG VẬN CHUYỂN (TRADE ROUTES)
+   - CRUD tuyến đường vận chuyển
+   - Quản lý trạng thái active/inactive
+   - Giao diện: TradeRouteConfig
+
+4. QUẢN LÝ TỶ GIÁ NGOẠI TỆ
+   - Cấu hình tỷ giá theo từng loại tiền (USD, CNY,...)
+   - Giao diện: ExchangeRateConfig
+
+5. PHIẾU NHẬP KHO (WAREHOUSE RECEIPT)
+   - Nhập kho theo từng item (WarehouseReceiptItem)
+   - Kiểm tra số lượng PO -> số lượng nhập
+   - Upload hình ảnh cho từng item nhập kho
+   - Cập nhật giá vốn bình quân gia quyền
+   - Giao diện: WarehouseList, WarehouseReceiptList, WarehouseReceiptDetail
+
+6. QUẢN LÝ VẬN ĐƠN (WAYBILLS)
+   - CRUD vận đơn
+   - Xác nhận giao hàng
+   - Liên kết vận đơn với phiếu yêu cầu thanh toán (DNTT)
+   - Giao diện: WaybillList, WaybillNew, WaybillDetail
+
+7. THEO DÕI LÔ HÀNG (SHIPMENT TRACKING)
+   - Sự kiện theo dõi theo từng vận đơn
+   - Cập nhật vị trí lô hàng
+
+8. QUẢN LÝ SẢN PHẨM (NÂNG CẤP)
+   - Import sản phẩm từ Excel
+   - Xóa hàng loạt
+   - Tạo mã POS tự động
+   - Product Combos (nhóm sản phẩm)
+   - Thư viện hình ảnh sản phẩm (image gallery)
+   - Giao diện: ProductList, ProductForm, ProductDetail
+
+9. THEO DÕI GIÁ VỐN (PRODUCT COST)
+   - Giá vốn bình quân gia quyền (weighted average cost)
+   - Cảnh báo biến động giá > 20% (Cost Alerts)
+   - Theo dõi số lô nhập
+   - Giao diện: ProductCostList, CostAlertsList
+
+10. CHI PHÍ & NHẬN XÉT (COST COMMENTS)
+    - Ghi chú/nhận xét gắn với từng đơn hàng (PO)
+    - Dùng cho kế toán - sales trao đổi thông tin
+
+11. YÊU CẦU THANH TOÁN DNTT (NÂNG CẤP)
+    - Liên kết nhiều PO và nhiều vận đơn trong 1 DNTT
+    - Ma trận phí tùy chỉnh (custom fees matrix)
+    - Quy trình duyệt: L1 -> L2 -> Kế toán kiểm tra -> Chi trả
+    - Upload file đính kèm (chứng từ thanh toán)
+    - Chênh lệch tỷ giá
+    - Giao diện: PaymentRequestNew, PaymentRequestDetail, PaymentList
+
+12. DASHBOARD & THỐNG KÊ
+    - KPIs theo vai trò
+    - Biểu đồ xu hướng đơn hàng/theo tháng
+    - Biểu đồ xu hướng kế hoạch/theo tháng
+    - Biểu đồ xu hướng thanh toán/theo tháng
+    - Biểu đồ tròn phân tích nguồn (source breakdown)
+    - Biểu đồ cột top sản phẩm
+    - Danh sách đơn hàng gần đây
+    - Sử dụng thư viện Recharts chuyên nghiệp
+
+13. TÌM KIẾM TOÀN CỤC (GLOBAL SEARCH)
+    - Tìm kiếm đa thực thể (PO, DNTT, vận đơn)
+
+14. THÔNG BÁO (NOTIFICATIONS)
+    - Chuông thông báo với số lượng chưa đọc
+    - Tự động refresh mỗi 15 giây
+    - Tổng hợp các thực thể chờ duyệt
+    - Lưu trạng thái đã đọc trong localStorage
+    - Giao diện: NotificationsPage, NotificationBell
+
+15. ĐĂNG KÝ TÀI KHOẢN (REGISTER)
+    - Trang đăng ký người dùng mới
+    - Giao diện: Register
+
+16. TRIỂN KHAI DOCKER
+    - Docker Compose: MySQL 8 + Spring Boot + React/Nginx
+    - Dockerfile cho backend và frontend
+    - Deploy script (PowerShell + Bash)
+    - Backup & rollback tự động
+    - Caddyfile cho reverse proxy
+
+17. FLYWAY MIGRATIONS
+    - 44 file migration (V1 đến V44)
+    - Quản lý schema database phiên bản
+
+18. KIỂM THỬ (TESTING)
+    - 19 file test (JUnit 5 + Mockito)
+    - Controller tests, Service tests, Security tests
+
+====================================================================
+II. CHỨC NĂNG DỰ ĐỊNH THỰC HIỆN ĐỢT SAU
+====================================================================
+
+1. AUDIT LOG (NHẬT KÝ THAO TÁC)
+   - Mô tả: Ghi lại tất cả thay đổi dữ liệu (ai thay đổi, thay đổi gì,
+     khi nào) cho mọi transaction
+   - Ưu tiên: CAO - Quan trọng cho kiểm toán và bảo mật
+
+2. EMAIL NOTIFICATIONS
+   - Mô tả: Gửi email thông báo khi cần duyệt (đơn hàng, thanh toán,...)
+   - Cần: Cấu hình SMTP, Email template service
+   - Ưu tiên: CAO
+
+3. XUẤT EXCEL (EXPORT)
+   - Mô tả: Xuất dữ liệu ra file Excel cho các danh sách (PO, DNTT,
+     sản phẩm, kho,...)
+   - Hiện tại: Đã có Import Excel, chưa có Export
+   - Ưu tiên: TRUNG BÌNH
+
+4. TẠO BÁO CÁO PDF
+   - Mô tả: Tạo file PDF cho đơn hàng, phiếu thanh toán, phiếu nhập kho
+   - Ưu tiên: TRUNG BÌNH
+
+5. TÀI LIỆU API (SWAGGER/OPENAPI)
+   - Mô tả: Tự động tạo tài liệu API với Swagger/OpenAPI
+   - Giúp frontend và bên thứ 3 dễ dàng tích hợp
+   - Ưu tiên: TRUNG BÌNH
+
+6. TÍCH HỢP CỔNG THANH TOÁN
+   - Mô tả: Tích hợp với cổng thanh toán để chi trả trực tuyến
+   - Ưu tiên: THẤP
+
+7. QUẢN LÝ KHO NÂNG CAO
+   - Mô tả: Quản lý tồn kho chi tiết, nhập/xuất/tồn, cảnh báo tồn tối thiểu
+   - Ưu tiên: TRUNG BÌNH
+
+8. ĐA NGÔN NGỮ (i18n)
+   - Mô tả: Hỗ trợ nhiều ngôn ngữ (Anh, Việt, Trung,...)
+   - Ưu tiên: THẤP
+
+9. ỨNG DỤNG DI ĐỘNG (REACT NATIVE)
+   - Mô tả: Xây dựng mobile app cho hệ thống
+   - Ưu tiên: THẤP
+
+10. TÍCH HỢP PHẦN MỀM KẾ TOÁN
+    - Mô tả: Kết nối với hệ thống kế toán hiện có
+    - Ưu tiên: THẤP
+
+11. LỌC & TÌM KIẾM NÂNG CAO
+    - Mô tả: Tìm kiếm nâng cao với nhiều tiêu chí lọc hơn
+    - Ưu tiên: TRUNG BÌNH
+
+====================================================================
+III. THỐNG KÊ
+====================================================================
+- Tổng số giao diện (pages) đã hoàn thành: 23+
+- Tổng số REST controllers: 15
+- Tổng số services: 17
+- Tổng số repositories: 20+
+- Tổng số JPA entities: 22
+- Tổng số Flyway migrations: 44
+- Tổng số file test: 19
+- Tổng số vai trò người dùng: 9
+
+====================================================================

@@ -25,7 +25,7 @@ public class WarehouseReceiptController {
     private WarehouseReceiptService warehouseReceiptService;
 
     @GetMapping("/pending")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<PendingReceiveDTO>> getPendingReceives() {
         return ResponseEntity.ok(warehouseReceiptService.getPendingReceives());
     }
@@ -38,14 +38,14 @@ public class WarehouseReceiptController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<WarehouseReceiptDTO>> getAllWarehouseReceipts() {
         List<WarehouseReceiptDTO> receipts = warehouseReceiptService.getAllWarehouseReceipts();
         return ResponseEntity.ok(receipts);
     }
 
     @GetMapping("/{id:\\d+}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<WarehouseReceiptDTO> getWarehouseReceiptById(@PathVariable Long id) {
         WarehouseReceiptDTO receipt = warehouseReceiptService.getWarehouseReceiptById(id);
         return ResponseEntity.ok(receipt);

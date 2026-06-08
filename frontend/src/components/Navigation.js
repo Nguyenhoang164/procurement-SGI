@@ -10,7 +10,8 @@ const ROLE_MENU = {
   ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
   CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
   SALES: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts'],
-  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts', 'costs', 'cost-alerts']
+  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts', 'costs', 'cost-alerts'],
+  PURCHASING: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'waybills', 'warehouse', 'products', 'trade-routes', 'bank-accounts']
 };
 
 function Navigation({ user, onLogout }) {
