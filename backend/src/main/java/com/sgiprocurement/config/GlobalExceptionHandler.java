@@ -57,12 +57,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<Map<String, String>> handleBadCredentialsException(
+    public ResponseEntity<String> handleBadCredentialsException(
             BadCredentialsException ex) {
 
-        Map<String, String> body = new HashMap<>();
-        body.put("message", "Tài khoản hoặc mật khẩu không đúng");
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>("Tài khoản hoặc mật khẩu không đúng", HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
