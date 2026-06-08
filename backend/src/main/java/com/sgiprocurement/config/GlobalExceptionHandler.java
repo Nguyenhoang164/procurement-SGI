@@ -57,18 +57,12 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorDetails> handleBadCredentialsException(
-            BadCredentialsException ex,
-            WebRequest request) {
+    public ResponseEntity<Map<String, String>> handleBadCredentialsException(
+            BadCredentialsException ex) {
 
-        ErrorDetails errorDetails = new ErrorDetails(
-                LocalDateTime.now(),
-                "Tài khoản hoặc mật khẩu không đúng",
-                request.getDescription(false),
-                "UNAUTHORIZED"
-        );
-
-        return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
+        Map<String, String> body = new HashMap<>();
+        body.put("message", "Tài khoản hoặc mật khẩu không đúng");
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
