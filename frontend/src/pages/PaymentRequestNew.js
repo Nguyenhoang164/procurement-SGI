@@ -108,7 +108,7 @@ function PaymentRequestNew() {
       setProductMap(map);
     }).catch(() => {});
     bankAccountAPI.getAll().then(setBankAccounts).catch(() => {});
-    bankAccountAPI.getBankNames().then(setBankNames).catch(() => {});
+    bankAccountAPI.getBankNames().then(list => setBankNames(list.map(b => typeof b === 'string' ? b : b.bankName || '').filter(Boolean))).catch(() => {});
     paymentRequestAPI.getAll().then(list => {
       setPaidDntts(list.filter(p => p.type === 'MUA_HANG' && p.status === 'PAID'));
     }).catch(() => {});

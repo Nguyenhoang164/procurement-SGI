@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Login.css';
 import { authAPI } from '../services/api';
 
@@ -71,10 +71,6 @@ function Login({ onLogin }) {
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
-
-        <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Link to="/register" style={{ color: '#2563eb', fontSize: 14 }}>Đăng ký tài khoản mới</Link>
-        </div>
 
         <p className="login-hint">Demo: admin / admin@123</p>
       </div>

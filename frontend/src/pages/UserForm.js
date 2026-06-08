@@ -10,7 +10,8 @@ const ROLE_OPTIONS = [
   { value: 'ACCOUNTANT', label: 'Kế toán' },
   { value: 'CHIEF_ACCOUNTANT', label: 'Kế toán trưởng' },
   { value: 'SALES', label: 'Nhân viên kinh doanh' },
-  { value: 'SALES_MANAGER', label: 'Trưởng phòng kinh doanh' }
+  { value: 'SALES_MANAGER', label: 'Trưởng phòng kinh doanh' },
+  { value: 'PURCHASING', label: 'Nhân viên mua hàng' }
 ];
 
 function UserForm() {

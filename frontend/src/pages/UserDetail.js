@@ -10,7 +10,8 @@ const ROLE_LABELS = {
   ACCOUNTANT: 'Kế toán',
   CHIEF_ACCOUNTANT: 'Kế toán trưởng',
   SALES: 'Nhân viên kinh doanh',
-  SALES_MANAGER: 'Trưởng phòng kinh doanh'
+  SALES_MANAGER: 'Trưởng phòng kinh doanh',
+  PURCHASING: 'Nhân viên mua hàng'
 };
 
 function UserDetail() {

@@ -25,7 +25,7 @@ public class DataSeeder implements CommandLineRunner {
         seedUser("thukho",       "kho@123",   "WAREHOUSE",         "Vietnam");
         seedUser("ketoan",       "kt@123",    "ACCOUNTANT",        "Vietnam");
         seedUser("ketoantruong", "ktt@123",   "CHIEF_ACCOUNTANT",  "All Markets");
-        seedUser("nvkinhdoanh",  "nvkd@123",  "SALES",             "Vietnam");
+        seedUser("leadkinhdoanh","lvkd@123",  "SALES",             "Vietnam");
         seedUser("truongphongkd","tpkd@123",  "SALES_MANAGER",     "Vietnam");
         seedUser("nvmuahang",    "mh@123",    "PURCHASING",        "Vietnam");
         seedUser("userpending",  "pending@123","PENDING",           "Vietnam");

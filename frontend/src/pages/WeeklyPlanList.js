@@ -152,6 +152,9 @@ function WeeklyPlanList() {
                       ? new Date(plan.proposedDate).toLocaleDateString('vi-VN')
                       : '—'}
                   </span>
+                  <span style={{ color: '#64748b', fontSize: 13 }}>
+                    {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString('vi-VN') : '—'}
+                  </span>
                   <span className={`badge badge-${plan.status?.toLowerCase() || 'draft'}`}>
                     {statusLabels[plan.status] || plan.status}
                   </span>
@@ -170,9 +173,11 @@ function WeeklyPlanList() {
                       Sửa
                     </button>
                   )}
-                  <button className="btn btn-sm btn-primary" onClick={() => navigate('/purchase-orders/new', { state: { fromPlan: plan } })}>
-                    Tạo đơn
-                  </button>
+                  {canCrud && (
+                    <button className="btn btn-sm btn-primary" onClick={() => navigate('/purchase-orders/new', { state: { fromPlan: plan } })}>
+                      Tạo đơn
+                    </button>
+                  )}
                   {canDelete && (
                     <button className="btn btn-sm btn-delete" onClick={() => handleDelete(plan.id)}>
                       Xóa

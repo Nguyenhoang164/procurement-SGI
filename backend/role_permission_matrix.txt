@@ -10,10 +10,10 @@ Username          | Password      | Role              | Market
 ------------------|---------------|-------------------|------------
 admin             | admin@123     | ADMIN             | All Markets
 ceo               | ceo@123       | CEO               | All Markets
-thukho            | kho@123       | WAREHOUSE         | Vietnam
-ketoan            | kt@123        | ACCOUNTANT        | Vietnam
+Nhunghth            | kho@123       | WAREHOUSE         | Vietnam
+Trangtth            | kt@123        | ACCOUNTANT        | Vietnam
 ketoantruong      | ktt@123       | CHIEF_ACCOUNTANT  | All Markets
-nvkinhdoanh       | nvkd@123      | SALES             | Vietnam
+leadkinhdoanh     | lvkd@123      | SALES             | Vietnam
 truongphongkd     | tpkd@123      | SALES_MANAGER     | Vietnam
 nvmuahang         | mh@123        | PURCHASING        | Vietnam
 userpending       | pending@123   | PENDING           | Vietnam

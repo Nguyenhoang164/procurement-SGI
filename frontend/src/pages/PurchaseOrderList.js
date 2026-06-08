@@ -184,6 +184,9 @@ function PurchaseOrderList() {
                   <span style={{ color: '#64748b', fontSize: 13 }}>
                     {order.items ? order.items.length : 0} sản phẩm
                   </span>
+                  <span style={{ color: '#94a3b8', fontSize: 12 }}>
+                    {order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : ''}
+                  </span>
                   {order.supplierName && (
                     <span style={{ color: '#64748b', fontSize: 13 }}>{order.supplierName}</span>
                   )}

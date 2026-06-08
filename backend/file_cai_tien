@@ -1,0 +1,32 @@
+- Giao diện trang quản lý tài khoản
++ Tạo tài khoản: Khi chọn vai trò tài khoản chưa có option nhân viên mua hàng, thêm thời gian tạo tài khoản tự động khi tạo xong
++ Màn hình danh sách tài khoản: thêm tính năng tim kiếm thông tin tài khoản, thêm phân trang với mỗi trang 10 bản ghi, hiển thị thêm trường ngày tạo tài khoản
+
+- Giao diện Avatar tài khoản
++ Thêm thông tin role mà user đó đang thực hiện
+
+- Trang kế hoạch tuần
++ Nút tạo đơn ở danh sách: hiện tại role nào cũng thấy được nút này, chỉ hiển thị với các role thực hiện nhiệm vụ còn lại ẩn
++ Thêm trường thời gian tạo kế hoạch
+
+- Trang đơn hàng
++ Thêm trường thời gian tạo đơn
+
+- Thay đổi tên quyền hạn người dùng
++ Chuyển đổi tên quyền nvkinhdoanh = leadkinhdoanh (Lead kinh doanh)
+
+- Bảng điều khiển
++ Màn hình danh sách đơn hàng gần đây: Cột mã đơn, mã Pos và số lượng, các biến thể đang chưa thể hiện được, cần cải tiến hoặc đơn giản hơn là lấy danh sách đơn hàng của trang đơn hàng rồi đưa vào
++ Thêm tính năng tìm kiếm nâng cao, có thể search được bất kì dữ liệu nào ở màn khác, biểu diễn sao cho khoa học thì tự nghiên cứu đi
+
+- Trang đề nghị thanh toán
++ Tạo đề nghị thanh toán: tại form thông tin chuyển khoản, trường thông tin ngân hàng đang bị để là [Object Object] còn thêm thủ công tên ngân hàng thì bình thường, xử lý vấn đề này
+
+- Trang đăng nhập
++ Bỏ link đăng ký
++ Bỏ cụm chữ Demo: admin / admin@123
+
+- Màn quy trình sử dụng
++ Chia làm 2 màn chính gồm màn hiển thị quy trình mua hàng tổng trong hệ thống bằng sơ đồ, màn thứ 2 là quy trình cho user đang đăng nhập thực hiện vai trò
+
+

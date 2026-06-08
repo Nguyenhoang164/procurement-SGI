@@ -197,6 +197,8 @@ function Dashboard() {
           <div className="table-card">
             <div className="table-toolbar">
               <h2>Đơn hàng gần đây</h2>
+              <a href="/purchase-orders" onClick={(e) => { e.preventDefault(); window.location.href = '/purchase-orders'; }}
+                style={{ color: '#2563eb', fontSize: 13, textDecoration: 'none' }}>Xem tất cả →</a>
             </div>
             <div className="table-wrapper">
               <table className="table">

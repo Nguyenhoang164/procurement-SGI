@@ -3,6 +3,18 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useNotifications } from '../hooks/useNotifications';
 import '../styles/Navigation.css';
 
+const ROLE_LABELS = {
+  ADMIN: 'Admin',
+  CEO: 'CEO',
+  WAREHOUSE: 'Thủ kho',
+  ACCOUNTANT: 'Kế toán',
+  CHIEF_ACCOUNTANT: 'Kế toán trưởng',
+  SALES: 'Nhân viên kinh doanh',
+  SALES_MANAGER: 'Trưởng phòng kinh doanh',
+  PURCHASING: 'Nhân viên mua hàng',
+  PENDING: 'Chờ phân quyền'
+};
+
 const ROLE_MENU = {
   ADMIN: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
   CEO: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
@@ -165,7 +177,7 @@ function Navigation({ user, onLogout }) {
               </div>
               <div>
                 <div className="sidebar-popup-name">{user?.username || 'User'}</div>
-                <div className="sidebar-popup-role">{pageName || user?.role || 'Nhân viên'}</div>
+                <div className="sidebar-popup-role">{ROLE_LABELS[user?.role] || user?.role || 'Nhân viên'}</div>
               </div>
             </div>
             <button className="sidebar-popup-logout" onClick={handleLogout}>
