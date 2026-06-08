@@ -35,11 +35,11 @@ export function canCrudProducts(user) { return isAdmin(user); }
 export function canImportProducts(user) { return true; }
 
 // Purchase Orders
-export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
-export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canDeletePO(user) { return isAdmin(user); }
-export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
-export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canApprovePO_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canRejectPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canSendPOToAccounting(user) { return isAdmin(user); }
@@ -69,7 +69,7 @@ export function canConfirmWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLE
 export function canCrudWarehouseReceipt(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE); }
 
 // Weekly Plans
-export function canCrudWeeklyPlan(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canCrudWeeklyPlan(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canDeleteWeeklyPlan(user) { return isAdmin(user); }
 export function canApproveWP_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canApproveWP_L2(user) { return isAdmin(user); }

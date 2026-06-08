@@ -34,14 +34,14 @@ public class PurchaseOrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> createPurchaseOrder(@Valid @RequestBody PurchaseOrderDTO dto) {
         PurchaseOrderDTO created = purchaseOrderService.createPurchaseOrder(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> updatePurchaseOrder(
             @PathVariable Long id,
             @Valid @RequestBody PurchaseOrderDTO dto) {
@@ -57,7 +57,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> submitForApproval(@PathVariable Long id) {
         PurchaseOrderDTO submitted = purchaseOrderService.submitForApproval(id);
         return ResponseEntity.ok(submitted);
@@ -100,7 +100,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<Map<String, Object>> importPurchaseOrders(@RequestBody List<PurchaseOrderDTO> orders) {
         int count = purchaseOrderService.importPurchaseOrders(orders);
         return ResponseEntity.ok(Map.of("imported", count, "message", "Đã import " + count + " đơn hàng"));
