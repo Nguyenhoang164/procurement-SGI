@@ -187,8 +187,8 @@ function WeeklyPlanList() {
               </div>
 
               {plan.items && plan.items.length > 0 ? (
-                <div className="table-wrapper">
-                  <table className="table">
+                <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', whiteSpace: 'nowrap' }}>
+                  <table className="table" style={{ minWidth: 960 }}>
                     <thead>
                       <tr>
                         <th style={{ width: 40 }}>#</th>
