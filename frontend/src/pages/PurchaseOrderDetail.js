@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { purchaseOrderAPI, costCommentAPI, productAPI, productCostAPI } from '../services/api';
 import { canCreatePaymentForOrder, getPaymentStatusBadgeClass, getPaymentStatusLabel } from '../utils/paymentUtils';
+import { isAdmin, canEditPO, canApprovePO_L1, canRejectPO, canAddCostComment, canSendPOToAccounting, hasRole, ROLES } from '../utils/permissions';
 
 function PurchaseOrderDetail() {
   const { id } = useParams();
@@ -170,9 +171,9 @@ function PurchaseOrderDetail() {
   if (error) return <div className="page-content"><div className="error-message">{error}</div></div>;
   if (!order) return <div className="page-content"><div className="error-message">Không tìm thấy đơn hàng.</div></div>;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'CEO';
-  const isSalesOrManager = user?.role === 'SALES' || user?.role === 'SALES_MANAGER' || user?.role === 'ACCOUNTANT' || user?.role === 'CHIEF_ACCOUNTANT';
-  console.log('[PODetail] user:', user, 'isAdmin:', isAdmin, 'isSalesOrManager:', isSalesOrManager, 'status:', order?.status, 'showButtons:', order?.status === 'PENDING_L1');
+  const isAdminUser = isAdmin(user);
+  const isSalesOrManager = hasRole(user, ROLES.SALES, ROLES.SALES_MANAGER);
+  const canAddComment = canAddCostComment(user);
   const formatDate = (value) => value ? new Date(value).toLocaleDateString('vi-VN') : '-';
   const formatMoney = (value) => value != null ? Number(value).toLocaleString('vi-VN') : '0';
   const formatPlanCode = (planId) => planId ? `KH-${String(planId).padStart(4, '0')}` : '-';
@@ -187,14 +188,20 @@ function PurchaseOrderDetail() {
         <div className="page-actions">
           <button className="btn btn-secondary" onClick={() => navigate('/purchase-orders')}>Quay lại</button>
 
-          {order.status === 'PENDING_L1' && (
+          {order.status === 'PENDING_L1' && (canApprovePO_L1(user) || canRejectPO(user)) && (
             <>
-              <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
-              <button className="btn btn-primary" onClick={handleApproveL1}>Phê duyệt</button>
+              {canRejectPO(user) && (
+                <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
+              )}
+              {canApprovePO_L1(user) && (
+                <button className="btn btn-primary" onClick={handleApproveL1}>Phê duyệt</button>
+              )}
             </>
           )}
 
-          <button className="btn btn-secondary" onClick={() => navigate(`/purchase-orders/edit/${id}`)}>Chỉnh sửa</button>
+          {canEditPO(user) && (
+            <button className="btn btn-secondary" onClick={() => navigate(`/purchase-orders/edit/${id}`)}>Chỉnh sửa</button>
+          )}
           {canCreatePaymentForOrder(user, order) ? (
             <button className="btn btn-primary" onClick={() => navigate(`/payments/new?poId=${id}`)}>Lập DNTT</button>
           ) : null}
@@ -475,7 +482,7 @@ function PurchaseOrderDetail() {
         <section className="detail-section" style={{ marginTop: 20 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3>Phân hệ tương tác Kế toán — Chênh lệch giá vốn</h3>
-            {(isAdmin || isSalesOrManager) && (
+            {canAddComment && (
               <button className="btn btn-sm btn-primary" onClick={() => setShowCommentForm(!showCommentForm)}>
                 {showCommentForm ? 'Đóng' : 'Thêm cảnh báo'}
               </button>

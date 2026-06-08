@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { warehouseAPI, productCostAPI } from '../services/api';
+import { canCrudWarehouseReceipt, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -17,6 +18,8 @@ const parseVariants = (spec) => {
 function WarehouseReceiptDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = getUser();
+  const canCrud = canCrudWarehouseReceipt(user);
   const [receipt, setReceipt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -314,7 +317,7 @@ function WarehouseReceiptDetail() {
                 ))}
               </div>
             )}
-            {images.length < 3 && (
+            {images.length < 3 && canCrud && (
               <div>
                 <input type="file" ref={fileInputRef} multiple accept="image/*"
                   onChange={handleImageUpload}

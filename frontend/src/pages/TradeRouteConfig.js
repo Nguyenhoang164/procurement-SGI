@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Form.css';
 import { tradeRouteAPI } from '../services/api';
+import { canCreateTradeRoute, canEditTradeRoute, canDeleteTradeRoute, getUser } from '../utils/permissions';
 
 function TradeRouteConfig() {
+  const user = getUser();
+  const canAdd = canCreateTradeRoute(user);
+  const canEdit = canEditTradeRoute(user);
+  const canDel = canDeleteTradeRoute(user);
   const [routes, setRoutes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -94,8 +99,10 @@ function TradeRouteConfig() {
             <input value={newForm.description} onChange={e => setNewForm(f => ({ ...f, description: e.target.value }))}
               placeholder="Mô tả tuyến hàng" style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }} />
           </div>
-          <button className="btn btn-primary" onClick={handleAdd} disabled={!newForm.routeName}
-            style={{ height: 40, whiteSpace: 'nowrap' }}>Thêm tuyến</button>
+          {canAdd && (
+            <button className="btn btn-primary" onClick={handleAdd} disabled={!newForm.routeName}
+              style={{ height: 40, whiteSpace: 'nowrap' }}>Thêm tuyến</button>
+          )}
         </div>
 
         {loading ? (
@@ -151,8 +158,12 @@ function TradeRouteConfig() {
                         <span style={{ color: r.active ? '#059669' : '#dc2626' }}>{r.active ? 'Có' : 'Không'}</span>
                       </td>
                       <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
-                        <button className="btn btn-secondary" style={{ marginRight: 8 }} onClick={() => startEdit(r)}>Sửa</button>
-                        <button className="btn btn-sm btn-delete" onClick={() => handleDelete(r.id)}>Xóa</button>
+                        {canEdit && (
+                          <button className="btn btn-secondary" style={{ marginRight: 8 }} onClick={() => startEdit(r)}>Sửa</button>
+                        )}
+                        {canDel && (
+                          <button className="btn btn-sm btn-delete" onClick={() => handleDelete(r.id)}>Xóa</button>
+                        )}
                       </td>
                     </>
                   )}

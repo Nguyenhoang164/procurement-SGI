@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { bankAccountAPI } from '../services/api';
+import { canCrudBankAccount } from '../utils/permissions';
 
 function BankAccountForm() {
   const { id } = useParams();
@@ -20,8 +21,10 @@ function BankAccountForm() {
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    if (userData) setUser(JSON.parse(userData));
-  }, []);
+    const u = userData ? JSON.parse(userData) : null;
+    setUser(u);
+    if (!canCrudBankAccount(u)) navigate('/bank-accounts');
+  }, [navigate]);
 
   useEffect(() => {
     if (!id) return;

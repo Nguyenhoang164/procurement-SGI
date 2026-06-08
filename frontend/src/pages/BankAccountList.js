@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Form.css';
 import { bankAccountAPI, resolveFileUrl } from '../services/api';
+import { canCrudBankAccount, canDeleteBankAccount, getUser } from '../utils/permissions';
 
 function BankAccountList() {
   const navigate = useNavigate();
+  const user = getUser();
+  const canCrud = canCrudBankAccount(user);
+  const canDelete = canDeleteBankAccount(user);
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,9 +47,11 @@ function BankAccountList() {
           <p className="page-subtitle">Quản lý tài khoản thụ hưởng để chuyển khoản</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={() => navigate('/bank-accounts/new')}>
-            + Thêm tài khoản
-          </button>
+          {canCrud && (
+            <button className="btn btn-primary" onClick={() => navigate('/bank-accounts/new')}>
+              + Thêm tài khoản
+            </button>
+          )}
         </div>
       </div>
 
@@ -79,9 +85,13 @@ function BankAccountList() {
                     )}
                   </td>
                   <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
-                    <button className="btn btn-secondary" style={{ marginRight: 8 }}
-                      onClick={() => navigate(`/bank-accounts/edit/${acc.id}`)}>Sửa</button>
-                    <button className="btn btn-danger" onClick={() => handleDelete(acc.id)}>Xóa</button>
+                    {canCrud && (
+                      <button className="btn btn-secondary" style={{ marginRight: 8 }}
+                        onClick={() => navigate(`/bank-accounts/edit/${acc.id}`)}>Sửa</button>
+                    )}
+                    {canDelete && (
+                      <button className="btn btn-danger" onClick={() => handleDelete(acc.id)}>Xóa</button>
+                    )}
                   </td>
                 </tr>
               ))}

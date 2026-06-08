@@ -7,10 +7,10 @@ const ROLE_MENU = {
   ADMIN: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
   CEO: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
   WAREHOUSE: ['dashboard', 'notifications', 'waybills', 'warehouse', 'purchase-orders', 'payments', 'weekly-plans', 'products'],
-  ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills'],
-  CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills'],
-  SALES: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes'],
-  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes']
+  ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
+  CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
+  SALES: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts'],
+  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts', 'costs', 'cost-alerts']
 };
 
 function Navigation({ user, onLogout }) {

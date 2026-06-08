@@ -13,6 +13,7 @@ import {
   parseAttachmentUrls,
   getAttachmentFileName
 } from '../utils/paymentUtils';
+import { canDeletePayment, getUser } from '../utils/permissions';
 
 function PaymentList() {
   const [payments, setPayments] = useState([]);
@@ -105,6 +106,7 @@ function PaymentList() {
   const pendingL1 = payments.filter((item) => item.status === 'PENDING_L1').length;
   const pendingL2 = payments.filter((item) => item.status === 'PENDING_L2').length;
   const allowCreate = canCreatePayment(user);
+  const canDelete = canDeletePayment(user);
 
   return (
     <div className="page-screen">
@@ -195,9 +197,11 @@ function PaymentList() {
                             <button className="btn btn-sm btn-view" onClick={(e) => { e.stopPropagation(); navigate(`/payments/${payment.id}`); }}>
                                 Chi tiết
                             </button>
-                            <button className="btn btn-sm btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(payment.id); }}>
-                                Xóa
-                            </button>
+                            {canDelete && (
+                              <button className="btn btn-sm btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(payment.id); }}>
+                                  Xóa
+                              </button>
+                            )}
                         </div>
                       </td>
                     </tr>

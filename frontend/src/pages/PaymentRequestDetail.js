@@ -17,6 +17,7 @@ import {
   numberToWords,
   formatMoney
 } from '../utils/paymentUtils';
+import { isAdmin, canApprovePR_L1, canApprovePR_L2, canPayPR, canEditPaymentByRole, canRejectPR } from '../utils/permissions';
 
 function PaymentRequestDetail() {
   const { id } = useParams();
@@ -254,8 +255,13 @@ function PaymentRequestDetail() {
   if (error) return <div className="page-content"><div className="error-message">{error}</div></div>;
   if (!request) return <div className="page-content"><div className="error-message">Không tìm thấy yêu cầu thanh toán.</div></div>;
 
-  const isAdmin = user?.role === 'ADMIN' || user?.role === 'CEO';
-  const isAccountant = user?.role === 'ACCOUNTANT' || user?.role === 'CHIEF_ACCOUNTANT';
+  const isAdminUser = isAdmin(user);
+  const canEdit = canEditPaymentByRole(user) && canEditPayment(request);
+  const canDoL1 = canApprovePR_L1(user);
+  const canDoL2 = canApprovePR_L2(user);
+  const canDoAccountingCheck = canAccountingCheck(user);
+  const canDoPay = canPayPR(user);
+  const canDoReject = canRejectPR(user);
   const attachmentUrls = parseAttachmentUrls(request.attachments);
   const customFees = request.customFees || [];
   const exchangeRateDiff = Number(request.exchangeRateDiffVnd) || 0;
@@ -272,38 +278,50 @@ function PaymentRequestDetail() {
          <div className="page-actions">
            <button className="btn btn-secondary" onClick={() => navigate('/payments')}>Quay lại</button>
 
-           {canCreatePayment(user) && canEditPayment(request) ? (
-             <button className="btn btn-secondary" onClick={() => navigate(`/payments/edit/${id}`)}>Chỉnh sửa</button>
-           ) : null}
+            {canEdit && (
+              <button className="btn btn-secondary" onClick={() => navigate(`/payments/edit/${id}`)}>Chỉnh sửa</button>
+            )}
 
             <button className="btn btn-outline" onClick={handlePrint}>
               In đề nghị
             </button>
 
-            {request.status === 'PENDING_L1' && (isAccountant || isAdmin) && (
+            {request.status === 'PENDING_L1' && (canDoL1 || canDoReject) && (
               <>
-                <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
-                <button className="btn btn-primary" onClick={handleApproveL1}>Phê duyệt L1</button>
+                {canDoReject && (
+                  <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
+                )}
+                {canDoL1 && (
+                  <button className="btn btn-primary" onClick={handleApproveL1}>Phê duyệt L1</button>
+                )}
               </>
             )}
 
-            {request.status === 'ACCOUNTING_CHECK' && (canAccountingCheck(user)) && (
+            {request.status === 'ACCOUNTING_CHECK' && (canDoAccountingCheck || canDoReject) && (
               <>
-                <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
-                <button className="btn btn-primary" onClick={handleAccountingCheck}>Kế toán duyệt chi</button>
+                {canDoReject && (
+                  <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
+                )}
+                {canDoAccountingCheck && (
+                  <button className="btn btn-primary" onClick={handleAccountingCheck}>Kế toán duyệt chi</button>
+                )}
               </>
             )}
 
-            {request.status === 'PENDING_L2' && isAdmin && (
+            {request.status === 'PENDING_L2' && (canDoL2 || canDoReject) && (
               <>
-                <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
-                <button className="btn btn-primary" onClick={handleApproveL2}>Phê duyệt L2 (Final)</button>
+                {canDoReject && (
+                  <button className="btn btn-danger" onClick={openRejectModal}>Từ chối</button>
+                )}
+                {canDoL2 && (
+                  <button className="btn btn-primary" onClick={handleApproveL2}>Phê duyệt L2 (Final)</button>
+                )}
               </>
             )}
 
-           {request.status === 'APPROVED' && (isAccountant || isAdmin) && (
-             <button className="btn btn-primary" onClick={() => setShowPayModal(true)}>Xác nhận Đã thanh toán</button>
-           )}
+           {request.status === 'APPROVED' && canDoPay && (
+              <button className="btn btn-primary" onClick={() => setShowPayModal(true)}>Xác nhận Đã thanh toán</button>
+            )}
          </div>
       </div>
 

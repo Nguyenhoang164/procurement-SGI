@@ -2,8 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { warehouseAPI } from '../services/api';
+import { canCrudWarehouseReceipt, getUser } from '../utils/permissions';
 
 function WarehouseReceiptList() {
+  const user = getUser();
+  const canCrud = canCrudWarehouseReceipt(user);
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,7 +37,9 @@ function WarehouseReceiptList() {
           <p className="page-subtitle">Danh sách phiếu nhập kho và kiểm đếm</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-secondary" onClick={() => navigate('/warehouse')}>Nhận hàng mới</button>
+          {canCrud && (
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('/warehouse')}>Nhận hàng mới</button>
+          )}
           <button type="button" className="btn btn-secondary" onClick={fetchReceipts}>Làm mới</button>
         </div>
       </div>

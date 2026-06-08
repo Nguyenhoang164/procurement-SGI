@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import '../styles/Form.css';
 import { exchangeRateAPI } from '../services/api';
+import { canUpdateExchangeRates, getUser } from '../utils/permissions';
 
 function ExchangeRateConfig() {
+  const user = getUser();
+  const canUpdate = canUpdateExchangeRates(user);
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -88,8 +91,10 @@ function ExchangeRateConfig() {
             <input type="number" step="0.0001" value={newRate} onChange={e => setNewRate(e.target.value)}
               placeholder="0" style={{ width: '100%', padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }} />
           </div>
-          <button className="btn btn-primary" onClick={handleAdd} disabled={!newCurrency || !newRate}
-            style={{ height: 40, whiteSpace: 'nowrap' }}>Thêm</button>
+          {canUpdate && (
+            <button className="btn btn-primary" onClick={handleAdd} disabled={!newCurrency || !newRate}
+              style={{ height: 40, whiteSpace: 'nowrap' }}>Thêm</button>
+          )}
         </div>
 
         {loading ? (
@@ -129,9 +134,11 @@ function ExchangeRateConfig() {
                         <button className="btn btn-secondary" onClick={() => { setEditCurrency(null); setEditValue(''); }}>Hủy</button>
                       </>
                     ) : (
-                      <button className="btn btn-secondary" onClick={() => { setEditCurrency(r.currency); setEditValue(String(r.rate)); }}>
-                        Sửa
-                      </button>
+                      canUpdate && (
+                        <button className="btn btn-secondary" onClick={() => { setEditCurrency(r.currency); setEditValue(String(r.rate)); }}>
+                          Sửa
+                        </button>
+                      )
                     )}
                   </td>
                 </tr>

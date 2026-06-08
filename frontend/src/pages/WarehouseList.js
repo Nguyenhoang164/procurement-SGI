@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import '../styles/Form.css';
 import { warehouseAPI } from '../services/api';
+import { canCrudWarehouseReceipt, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -16,6 +17,8 @@ const parseVariants = (spec) => {
 };
 
 function WarehouseList() {
+  const user = getUser();
+  const canCrud = canCrudWarehouseReceipt(user);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -288,7 +291,7 @@ function WarehouseList() {
                         <td>{item.shippingMethod || '—'}</td>
                         <td><span className={`badge badge-${(item.paymentStatus || '').toLowerCase() === 'paid' ? 'paid' : (item.paymentStatus || '').toLowerCase() === 'delivered' ? 'delivered' : 'pending'}`}>{item.paymentStatus}</span></td>
                         <td>
-                          {canReceive ? (
+                          {canReceive && canCrud ? (
                             <button type="button" className="btn btn-sm btn-primary" onClick={() => openReceive(item)}>Nhận hàng</button>
                           ) : (
                             <span className="muted-copy" style={{ fontSize: 12 }}>{hasDnttLink ? 'Đã nhập kho' : 'Chờ liên kết DNTT'}</span>

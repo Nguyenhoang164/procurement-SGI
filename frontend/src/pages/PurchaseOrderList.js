@@ -4,6 +4,7 @@ import '../styles/List.css';
 import { purchaseOrderAPI, productAPI, productCostAPI } from '../services/api';
 import { getPaymentStatusLabel } from '../utils/paymentUtils';
 import * as XLSX from 'xlsx';
+import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
 
 const statusLabels = {
   DRAFT: 'Nháp', PENDING_L1: 'Chờ duyệt', APPROVED: 'Phê duyệt',
@@ -20,9 +21,9 @@ function PurchaseOrderList() {
   const [costMap, setCostMap] = useState({});
   const navigate = useNavigate();
 
-  const userData = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = userData.role === 'ADMIN' || userData.role === 'CEO';
-  const isSalesManager = userData.role === 'SALES_MANAGER';
+  const userData = getUser();
+  const isAdminUser = isAdmin(userData);
+  const canApprove = canApprovePO_L1(userData);
 
   useEffect(() => {
     fetchOrders();
@@ -132,8 +133,12 @@ function PurchaseOrderList() {
           <p className="page-subtitle">Danh sách PO — Chờ duyệt → Phê duyệt → Vận chuyển → Hoàn tất</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={() => navigate('/purchase-orders/new')}>Tạo đơn hàng mới</button>
-          <button className="btn btn-secondary" onClick={handleImport}>Import</button>
+          {canCreatePO(userData) && (
+            <button className="btn btn-primary" onClick={() => navigate('/purchase-orders/new')}>Tạo đơn hàng mới</button>
+          )}
+          {canImportPO(userData) && (
+            <button className="btn btn-secondary" onClick={handleImport}>Import</button>
+          )}
           <button className="btn btn-secondary" onClick={handleExportExcel}>Xuất Excel</button>
         </div>
       </div>
@@ -192,12 +197,16 @@ function PurchaseOrderList() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  {order.status === 'PENDING_L1' && (isSalesManager || isAdmin) && (
+                  {order.status === 'PENDING_L1' && canApprove && (
                     <button className="btn btn-sm btn-approve" onClick={() => navigate(`/purchase-orders/${order.id}`)}>Phê duyệt</button>
                   )}
                   <button className="btn btn-sm btn-view" onClick={() => navigate(`/purchase-orders/${order.id}`)}>Xem</button>
-                  <button className="btn btn-sm btn-view" onClick={() => navigate(`/purchase-orders/edit/${order.id}`)}>Sửa</button>
-                  <button className="btn btn-sm btn-delete" onClick={() => handleDelete(order.id)}>Xóa</button>
+                  {canEditPO(userData) && (
+                    <button className="btn btn-sm btn-view" onClick={() => navigate(`/purchase-orders/edit/${order.id}`)}>Sửa</button>
+                  )}
+                  {canDeletePO(userData) && (
+                    <button className="btn btn-sm btn-delete" onClick={() => handleDelete(order.id)}>Xóa</button>
+                  )}
                 </div>
               </div>
 

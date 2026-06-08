@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { weeklyPlanAPI, productAPI } from '../services/api';
+import { canCrudWeeklyPlan, canDeleteWeeklyPlan, getUser } from '../utils/permissions';
 
 const statusLabels = {
   'DRAFT': 'Bản nháp',
@@ -37,6 +38,9 @@ function WeeklyPlanList() {
     if (incomingSearch) setSearchKeyword(incomingSearch);
   }, [location.state, location.search]);
 
+  const userData = getUser();
+  const canCrud = canCrudWeeklyPlan(userData);
+  const canDelete = canDeleteWeeklyPlan(userData);
   const getName = (item) => item.productName || productMap[item.posCode] || '-';
 
   const fetchPlans = async () => {
@@ -92,9 +96,11 @@ function WeeklyPlanList() {
           <p className="page-subtitle">Bước đề xuất nhu cầu trước khi chuyển sang đơn hàng PKD2</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={() => navigate('/weekly-plans/new')}>
-            Thêm kế hoạch
-          </button>
+          {canCrud && (
+            <button className="btn btn-primary" onClick={() => navigate('/weekly-plans/new')}>
+              Thêm kế hoạch
+            </button>
+          )}
         </div>
       </div>
 
@@ -159,15 +165,19 @@ function WeeklyPlanList() {
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button className="btn btn-sm btn-view" onClick={() => navigate(`/weekly-plans/edit/${plan.id}`)}>
-                    Sửa
-                  </button>
+                  {canCrud && (
+                    <button className="btn btn-sm btn-view" onClick={() => navigate(`/weekly-plans/edit/${plan.id}`)}>
+                      Sửa
+                    </button>
+                  )}
                   <button className="btn btn-sm btn-primary" onClick={() => navigate('/purchase-orders/new', { state: { fromPlan: plan } })}>
                     Tạo đơn
                   </button>
-                  <button className="btn btn-sm btn-delete" onClick={() => handleDelete(plan.id)}>
-                    Xóa
-                  </button>
+                  {canDelete && (
+                    <button className="btn btn-sm btn-delete" onClick={() => handleDelete(plan.id)}>
+                      Xóa
+                    </button>
+                  )}
                 </div>
               </div>
 

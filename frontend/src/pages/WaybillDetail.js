@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { waybillAPI, paymentRequestAPI } from '../services/api';
 import { formatDnttCode } from '../utils/paymentUtils';
+import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -43,6 +44,9 @@ function WaybillDetail() {
   useEffect(() => { fetchWaybill(); }, [fetchWaybill]);
 
   const [confirming, setConfirming] = useState(false);
+  const userData = getUser();
+  const canCrud = canCrudWaybill(userData);
+  const canConfirm = canConfirmWaybill(userData);
 
   const handleConfirmDelivery = async () => {
     if (!window.confirm('Xác nhận vận đơn đã giao thành công?')) return;
@@ -74,12 +78,14 @@ function WaybillDetail() {
         </div>
         <div className="page-actions">
           <button className="btn btn-secondary" onClick={() => navigate('/waybills')}>Quay lại</button>
-          {waybill.status !== 'DELIVERED' && waybill.status !== 'CANCELLED' && (
+          {waybill.status !== 'DELIVERED' && waybill.status !== 'CANCELLED' && canConfirm && (
             <button className="btn btn-primary" onClick={handleConfirmDelivery} disabled={confirming}>
               {confirming ? 'Đang xác nhận...' : 'Xác nhận vận đơn thành công'}
             </button>
           )}
-          <button className="btn btn-secondary" onClick={() => navigate(`/waybills/edit/${id}`)}>Chỉnh sửa</button>
+          {canCrud && (
+            <button className="btn btn-secondary" onClick={() => navigate(`/waybills/edit/${id}`)}>Chỉnh sửa</button>
+          )}
         </div>
       </div>
 

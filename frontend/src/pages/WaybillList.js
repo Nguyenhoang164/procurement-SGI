@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { waybillAPI } from '../services/api';
+import { canCrudWaybill, getUser } from '../utils/permissions';
 
 function WaybillList() {
   const [waybills, setWaybills] = useState([]);
@@ -9,6 +10,8 @@ function WaybillList() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const userData = getUser();
+  const canCrud = canCrudWaybill(userData);
 
   const fetchWaybills = useCallback(async () => {
     setLoading(true);
@@ -42,7 +45,9 @@ function WaybillList() {
           <p className="page-subtitle">Theo dõi vận chuyển và đối chiếu nhập kho</p>
         </div>
       <div className="page-actions">
-        <button className="btn btn-primary" onClick={() => navigate('/waybills/new')}>Tạo vận đơn mới</button>
+        {canCrud && (
+          <button className="btn btn-primary" onClick={() => navigate('/waybills/new')}>Tạo vận đơn mới</button>
+        )}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           <input
             type="text"
@@ -95,7 +100,9 @@ function WaybillList() {
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button className="btn btn-sm btn-view" onClick={() => navigate(`/waybills/${wb.id}`)}>Xem</button>
-                          <button className="btn btn-sm btn-view" onClick={() => navigate(`/waybills/edit/${wb.id}`)}>Sửa</button>
+                          {canCrud && (
+                            <button className="btn btn-sm btn-view" onClick={() => navigate(`/waybills/edit/${wb.id}`)}>Sửa</button>
+                          )}
                         </div>
                       </td>
                     </tr>
