@@ -16,14 +16,14 @@ const ROLE_LABELS = {
 };
 
 const ROLE_MENU = {
-  ADMIN: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
-  CEO: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
-  WAREHOUSE: ['dashboard', 'notifications', 'waybills', 'warehouse', 'purchase-orders', 'payments', 'weekly-plans', 'products'],
-  ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
-  CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
-  SALES: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts'],
-  SALES_MANAGER: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts', 'costs', 'cost-alerts'],
-  PURCHASING: ['dashboard', 'notifications', 'weekly-plans', 'purchase-orders', 'payments', 'waybills', 'warehouse', 'products', 'trade-routes', 'bank-accounts']
+  ADMIN: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
+  CEO: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
+  WAREHOUSE: ['dashboard', 'notifications', 'process-guide', 'waybills', 'warehouse', 'purchase-orders', 'payments', 'weekly-plans', 'products'],
+  ACCOUNTANT: ['dashboard', 'notifications', 'process-guide', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
+  CHIEF_ACCOUNTANT: ['dashboard', 'notifications', 'process-guide', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
+  SALES: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts'],
+  SALES_MANAGER: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'products', 'trade-routes', 'payments', 'waybills', 'warehouse', 'bank-accounts', 'costs', 'cost-alerts'],
+  PURCHASING: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'waybills', 'warehouse', 'products', 'trade-routes', 'bank-accounts']
 };
 
 function Navigation({ user, onLogout }) {
@@ -62,6 +62,7 @@ function Navigation({ user, onLogout }) {
       key: 'overview',
       items: [
         { to: '/dashboard', label: 'Bảng điều khiển', key: 'dashboard', short: 'DB' },
+        { to: '/process-guide', label: 'Quy trình', key: 'process-guide', short: 'QT' },
         { to: '/notifications', label: 'Thông báo', key: 'notifications', short: 'TB', badge: unreadCount }
       ]
     },

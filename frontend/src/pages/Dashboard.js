@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { dashboardAPI } from '../services/api';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { dashboardAPI, globalSearchAPI } from '../services/api';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
@@ -11,6 +12,12 @@ function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
+  const [searching, setSearching] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const searchRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     dashboardAPI.getKpi()
@@ -18,6 +25,23 @@ function Dashboard() {
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    const handler = (e) => { if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearch(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleSearch = async (kw) => {
+    setSearchKeyword(kw);
+    if (!kw.trim()) { setSearchResults(null); setShowSearch(false); return; }
+    setSearching(true); setShowSearch(true);
+    try {
+      const res = await globalSearchAPI.search(kw);
+      setSearchResults(res);
+    } catch { setSearchResults(null); }
+    finally { setSearching(false); }
+  };
 
   if (loading) {
     return (
@@ -81,6 +105,59 @@ function Dashboard() {
       </div>
 
       <div className="page-content">
+        <div ref={searchRef} style={{ position: 'relative', marginBottom: 16 }}>
+          <input type="text" placeholder="Tìm kiếm nâng cao (PO, sản phẩm, vận đơn, đề nghị TT...)" value={searchKeyword}
+            onChange={(e) => handleSearch(e.target.value)}
+            onFocus={() => { if (searchResults || searching) setShowSearch(true); }}
+            style={{ width: '100%', padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14, boxSizing: 'border-box' }} />
+          {showSearch && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: 400, overflow: 'auto', marginTop: 4 }}>
+              {searching ? (
+                <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>Đang tìm kiếm...</div>
+              ) : searchResults ? (
+                <>
+                  {searchResults.purchaseOrders?.length > 0 && (
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: '#6b7280', marginBottom: 4 }}>ĐƠN HÀNG ({searchResults.purchaseOrders.length})</div>
+                      {searchResults.purchaseOrders.slice(0, 5).map(po => (
+                        <div key={po.id} style={{ padding: '4px 0', cursor: 'pointer', fontSize: 13, color: '#2563eb' }}
+                          onClick={() => { navigate(`/purchase-orders/${po.id}`); setShowSearch(false); setSearchKeyword(''); }}>
+                          {po.poCode} - {po.productName || 'N/A'}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.paymentRequests?.length > 0 && (
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: '#6b7280', marginBottom: 4 }}>ĐỀ NGHỊ TT ({searchResults.paymentRequests.length})</div>
+                      {searchResults.paymentRequests.slice(0, 5).map(pr => (
+                        <div key={pr.id} style={{ padding: '4px 0', cursor: 'pointer', fontSize: 13, color: '#2563eb' }}
+                          onClick={() => { navigate(`/payments/${pr.id}`); setShowSearch(false); setSearchKeyword(''); }}>
+                          DNTT-{String(pr.id).padStart(4, '0')}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {searchResults.waybills?.length > 0 && (
+                    <div style={{ padding: '8px 12px' }}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: '#6b7280', marginBottom: 4 }}>VẬN ĐƠN ({searchResults.waybills.length})</div>
+                      {searchResults.waybills.slice(0, 5).map(wb => (
+                        <div key={wb.id} style={{ padding: '4px 0', cursor: 'pointer', fontSize: 13, color: '#2563eb' }}
+                          onClick={() => { navigate(`/waybills/${wb.id}`); setShowSearch(false); setSearchKeyword(''); }}>
+                          {wb.waybillCode || 'WB-' + wb.id}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {(!searchResults.purchaseOrders?.length && !searchResults.paymentRequests?.length && !searchResults.waybills?.length) && (
+                    <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>Không tìm thấy kết quả phù hợp.</div>
+                  )}
+                </>
+              ) : null}
+            </div>
+          )}
+        </div>
+
         <div className="stats-grid">
           {statCards.map((card, index) => (
             <div className="stat-card" key={index}>

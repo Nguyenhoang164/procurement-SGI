@@ -71,8 +71,6 @@ function Login({ onLogin }) {
             {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
         </form>
-
-        <p className="login-hint">Demo: admin / admin@123</p>
       </div>
     </div>
   );

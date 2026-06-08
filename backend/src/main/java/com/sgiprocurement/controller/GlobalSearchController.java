@@ -28,7 +28,7 @@ public class GlobalSearchController {
     private WaybillService waybillService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<Map<String, Object>> globalSearch(@RequestParam String keyword) {
         Map<String, Object> results = new LinkedHashMap<>();
 

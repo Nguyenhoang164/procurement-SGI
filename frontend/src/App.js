@@ -34,6 +34,7 @@ import WarehouseReceiptList from './pages/WarehouseReceiptList';
 import UserList from './pages/UserList';
 import UserForm from './pages/UserForm';
 import UserDetail from './pages/UserDetail';
+import ProcessGuide from './pages/ProcessGuide';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -89,6 +90,7 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/process-guide" element={<ProcessGuide />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/weekly-plans" element={<WeeklyPlanList />} />
           <Route path="/weekly-plans/new" element={<WeeklyPlanNew />} />        
