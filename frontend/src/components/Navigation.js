@@ -9,7 +9,7 @@ const ROLE_LABELS = {
   WAREHOUSE: 'Thủ kho',
   ACCOUNTANT: 'Kế toán',
   CHIEF_ACCOUNTANT: 'Kế toán trưởng',
-  SALES: 'Nhân viên kinh doanh',
+  SALES: 'Lead kinh doanh',
   SALES_MANAGER: 'Trưởng phòng kinh doanh',
   PURCHASING: 'Nhân viên mua hàng',
   PENDING: 'Chờ phân quyền'

@@ -9,7 +9,7 @@ const ROLE_OPTIONS = [
   { value: 'WAREHOUSE', label: 'Thủ kho' },
   { value: 'ACCOUNTANT', label: 'Kế toán' },
   { value: 'CHIEF_ACCOUNTANT', label: 'Kế toán trưởng' },
-  { value: 'SALES', label: 'Nhân viên kinh doanh' },
+  { value: 'SALES', label: 'Lead kinh doanh' },
   { value: 'SALES_MANAGER', label: 'Trưởng phòng kinh doanh' },
   { value: 'PURCHASING', label: 'Nhân viên mua hàng' }
 ];

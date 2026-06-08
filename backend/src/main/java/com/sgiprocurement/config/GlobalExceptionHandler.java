@@ -3,6 +3,7 @@ package com.sgiprocurement.config;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -53,6 +54,21 @@ public class GlobalExceptionHandler {
         );
         
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorDetails> handleBadCredentialsException(
+            BadCredentialsException ex,
+            WebRequest request) {
+
+        ErrorDetails errorDetails = new ErrorDetails(
+                LocalDateTime.now(),
+                "Tài khoản hoặc mật khẩu không đúng",
+                request.getDescription(false),
+                "UNAUTHORIZED"
+        );
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
