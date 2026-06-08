@@ -85,6 +85,8 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         product.setProductName(productDTO.getProductName());
+        product.setVietnameseName(productDTO.getVietnameseName());
+        product.setOldPosCode(productDTO.getOldPosCode());
         product.setSpec(productDTO.getSpec());
         product.setCategoryId(productDTO.getCategoryId());
         product.setMarketCode(productDTO.getMarketCode());
@@ -136,6 +138,8 @@ public class ProductService {
                 }
                 Product product = new Product();
                 product.setProductName(name.trim());
+                product.setVietnameseName(dto.getVietnameseName());
+                product.setOldPosCode(dto.getOldPosCode());
                 product.setMarketCode(dto.getMarketCode() != null ? dto.getMarketCode().toUpperCase() : "VN");
                 product.setSpec(dto.getSpec());
                 product.setUnit(dto.getUnit());
@@ -275,7 +279,9 @@ public class ProductService {
         ProductDTO dto = new ProductDTO();
         dto.setId(product.getId());
         dto.setPosCode(product.getPosCode());
+        dto.setOldPosCode(product.getOldPosCode());
         dto.setProductName(product.getProductName());
+        dto.setVietnameseName(product.getVietnameseName());
         dto.setCategoryId(product.getCategoryId());
         dto.setMarketCode(product.getMarketCode());
         dto.setSpec(product.getSpec());
@@ -296,7 +302,9 @@ public class ProductService {
         Product p = new Product();
         p.setId(productDTO.getId());
         p.setPosCode(productDTO.getPosCode());
+        p.setOldPosCode(productDTO.getOldPosCode());
         p.setProductName(productDTO.getProductName());
+        p.setVietnameseName(productDTO.getVietnameseName());
         p.setSpec(productDTO.getSpec());
         p.setCategoryId(productDTO.getCategoryId());
         p.setMarketCode(productDTO.getMarketCode());

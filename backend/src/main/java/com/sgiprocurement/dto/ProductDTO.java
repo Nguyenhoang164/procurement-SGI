@@ -15,7 +15,11 @@ public class ProductDTO {
 
     private String posCode;
 
+    private String oldPosCode;
+
     private String productName;
+
+    private String vietnameseName;
 
     private Long categoryId;
 

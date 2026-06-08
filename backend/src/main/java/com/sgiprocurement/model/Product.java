@@ -21,8 +21,14 @@ public class Product {
     @Column(name = "pos_code", nullable = false, length = 150, unique = true)
     private String posCode;
 
+    @Column(name = "old_pos_code", length = 150)
+    private String oldPosCode;
+
     @Column(name = "product_name", nullable = false, length = 255)
     private String productName;
+
+    @Column(name = "vietnamese_name", length = 255)
+    private String vietnameseName;
 
     @Column(name = "category_id")
     private Long categoryId;

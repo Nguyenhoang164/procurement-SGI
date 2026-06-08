@@ -143,6 +143,9 @@ function ProductDetail() {
             <div>
               <div className="product-pos-code">{product.posCode}</div>
               <h2>{product.productName}</h2>
+              {product.vietnameseName && (
+                <div style={{ fontSize: '14px', color: '#64748b', marginTop: 4 }}>{product.vietnameseName}</div>
+              )}
             </div>
             <span className={`badge badge-${product.status?.toLowerCase() || 'active'}`}>
               {product.status === 'ACTIVE' ? 'Đang hoạt động' : product.status || '-'}
@@ -150,6 +153,10 @@ function ProductDetail() {
           </div>
 
           <div className="product-info-grid">
+            <div className="product-info-item">
+              <span>Mã POS cũ</span>
+              <strong>{product.oldPosCode || 'N/A'}</strong>
+            </div>
             <div className="product-info-item">
               <span>Thị trường</span>
               <strong>{product.marketCode || '-'}</strong>

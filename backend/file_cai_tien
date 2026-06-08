@@ -13,7 +13,7 @@
 + Thêm trường thời gian tạo đơn
 
 - Thay đổi tên quyền hạn người dùng
-+ Chuyển đổi tên quyền nvkinhdoanh = leadkinhdoanh (Lead kinh doanh)
++ Chuyển đổi tên vai trò nhân viên kinh doanh = lead kinh doanh (Lead kinh doanh)
 
 - Bảng điều khiển
 + Màn hình danh sách đơn hàng gần đây: Cột mã đơn, mã Pos và số lượng, các biến thể đang chưa thể hiện được, cần cải tiến hoặc đơn giản hơn là lấy danh sách đơn hàng của trang đơn hàng rồi đưa vào
@@ -28,5 +28,9 @@
 
 - Màn quy trình sử dụng
 + Chia làm 2 màn chính gồm màn hiển thị quy trình mua hàng tổng trong hệ thống bằng sơ đồ, màn thứ 2 là quy trình cho user đang đăng nhập thực hiện vai trò
+
+- Danh mục sản phẩm
++ Thêm cột tên tiếng việt cho sản phẩm ở đằng sau, vì file exel không có nên cần linh hoạt trong việc dịch sang tiếng việt
++ Thêm cột Mã pos cũ với cột file exel POS variation ID , nếu file khác không có cột đó thì để giá trị mặc định là N/A
 
 

@@ -10,6 +10,8 @@ function ProductForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     posCode: '',
     productName: '',
+    vietnameseName: '',
+    oldPosCode: '',
     categoryId: '',
     marketCode: 'VN',
     spec: '',
@@ -147,6 +149,11 @@ function ProductForm({ onSuccess }) {
               <input type="text" name="productName" value={formData.productName} onChange={handleChange} required className="form-input" placeholder="Ví dụ: Durex Pro..." />
             </div>
 
+            <div className="form-group">
+              <label>Tên tiếng Việt</label>
+              <input type="text" name="vietnameseName" value={formData.vietnameseName} onChange={handleChange} className="form-input" placeholder="Nhập tên tiếng Việt..." />
+            </div>
+
             <div className="form-row">
               <div className="form-group">
                 <label>Thị trường *</label>
@@ -168,6 +175,10 @@ function ProductForm({ onSuccess }) {
                   )}
                 </div>
               </div>
+            </div>
+            <div className="form-group">
+              <label>Mã POS cũ</label>
+              <input type="text" name="oldPosCode" value={formData.oldPosCode} onChange={handleChange} className="form-input" placeholder="POS variation ID từ file Excel..." />
             </div>
           </div>
 

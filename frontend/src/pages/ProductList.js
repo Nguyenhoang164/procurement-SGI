@@ -92,7 +92,8 @@ function ProductList() {
             marketCode: findKey(row, 'Thị trường', 'thị trường', 'Market', 'market', 'marketCode', 'Market Code'),
             spec: findKey(row, 'Quy cách', 'quy cách', 'Spec', 'spec', 'Quy cách đóng gói'),
             unit: findKey(row, 'Đơn vị', 'đơn vị', 'Unit', 'unit', 'ĐVT'),
-            sourceLink: findKey(row, 'Link nguồn', 'link nguồn', 'Source Link', 'sourceLink', 'source_link', 'Link', 'link')
+            sourceLink: findKey(row, 'Link nguồn', 'link nguồn', 'Source Link', 'sourceLink', 'source_link', 'Link', 'link'),
+            oldPosCode: findKey(row, 'POS variation ID', 'Pos variation id', 'pos_variation_id', 'POS variation', 'Mã POS cũ', 'oldPosCode', 'old_pos_code') || 'N/A'
           }));
           resolve(mapped);
         } catch (err) {
@@ -248,7 +249,9 @@ function ProductList() {
                     <input type="checkbox" checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
                   </th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>MÃ POS</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>MÃ POS CŨ</th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>SẢN PHẨM</th>
+                  <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>TÊN TIẾNG VIỆT</th>
                   <th style={{ padding: '16px 20px', textAlign: 'center', color: '#475569', fontSize: '13px' }}>THỊ TRƯỜNG</th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>QUY CÁCH / ĐƠN VỊ</th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>TRẠNG THÁI</th>
@@ -270,7 +273,13 @@ function ProductList() {
                         </code>
                       </td>
                       <td style={{ padding: '16px 20px' }}>
+                        <div style={{ fontSize: '13px', color: '#64748b' }}>{p.oldPosCode || 'N/A'}</div>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
                         <div style={{ fontWeight: '600', color: '#1e293b' }}>{p.productName}</div>
+                      </td>
+                      <td style={{ padding: '16px 20px' }}>
+                        <div style={{ fontSize: '13px', color: '#64748b' }}>{p.vietnameseName || '---'}</div>
                       </td>
                       <td style={{ padding: '16px 20px', textAlign: 'center' }}>
                         <span style={{ padding: '2px 8px', backgroundColor: '#f1f5f9', borderRadius: '4px', fontSize: '12px', fontWeight: '700' }}>
@@ -298,7 +307,7 @@ function ProductList() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="8" style={{ textAlign: 'center', padding: '40px' }}>Không có dữ liệu</td></tr>
+                  <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px' }}>Không có dữ liệu</td></tr>
                 )}
               </tbody>
             </table>
