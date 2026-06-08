@@ -158,8 +158,10 @@ function WaybillDetail() {
                     <th style={{ width: 110 }}>Mã POS</th>
                     <th style={{ width: 80 }}>Chi tiết</th>
                     <th style={{ width: 70 }}>SL</th>
-                    <th style={{ width: 110 }}>Đơn giá</th>
+                    <th style={{ width: 110 }}>Đơn giá (NT)</th>
                     <th style={{ width: 60 }}>TG</th>
+                    <th style={{ width: 110 }}>Thành tiền (NT)</th>
+                    <th style={{ width: 100 }}>Quy đổi VNĐ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -167,6 +169,8 @@ function WaybillDetail() {
                     const pVariants = parseVariants(p.spec);
                     const hasVariants = pVariants.some(v => v.name || v.qty);
                     const rows = [];
+                    const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
+                    const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
                     rows.push(
                       <tr key={idx}>
                         <td>{idx + 1}</td>
@@ -174,8 +178,10 @@ function WaybillDetail() {
                         <td>{p.posCode || '-'}</td>
                         <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                         <td>{p.orderedQty}</td>
-                        <td>{Number(p.unitPrice || 0).toLocaleString()}</td>
-                        <td>{p.currency || 'CNY'}</td>
+                        <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
+                        <td>{p.exchangeRate || '3520'}</td>
+                        <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
+                        <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                       </tr>
                     );
                     if (hasVariants) {
@@ -190,6 +196,8 @@ function WaybillDetail() {
                             <td></td>
                             <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
                             <td>{v.qty || 0}</td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                           </tr>

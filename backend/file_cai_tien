@@ -32,5 +32,7 @@
 - Danh mục sản phẩm
 + Thêm cột tên tiếng việt cho sản phẩm ở đằng sau, vì file exel không có nên cần linh hoạt trong việc dịch sang tiếng việt
 + Thêm cột Mã pos cũ với cột file exel POS variation ID , nếu file khác không có cột đó thì để giá trị mặc định là N/A
++ Trong trường hợp nếu add 2 sản phẩm giống nhau về tên thì tiến hành hiển thị cửa sổ sản phẩm nào trùng để có thể xử lý
+
 
 

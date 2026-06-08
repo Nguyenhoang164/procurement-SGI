@@ -56,6 +56,10 @@ public class ProductService {
     }
 
     public ProductDTO createProduct(ProductDTO productDTO) {
+        String name = productDTO.getProductName();
+        if (name != null && productRepository.findByProductName(name.trim()).isPresent()) {
+            throw new RuntimeException("Sản phẩm \"" + name.trim() + "\" đã tồn tại trong hệ thống");
+        }
         Product product = convertToEntity(productDTO);
         if (product.getPosCode() == null || product.getPosCode().isEmpty()) {
             String code = productNamingService.generatePosCode(
@@ -132,10 +136,12 @@ public class ProductService {
                     result.addError("DĂ²ng " + rowNum + ": TĂªn sáº£n pháº©m khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng");
                     continue;
                 }
-                if (productRepository.findByProductName(name.trim()).isPresent()) {
-                    result.addError("DĂ²ng " + rowNum + ": Sáº£n pháº©m \"" + name.trim() + "\" Ä‘Ă£ tá»“n táº¡i");
-                    continue;
-                }
+            if (productRepository.findByProductName(name.trim()).isPresent()) {
+                String dupName = name.trim();
+                result.addError("Dòng " + rowNum + ": \"" + dupName + "\" đã tồn tại");
+                result.addDuplicateName(dupName);
+                continue;
+            }
                 Product product = new Product();
                 product.setProductName(name.trim());
                 product.setVietnameseName(dto.getVietnameseName());

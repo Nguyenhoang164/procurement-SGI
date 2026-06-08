@@ -21,7 +21,7 @@ const calcTotalQty = (variants) => {
 };
 
 const emptyProduct = {
-  posCode: '', productName: '', spec: '', orderedQty: '', unitPrice: '', currency: 'CNY'
+  posCode: '', productName: '', spec: '', orderedQty: '', unitPrice: '', currency: 'CNY', exchangeRate: '3520'
 };
 
 function WaybillNew() {
@@ -71,7 +71,8 @@ function WaybillNew() {
             spec: item.spec || '',
             orderedQty: String(item.orderedQty || ''),
             unitPrice: String(item.unitPrice || ''),
-            currency: item.currency || 'CNY'
+            currency: item.currency || 'CNY',
+            exchangeRate: String(item.exchangeRate || '3520')
           }));
           setProducts(mapped);
           const total = mapped.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
@@ -306,14 +307,16 @@ function WaybillNew() {
                     <th>Sản phẩm</th>
                     <th style={{ minWidth: 160 }}>Chi tiết</th>
                     <th style={{ width: 60 }}>SL</th>
-                    <th style={{ width: 110 }}>Đơn giá</th>
+                    <th style={{ width: 110 }}>Đơn giá (NT)</th>
                     <th style={{ width: 60 }}>TG</th>
+                    <th style={{ width: 110 }}>Thành tiền (NT)</th>
+                    <th style={{ width: 100 }}>Quy đổi VNĐ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {products.length === 0 && (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>
+                      <td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>
                         Chưa có sản phẩm. Vui lòng chọn DNTT để tải sản phẩm từ đơn hàng.
                       </td>
                     </tr>
@@ -321,6 +324,8 @@ function WaybillNew() {
                   {products.flatMap((p, idx) => {
                     const pVariants = parseVariants(p.spec);
                     const hasVariants = pVariants.some(v => v.name || v.qty);
+                    const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
+                    const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
                     return [
                       <tr key={idx}>
                         <td>{idx + 1}</td>
@@ -328,7 +333,9 @@ function WaybillNew() {
                         <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                         <td>{p.orderedQty}</td>
                         <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                        <td>{p.currency || 'CNY'}</td>
+                        <td>{p.exchangeRate || '3520'}</td>
+                        <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
+                        <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                       </tr>,
                       ...(hasVariants ? pVariants.filter(v => v.name || v.qty).map((v, vi) => (
                         <tr key={`${idx}-v${vi}`} style={{ background: '#f8fafc' }}>
@@ -338,6 +345,8 @@ function WaybillNew() {
                           </td>
                           <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
                           <td>{v.qty || 0}</td>
+                          <td></td>
+                          <td></td>
                           <td></td>
                           <td></td>
                         </tr>

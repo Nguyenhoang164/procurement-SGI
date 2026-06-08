@@ -8,6 +8,7 @@ public class ProductImportResult {
     private int successCount;
     private int errorCount;
     private List<String> errors = new ArrayList<>();
+    private List<String> duplicateNames = new ArrayList<>();
 
     public ProductImportResult() {}
 
@@ -30,5 +31,9 @@ public class ProductImportResult {
     public List<String> getErrors() { return errors; }
     public void setErrors(List<String> errors) { this.errors = errors; }
 
+    public List<String> getDuplicateNames() { return duplicateNames; }
+    public void setDuplicateNames(List<String> duplicateNames) { this.duplicateNames = duplicateNames; }
+
     public void addError(String error) { this.errors.add(error); }
+    public void addDuplicateName(String name) { this.duplicateNames.add(name); }
 }

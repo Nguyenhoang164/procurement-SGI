@@ -206,7 +206,7 @@ function ProductList() {
             zIndex: 1000
           }} onClick={() => setImportResult(null)}>
             <div style={{
-              background: '#fff', borderRadius: 12, padding: 28, minWidth: 400, maxWidth: 500,
+              background: '#fff', borderRadius: 12, padding: 28, minWidth: 420, maxWidth: 540,
               boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
             }} onClick={(e) => e.stopPropagation()}>
               <h3 style={{ margin: '0 0 16px' }}>Kết quả import</h3>
@@ -220,8 +220,20 @@ function ProductList() {
                   <div style={{ fontSize: 13, color: importResult.errorCount > 0 ? '#991b1b' : '#64748b' }}>Lỗi</div>
                 </div>
               </div>
+              {importResult.duplicateNames?.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: '#92400e', marginBottom: 6 }}>Sản phẩm trùng tên ({importResult.duplicateNames.length})</div>
+                  <div style={{ maxHeight: 150, overflowY: 'auto', background: '#fffbeb', borderRadius: 8, padding: 8 }}>
+                    {importResult.duplicateNames.map((name, i) => (
+                      <div key={i} style={{ padding: '4px 8px', fontSize: 13, color: '#92400e', borderBottom: i < importResult.duplicateNames.length - 1 ? '1px solid #fde68a' : 'none' }}>
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {importResult.errors?.length > 0 && (
-                <div style={{ maxHeight: 200, overflowY: 'auto' }}>
+                <div style={{ maxHeight: 150, overflowY: 'auto' }}>
                   {importResult.errors.map((err, i) => (
                     <div key={i} style={{ padding: '6px 10px', fontSize: 13, color: '#991b1b', background: '#fef2f2', borderRadius: 6, marginBottom: 4 }}>
                       {err}
