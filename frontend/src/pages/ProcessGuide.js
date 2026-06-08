@@ -5,20 +5,22 @@ const ROLE_LABELS = {
   ADMIN: 'Admin', CEO: 'CEO', WAREHOUSE: 'Thủ kho',
   ACCOUNTANT: 'Kế toán', CHIEF_ACCOUNTANT: 'Kế toán trưởng',
   SALES: 'Lead kinh doanh', SALES_MANAGER: 'Trưởng phòng kinh doanh',
-  PURCHASING: 'Nhân viên mua hàng'
+  PURCHASING: 'Nhân viên mua hàng', PENDING: 'Chờ phân quyền'
 };
+
+const R = ROLE_LABELS;
 
 const STEPS = [
   { id: 'weekly-plan', label: 'Kế hoạch tuần', icon: '📋', color: '#2563eb',
-    desc: 'SALES/PURCHASING lập kế hoạch nhập hàng theo tuần, trình duyệt. SALES_MGR phê duyệt.' },
+    desc: `${R.SALES}/${R.PURCHASING} lập kế hoạch nhập hàng theo tuần, trình duyệt. ${R.SALES_MANAGER} phê duyệt.` },
   { id: 'purchase-order', label: 'Đơn mua hàng', icon: '📄', color: '#059669',
-    desc: 'SALES/PURCHASING tạo đơn hàng (PO) từ kế hoạch. SALES_MGR phê duyệt L1. ADMIN gửi kế toán.' },
+    desc: `${R.SALES}/${R.PURCHASING} tạo đơn hàng (PO) từ kế hoạch. ${R.SALES_MANAGER} phê duyệt L1. ${R.ADMIN} gửi kế toán.` },
   { id: 'payment-request', label: 'Đề nghị thanh toán', icon: '💰', color: '#d97706',
-    desc: 'ACCOUNTANT/CHIEF_ACCT/SALES/PURCHASING tạo đề nghị thanh toán. ACCOUNTANT/CHIEF_ACCT duyệt L1, chi trả. ADMIN duyệt L2.' },
+    desc: `${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT}/${R.SALES}/${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.ADMIN} duyệt L2.` },
   { id: 'waybill', label: 'Vận đơn', icon: '🚢', color: '#7c3aed',
-    desc: 'WAREHOUSE/SALES/PURCHASING tạo vận đơn theo lô hàng. WAREHOUSE xác nhận khi hàng về.' },
+    desc: `${R.WAREHOUSE}/${R.SALES}/${R.PURCHASING} tạo vận đơn theo lô hàng. ${R.WAREHOUSE} xác nhận khi hàng về.` },
   { id: 'warehouse-receipt', label: 'Nhập kho', icon: '📦', color: '#dc2626',
-    desc: 'WAREHOUSE tạo phiếu nhập kho, nhập hàng, upload hình ảnh biên lai và item.' }
+    desc: `${R.WAREHOUSE} tạo phiếu nhập kho, nhập hàng, upload hình ảnh biên lai và item.` }
 ];
 
 const ROLE_TASKS = {
@@ -26,9 +28,9 @@ const ROLE_TASKS = {
   CEO: 'Xem toàn bộ quy trình. Quản lý người dùng (thêm/sửa/vô hiệu).',
   WAREHOUSE: 'Tạo vận đơn → Xác nhận vận đơn → Tạo phiếu nhập kho → Nhập hàng.',
   ACCOUNTANT: 'Tạo đề nghị thanh toán → Phê duyệt L1 → Chi trả → Xác nhận TT.',
-  CHIEF_ACCOUNTANT: 'Giống ACCOUNTANT + Kiểm tra kế toán.',
+  CHIEF_ACCOUNTANT: `Giống ${R.ACCOUNTANT} + Kiểm tra kế toán.`,
   SALES: 'Lập kế hoạch tuần → Tạo đơn hàng (PO) → Tạo đề nghị thanh toán → Tạo vận đơn.',
-  SALES_MANAGER: 'Giống SALES + Phê duyệt PO L1 + Phê duyệt kế hoạch tuần.',
+  SALES_MANAGER: `Giống ${R.SALES} + Phê duyệt PO L1 + Phê duyệt kế hoạch tuần.`,
   PURCHASING: 'Lập kế hoạch tuần → Tạo đơn hàng (PO) → Tạo đề nghị thanh toán → Tạo vận đơn.'
 };
 

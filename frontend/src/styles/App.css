@@ -999,3 +999,38 @@ textarea {
     padding: 0;
   }
 }
+
+.deactivation-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  background: #dc2626;
+  color: #fff;
+  text-align: center;
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.role-changed-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #2563eb;
+  color: #fff;
+  text-align: center;
+  padding: 14px 20px;
+  font-weight: 600;
+  font-size: 15px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}

@@ -72,7 +72,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/v1/auth/**").permitAll()
+                        .requestMatchers("/v1/auth/login", "/v1/auth/register").permitAll()
                         .requestMatchers("/v1/products/generate-code").permitAll()
                         .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

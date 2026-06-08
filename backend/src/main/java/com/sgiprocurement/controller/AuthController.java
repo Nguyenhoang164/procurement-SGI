@@ -3,6 +3,7 @@ package com.sgiprocurement.controller;
 import com.sgiprocurement.dto.LoginRequest;
 import com.sgiprocurement.dto.RegisterRequest;
 import com.sgiprocurement.dto.AuthResponse;
+import com.sgiprocurement.dto.UserResponse;
 import com.sgiprocurement.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +27,11 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
-        AuthResponse response = authService.register(registerRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(registerRequest));
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        return ResponseEntity.ok(authService.getCurrentUser());
+    }
 }

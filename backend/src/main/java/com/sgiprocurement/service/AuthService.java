@@ -3,14 +3,17 @@ package com.sgiprocurement.service;
 import com.sgiprocurement.dto.LoginRequest;
 import com.sgiprocurement.dto.RegisterRequest;
 import com.sgiprocurement.dto.AuthResponse;
+import com.sgiprocurement.dto.UserResponse;
 import com.sgiprocurement.model.User;
 import com.sgiprocurement.repository.UserRepository;
 import com.sgiprocurement.config.JwtTokenProvider;
+import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -66,6 +69,21 @@ public class AuthService {
             admin.setUpdatedAt(LocalDateTime.now());
             userRepository.save(admin);
         }
+    }
+
+    public UserResponse getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getRole(),
+                user.getMarket(),
+                user.getActive(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
     }
 
     public AuthResponse register(RegisterRequest request) {

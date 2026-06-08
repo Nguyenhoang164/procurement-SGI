@@ -61,7 +61,9 @@ export const authAPI = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password, market })
-    })
+    }),
+  checkSession: async () =>
+    requestJson(`${API_BASE_URL}/auth/me`, { headers: getHeaders() })
 };
 
 export const weeklyPlanAPI = {
