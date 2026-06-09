@@ -177,10 +177,15 @@ public class PurchaseOrderService {
         po.setCompletedAt(dto.getCompletedAt());
         po.setDepositVnd(dto.getDepositVnd());
 
+        if (po.getExchangeRate() == null || po.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            fetchExchangeRate(po);
+        }
+
         if (dto.getItems() != null) {
             po.getItems().clear();
             for (PurchaseOrderItemDTO itemDTO : dto.getItems()) {
                 PurchaseOrderItem item = convertItemToEntity(itemDTO);
+                item.setExchangeRate(po.getExchangeRate());
                 item.setPurchaseOrder(po);
                 calculateItemAmounts(item);
                 po.getItems().add(item);
@@ -203,8 +208,13 @@ public class PurchaseOrderService {
             if (po.getCreatedAt() == null) po.setCreatedAt(java.time.LocalDateTime.now());
             po.setUpdatedAt(java.time.LocalDateTime.now());
 
+            if (po.getExchangeRate() == null || po.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) == 0) {
+                fetchExchangeRate(po);
+            }
+
             if (po.getItems() != null) {
                 for (PurchaseOrderItem item : po.getItems()) {
+                    item.setExchangeRate(po.getExchangeRate());
                     item.setPurchaseOrder(po);
                     calculateItemAmounts(item);
                 }
@@ -245,10 +255,10 @@ public class PurchaseOrderService {
             int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban", "department", "initiator_department");
             int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
             int colExchangeRate = findCol(colMap, "tỷgiá", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
-            int colCurrency = findCol(colMap, "tỷgiá-currency", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
+            int colCurrency = findCol(colMap, "tỷgiá-currency:loạiđơnvịtiềntệ", "tỷgiá-currency", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
             int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "product_name", "productname", "tên sản phẩm", "dev_product_name", "devproductname");
             int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quycách", "spec", "đvt");
-            int colNote = findCol(colMap, "chitiết_hànghoá_diễnảithêm lý do", "diễnảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem", "chitiết_hànghoá_diễn giảithêmlýdo");
+            int colNote = findCol(colMap, "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem");
             int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "quantity", "ordered_qty", "orderedqty", "soluong");
             int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
             int colTotalForeign = findCol(colMap, "tiềnhànghoá", "thành tiền", "total_amount", "totalamount", "total_foreign", "totalamountforeign", "tienhang", "tien_hang_hoa");
