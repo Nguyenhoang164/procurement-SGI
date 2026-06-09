@@ -93,6 +93,26 @@ function PurchaseOrderList() {
     input.click();
   };
 
+  const handleImportExcel = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const result = await purchaseOrderAPI.importExcel(file);
+        const msg = `Import ${result.successCount}/${result.totalOrders} đơn hàng thành công` +
+          (result.errors?.length ? `\n${result.errors.join('\n')}` : '');
+        alert(msg);
+        fetchOrders();
+      } catch (err) {
+        alert('Lỗi import Excel: ' + err.message);
+      }
+    };
+    input.click();
+  };
+
   const getName = (item) => item.productName || productMap[item.posCode] || '-';
 
   const handleExportExcel = () => {
@@ -137,7 +157,10 @@ function PurchaseOrderList() {
             <button className="btn btn-primary" onClick={() => navigate('/purchase-orders/new')}>Tạo đơn hàng mới</button>
           )}
           {canImportPO(userData) && (
-            <button className="btn btn-secondary" onClick={handleImport}>Import</button>
+            <>
+              <button className="btn btn-secondary" onClick={handleImport}>Import JSON</button>
+              <button className="btn btn-secondary" onClick={handleImportExcel}>Import Excel</button>
+            </>
           )}
           <button className="btn btn-secondary" onClick={handleExportExcel}>Xuất Excel</button>
         </div>

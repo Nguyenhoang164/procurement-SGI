@@ -106,6 +106,19 @@ export const purchaseOrderAPI = {
     const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, { method: 'DELETE', headers: getHeaders() });
     if (!response.ok) throw new Error('Xóa đơn hàng thất bại');
   },
+  importExcel: async (file) => {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/purchase-orders/import/excel`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Import Excel thất bại');
+    return result;
+  },
   approveL1: async (id) => requestJson(`${API_BASE_URL}/purchase-orders/${id}/approve-l1`, {
     method: 'POST', headers: getHeaders()
   }),
