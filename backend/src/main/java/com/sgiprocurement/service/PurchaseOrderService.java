@@ -251,7 +251,8 @@ public class PurchaseOrderService {
             int colNote = findCol(colMap, "chitiết_hànghoá_diễnảithêm lý do", "diễnảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem", "chitiết_hànghoá_diễn giảithêmlýdo");
             int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "quantity", "ordered_qty", "orderedqty", "soluong");
             int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
-            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "tiềnhànghoá", "thành tiền", "total_vnd", "totalamountvnd", "tienhang", "tien_hang_hoa");
+            int colTotalForeign = findCol(colMap, "tiềnhànghoá", "thành tiền", "total_amount", "totalamount", "total_foreign", "totalamountforeign", "tienhang", "tien_hang_hoa");
+            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
 
             Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
             int rowCount = 0;
@@ -309,6 +310,7 @@ public class PurchaseOrderService {
                     Integer qty = colQty >= 0 ? parseInteger(getCellStringValue(row.getCell(colQty))) : null;
                     item.setOrderedQty(qty != null ? qty : 0);
                     if (colUnitPrice >= 0) item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(colUnitPrice))));
+                    if (colTotalForeign >= 0) item.setTotalAmountForeign(parseBigDecimal(getCellStringValue(row.getCell(colTotalForeign))));
                     if (colTotalVnd >= 0) item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(colTotalVnd))));
                     item.setCurrency(order.getCurrency());
                     item.setExchangeRate(order.getExchangeRate());
