@@ -67,7 +67,7 @@ public class PurchaseOrderService {
         po.setStatus("PENDING_L1");
         po.setPaymentStatus(null);
 
-        if (po.getExchangeRate() == null || po.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) == 0) {
+        if (po.getExchangeRate() != null && po.getExchangeRate().compareTo(java.math.BigDecimal.ONE) == 0 && po.getCurrency() != null) {
             fetchExchangeRate(po);
         }
 
@@ -177,7 +177,7 @@ public class PurchaseOrderService {
         po.setCompletedAt(dto.getCompletedAt());
         po.setDepositVnd(dto.getDepositVnd());
 
-        if (po.getExchangeRate() == null || po.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) == 0) {
+        if (po.getExchangeRate() != null && po.getExchangeRate().compareTo(java.math.BigDecimal.ONE) == 0 && po.getCurrency() != null) {
             fetchExchangeRate(po);
         }
 
@@ -208,7 +208,7 @@ public class PurchaseOrderService {
             if (po.getCreatedAt() == null) po.setCreatedAt(java.time.LocalDateTime.now());
             po.setUpdatedAt(java.time.LocalDateTime.now());
 
-            if (po.getExchangeRate() == null || po.getExchangeRate().compareTo(java.math.BigDecimal.ZERO) == 0) {
+            if (po.getExchangeRate() != null && po.getExchangeRate().compareTo(java.math.BigDecimal.ONE) == 0 && po.getCurrency() != null) {
                 fetchExchangeRate(po);
             }
 
@@ -243,7 +243,12 @@ public class PurchaseOrderService {
             for (int c = 0; c <= headerRow.getLastCellNum(); c++) {
                 Cell cell = headerRow.getCell(c);
                 if (cell == null) continue;
-                String header = getCellStringValue(cell).toLowerCase().replace(" ", "");
+                String header = getCellStringValue(cell)
+                        .toLowerCase()
+                        .replace(" ", "")
+                        .replace("（", "(")
+                        .replace("）", ")")
+                        .replace("：", ":");
                 colMap.put(header, c);
             }
 
@@ -304,11 +309,13 @@ public class PurchaseOrderService {
                     if (order.getSourceType() == null && colSourceType >= 0) {
                         order.setSourceType(getCellStringValue(row.getCell(colSourceType)));
                     }
-                    if (order.getExchangeRate() == null && colExchangeRate >= 0) {
-                        order.setExchangeRate(parseBigDecimal(getCellStringValue(row.getCell(colExchangeRate))));
+                    if (colExchangeRate >= 0) {
+                        BigDecimal rate = parseBigDecimal(getCellStringValue(row.getCell(colExchangeRate)));
+                        if (rate != null) order.setExchangeRate(rate);
                     }
-                    if (order.getCurrency() == null && colCurrency >= 0) {
-                        order.setCurrency(getCellStringValue(row.getCell(colCurrency)));
+                    if (colCurrency >= 0) {
+                        String val = getCellStringValue(row.getCell(colCurrency));
+                        if (!val.isEmpty()) order.setCurrency(val);
                     }
 
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
