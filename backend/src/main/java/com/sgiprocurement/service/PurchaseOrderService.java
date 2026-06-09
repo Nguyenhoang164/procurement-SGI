@@ -380,7 +380,7 @@ public class PurchaseOrderService {
 
     private String getCellStringValue(Cell cell) {
         if (cell == null) return "";
-        if (DateUtil.isCellDateFormatted(cell)) {
+        if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cell.getDateCellValue());
         }
         return switch (cell.getCellType()) {
