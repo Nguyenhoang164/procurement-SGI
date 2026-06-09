@@ -12,6 +12,7 @@ import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.dto.PurchaseOrderImportResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.poi.ss.usermodel.*;
@@ -216,7 +217,7 @@ public class PurchaseOrderService {
         return count;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public PurchaseOrderImportResult importFromExcel(MultipartFile file) {
         PurchaseOrderImportResult result = new PurchaseOrderImportResult();
 
