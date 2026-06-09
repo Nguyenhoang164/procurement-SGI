@@ -414,7 +414,13 @@ public class PurchaseOrderService {
     private LocalDateTime parseDateTime(String value) {
         if (value == null || value.isBlank()) return null;
         value = value.trim();
-        String[] patterns = {"yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd", "dd/MM/yyyy"};
+        String[] patterns = {
+            "yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss",
+            "yyyy/M/d h:mm:ss a", "yyyy/M/d H:mm:ss",
+            "d/M/yyyy h:mm:ss a", "d/M/yyyy H:mm:ss",
+            "M/d/yyyy h:mm:ss a", "M/d/yyyy H:mm:ss",
+            "yyyy-MM-dd", "dd/MM/yyyy", "yyyy/M/d", "d/M/yyyy", "M/d/yyyy"
+        };
         for (String pattern : patterns) {
             try {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
