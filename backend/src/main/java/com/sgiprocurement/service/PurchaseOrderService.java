@@ -204,10 +204,18 @@ public class PurchaseOrderService {
     public int importPurchaseOrders(List<PurchaseOrderDTO> orders) {
         int count = 0;
         for (PurchaseOrderDTO dto : orders) {
+            PurchaseOrder existing = null;
+            if (dto.getPoCode() != null && !dto.getPoCode().isEmpty()) {
+                existing = purchaseOrderRepository.findByPoCode(dto.getPoCode()).orElse(null);
+            }
             PurchaseOrder po = convertToEntity(dto);
-            if (po.getStatus() == null) po.setStatus("COMPLETED");
+            if (existing != null) {
+                po.setId(existing.getId());
+                if (po.getCreatedAt() == null) po.setCreatedAt(existing.getCreatedAt());
+            }
             if (po.getCreatedAt() == null) po.setCreatedAt(java.time.LocalDateTime.now());
             po.setUpdatedAt(java.time.LocalDateTime.now());
+            if (po.getStatus() == null) po.setStatus("COMPLETED");
 
             if (po.getExchangeRate() != null && po.getExchangeRate().compareTo(java.math.BigDecimal.ONE) == 0 && po.getCurrency() != null) {
                 fetchExchangeRate(po);
@@ -270,8 +278,6 @@ public class PurchaseOrderService {
             int colTotalForeign = findCol(colMap, "tiềnhànghoá", "thành tiền", "total_amount", "totalamount", "total_foreign", "totalamountforeign", "tienhang", "tien_hang_hoa");
             int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
 
-            result.addError("[DEBUG] detected columns: orderDate=" + colOrderDate + " currency=" + colCurrency + " rate=" + colExchangeRate);
-
             Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
             int rowCount = 0;
 
@@ -307,9 +313,7 @@ public class PurchaseOrderService {
                             order.setOrderDate(date);
                             order.setCreatedAt(date.atStartOfDay());
                         } else {
-                            String raw = getCellStringValue(cell);
-                            result.addError("[DEBUG] row " + (i+1) + " orderDate raw='" + raw + "' cellType=" + (cell != null ? cell.getCellType() : "null"));
-                            LocalDateTime dt = parseDateTime(raw);
+                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
                             if (dt != null) {
                                 order.setOrderDate(dt.toLocalDate());
                                 order.setCreatedAt(dt);

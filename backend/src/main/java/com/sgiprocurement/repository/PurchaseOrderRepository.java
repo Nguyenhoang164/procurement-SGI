@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
@@ -29,5 +30,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     BigDecimal sumTotalGoodsCostVndBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     List<PurchaseOrder> findTop5ByOrderByCreatedAtDesc();
+
+    Optional<PurchaseOrder> findByPoCode(String poCode);
 
 }
