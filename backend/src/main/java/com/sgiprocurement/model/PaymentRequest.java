@@ -96,6 +96,9 @@ public class PaymentRequest {
     @Column(name = "shipment_items", columnDefinition = "TEXT")
     private String shipmentItems;
 
+    @Column(length = 100)
+    private String department;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

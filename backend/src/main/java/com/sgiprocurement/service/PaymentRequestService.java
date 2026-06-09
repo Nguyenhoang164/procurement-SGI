@@ -331,6 +331,9 @@ public class PaymentRequestService {
         if (dto.getBankAccountId() != null) {
             pr.setBankAccountId(dto.getBankAccountId());
         }
+        if (dto.getDepartment() != null) {
+            pr.setDepartment(dto.getDepartment());
+        }
 
         PaymentRequest updated = paymentRequestRepository.save(pr);
 
@@ -449,6 +452,7 @@ public class PaymentRequestService {
         dto.setAccountingCheckedAt(pr.getAccountingCheckedAt());
         dto.setSourceDnttIds(pr.getSourceDnttIds());
         dto.setShipmentItems(pr.getShipmentItems());
+        dto.setDepartment(pr.getDepartment());
 
         List<PaymentRequestPurchaseOrder> poLinks = paymentRequestPurchaseOrderRepository
                 .findByPaymentRequestId(pr.getId());
@@ -488,6 +492,15 @@ public class PaymentRequestService {
         List<Long> allPoIds = new ArrayList<>(dto.getPoIds());
         if (pr.getPoId() != null && !allPoIds.contains(pr.getPoId())) {
             allPoIds.add(pr.getPoId());
+        }
+
+        // Populate initiatorDepartment from first linked PO
+        for (Long poId : allPoIds) {
+            PurchaseOrder po = purchaseOrderRepository.findById(poId).orElse(null);
+            if (po != null && po.getInitiatorDepartment() != null && !po.getInitiatorDepartment().isEmpty()) {
+                dto.setInitiatorDepartment(po.getInitiatorDepartment());
+                break;
+            }
         }
         for (Long poId : allPoIds) {
             List<WarehouseReceipt> poReceipts = warehouseReceiptRepository.findAllByPoId(poId);
@@ -548,6 +561,7 @@ public class PaymentRequestService {
         pr.setAccountingCheckedAt(dto.getAccountingCheckedAt());
         pr.setSourceDnttIds(dto.getSourceDnttIds());
         pr.setShipmentItems(dto.getShipmentItems());
+        pr.setDepartment(dto.getDepartment());
         return pr;
     }
 

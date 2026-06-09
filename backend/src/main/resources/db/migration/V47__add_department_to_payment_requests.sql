@@ -1,0 +1,1 @@
+ALTER TABLE payment_requests ADD COLUMN department VARCHAR(100) DEFAULT NULL;

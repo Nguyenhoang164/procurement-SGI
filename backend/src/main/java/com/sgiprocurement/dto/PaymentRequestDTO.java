@@ -74,4 +74,8 @@ public class PaymentRequestDTO {
 
     private String shipmentItems;
 
+    private String department;
+
+    private String initiatorDepartment;
+
 }

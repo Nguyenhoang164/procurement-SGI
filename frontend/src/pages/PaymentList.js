@@ -159,6 +159,8 @@ function PaymentList() {
                     <th style={{ width: 100 }}>Mã DNTT</th>
                     <th>Liên kết PO</th>
                     <th style={{ width: 140 }}>Loại</th>
+                    <th>Bộ phận</th>
+                    <th>Phòng ban TH</th>
                     <th style={{ width: 140 }}>Số tiền</th>
                     <th style={{ width: 140 }}>Trạng thái</th>
                     <th style={{ width: 60 }}></th>
@@ -176,6 +178,8 @@ function PaymentList() {
                           {getPaymentTypeLabel(payment.type)}
                         </span>
                       </td>
+                      <td style={{ fontSize: 13 }}>{payment.department || '-'}</td>
+                      <td style={{ fontSize: 13 }}>{payment.initiatorDepartment || '-'}</td>
                       <td className="money">{Number(payment.amountVnd || 0).toLocaleString('vi-VN')} ₫</td>
                       <td>
                         <span className={`badge ${getPaymentStatusBadgeClass(payment.status)}`}>
@@ -234,6 +238,8 @@ function PaymentList() {
                         <div className="info-row"><span className="label">Loại thanh toán</span><span className="value">{getPaymentTypeLabel(detailModal.type)}</span></div>
                         <div className="info-row"><span className="label">Số tiền</span><span className="value money">{Number(detailModal.amountVnd || 0).toLocaleString('vi-VN')} ₫</span></div>
                         <div className="info-row"><span className="label">Trạng thái</span><span className={`badge ${getPaymentStatusBadgeClass(detailModal.status)}`}>{getPaymentStatusLabel(detailModal.status)}</span></div>
+                        {detailModal.department && <div className="info-row"><span className="label">Bộ phận</span><span className="value">{detailModal.department}</span></div>}
+                        {detailModal.initiatorDepartment && <div className="info-row"><span className="label">Phòng ban TH</span><span className="value">{detailModal.initiatorDepartment}</span></div>}
                         {detailModal.note && <div className="info-row"><span className="label">Ghi chú</span><span className="value">{detailModal.note}</span></div>}
                       </div>
                     </div>
