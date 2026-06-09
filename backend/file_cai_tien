@@ -38,22 +38,24 @@
 
 - Chức năng import danh sách đơn hàng
 * Hiện trạng: 1 file exel đơn hàng gồm các cột và tập trung lấy thông tin các cột sau
-+ Chi tiết _ Mã Phiếu DXNH
-+ Status: mặc định trạng thái là hoàn thành và thanh toán là đã xác nhận
-+ Submitted at: Thời gian tạo
-+ Completed at: Thời gian hoàn thành
-+ Requester: Người tạo
-+ Initiator department: Phòng ban thực hiện
-+ Nguồn nhập
-+ Tỷ giá
-+ Tỷ giá-Currency: Loại đơn vị tiền tệ
-+ Chi Tiết_Hàng Hóa_Tên Sản Phẩm_Chuẩn Hóa: Tên sản phẩm có trong đơn hàng
-+ Chi Tiết_Hàng Hóa_Đơn Vị Đo: Quy cách
-+ Chi Tiết_Hàng Hoá_Diễn giải thêm lý do: Ghi chú
-+ Chi Tiết_Hàng Hoá_Số Lượng: số lượng sản phẩm đó trong đơn hàng
-+ Chi Tiết_Giá Nhập 1 SP: Đơn giá
-+ TIỀN HÀNG HOÁ(VND): Quy đổi VND
++ Chi tiết _ Mã Phiếu DXNH -> tự động tạo theo quy tắc hệ thống
++ Status: mặc định trạng thái là hoàn thành và thanh toán là đã thanh toán
++ Submitted at -> Ngày đặt hàng: Thời gian tạo
++ Completed at -> Ngày thanh toán: Thời gian hoàn thành
++ Requester -> mặc định là unkown: Người tạo
++ Initiator department -> mặc định là unkown: Phòng ban thực hiện
++ Nguồn nhập -> Nguồn nhập
++ Tỷ giá -> Tỉ giá ngày TT
++ Tỷ giá-Currency - > Loại tiền tệ: Loại đơn vị tiền tệ
++ Chi Tiết_Hàng Hóa_Tên Sản Phẩm_Chuẩn Hóa -> Tên sản phẩm: Tên sản phẩm có trong đơn hàng
++ Chi Tiết_Hàng Hóa_Đơn Vị Đo -> mặc định là pcs: Quy cách
++ Chi Tiết_Hàng Hoá_Diễn giải thêm lý do -> Ghi chú: Ghi chú
++ Chi Tiết_Hàng Hoá_Số Lượng -> SL đặt(pcs): số lượng sản phẩm đó trong đơn hàng
++ Chi Tiết_Giá Nhập 1 SP - Đơn giá nhập(theo cột F): Đơn giá
++ TIỀN HÀNG HOÁ(VND) -> Tổng tiền hàng (VND): Quy đổi VND
++ VC nội địaTQ/VN (VNĐ): VC nội địa
++ Hình thức vận chuyển: Hình thức VC
 
 * Lưu ý
-- với 2 bản ghi có Chi tiết _ Mã Phiếu DXNH giống nhau, đó được coi là 1 đơn hàng
-- Dev_product_name: tên sản phẩm
+- sau dấu mũi tên -> là tên cột mới
+- chỉ cần gán data trực tiếp không cần tính toán

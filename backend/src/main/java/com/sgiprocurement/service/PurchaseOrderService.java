@@ -261,51 +261,45 @@ public class PurchaseOrderService {
                 colMap.put(header, c);
             }
 
-            int colPoCode = findCol(colMap, "chitiết_mãphiếudxnh", "mãphiếudxnh", "dxnh", "mãđềxuất", "po_code", "pocode", "mãpo");
-            int colStatus = findCol(colMap, "status", "trạngthái");
             int colOrderDate = findCol(colMap, "submittedat", "ngày đặt hàng", "ngaydathang", "order_date", "orderdate", "ngày đặt", "submitted_at");
-            int colCompletedAt = findCol(colMap, "completedat", "thờigianhoànthành", "completed_at");
+            int colCompletedAt = findCol(colMap, "completedat", "ngày thanh toán", "thờigianhoànthành", "completed_at");
             int colRequester = findCol(colMap, "requester", "ngườitạo", "người tạo", "created_by", "createdby");
-            int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban", "department", "initiator_department");
+            int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban thực hiện", "department", "initiator_department");
             int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
-            int colExchangeRate = findCol(colMap, "tỷgiá", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
-            int colCurrency = findCol(colMap, "tỷgiá-currency:loạiđơnvịtiềntệ", "tỷgiá-currency", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
-            int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "product_name", "productname", "tên sản phẩm", "dev_product_name", "devproductname");
-            int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quycách", "spec", "đvt");
-            int colNote = findCol(colMap, "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem");
-            int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "quantity", "ordered_qty", "orderedqty", "soluong");
-            int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
-            int colTotalForeign = findCol(colMap, "tiềnhànghoá", "thành tiền", "total_amount", "totalamount", "total_foreign", "totalamountforeign", "tienhang", "tien_hang_hoa");
-            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
+            int colExchangeRate = findCol(colMap, "tỷgiá", "tỉ giá ngày tt", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
+            int colCurrency = findCol(colMap, "tỷgiá-currency", "loạiđơnvịtiềntệ", "loại tiền tệ", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
+            int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "tên sản phẩm", "product_name", "productname", "dev_product_name", "devproductname");
+            int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quy cách", "quycách", "spec", "đvt");
+            int colNote = findCol(colMap, "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghichú", "ghi chú", "note", "dienthaikthem");
+            int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "sl đặt(pcs)", "sldặt", "quantity", "ordered_qty", "orderedqty", "soluong");
+            int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "đơngiánhập(theocộtf)", "đơngiá", "đơn giá nhập", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
+            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tổng tiền hàng (vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
+            int colDomesticShipping = findCol(colMap, "vc nội địatq/vn (vnđ)", "vc nội địa", "vcnộiđịa", "domestic_shipping_vnd", "domesticshippingvnd");
+            int colShippingMethod = findCol(colMap, "hìnhthức vận chuyển", "hình thức vc", "hìnhthứcvc", "hìnhthức vận tải", "shipping_method", "shippingmethod");
 
-            Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
+            List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
+            int seq = 0;
 
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 rowCount++;
 
-                String rawPoCode = colPoCode >= 0 ? getCellStringValue(row.getCell(colPoCode)) : "";
-                if (rawPoCode.isEmpty()) {
-                    result.addError("Dòng " + (i + 1) + ": Thiếu Mã Phiếu DXNH");
-                    continue;
-                }
-                final String poCode = rawPoCode;
-
                 try {
-                    PurchaseOrderDTO order = orderMap.computeIfAbsent(poCode, k -> {
-                        PurchaseOrderDTO dto = new PurchaseOrderDTO();
-                        dto.setPoCode(poCode);
-                        dto.setStatus("COMPLETED");
-                        dto.setPaymentStatus("CONFIRMED");
-                        dto.setItems(new ArrayList<>());
-                        return dto;
-                    });
+                    String poCode = "IMP-" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) + "-" + String.format("%03d", ++seq);
+                    PurchaseOrderDTO order = new PurchaseOrderDTO();
+                    order.setPoCode(poCode);
+                    order.setStatus("COMPLETED");
+                    order.setPaymentStatus("PAID");
+                    order.setItems(new ArrayList<>());
 
-                    if (order.getCreatedBy() == null && colRequester >= 0) {
-                        order.setCreatedBy(getCellStringValue(row.getCell(colRequester)));
-                    }
+                    String requester = colRequester >= 0 ? getCellStringValue(row.getCell(colRequester)) : "";
+                    order.setCreatedBy(requester.isEmpty() ? "unkown" : requester);
+
+                    String dept = colDepartment >= 0 ? getCellStringValue(row.getCell(colDepartment)) : "";
+                    order.setInitiatorDepartment(dept.isEmpty() ? "unkown" : dept);
+
                     if (colOrderDate >= 0) {
                         Cell cell = row.getCell(colOrderDate);
                         LocalDate date = getCellDate(cell);
@@ -320,13 +314,10 @@ public class PurchaseOrderService {
                             }
                         }
                     }
-                    if (order.getCompletedAt() == null && colCompletedAt >= 0) {
+                    if (colCompletedAt >= 0) {
                         order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(colCompletedAt))));
                     }
-                    if (order.getInitiatorDepartment() == null && colDepartment >= 0) {
-                        order.setInitiatorDepartment(getCellStringValue(row.getCell(colDepartment)));
-                    }
-                    if (order.getSourceType() == null && colSourceType >= 0) {
+                    if (colSourceType >= 0) {
                         order.setSourceType(getCellStringValue(row.getCell(colSourceType)));
                     }
                     if (colExchangeRate >= 0) {
@@ -338,25 +329,33 @@ public class PurchaseOrderService {
                         if (!val.isEmpty()) order.setCurrency(val);
                     }
 
+                    if (colDomesticShipping >= 0) {
+                        BigDecimal ds = parseBigDecimal(getCellStringValue(row.getCell(colDomesticShipping)));
+                        if (ds != null) order.setDomesticShippingVnd(ds);
+                    }
+                    if (colShippingMethod >= 0) {
+                        order.setShippingMethod(getCellStringValue(row.getCell(colShippingMethod)));
+                    }
+
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
                     String productName = colProductName >= 0 ? getCellStringValue(row.getCell(colProductName)) : "";
                     item.setProductName(productName.isEmpty() ? "N/A" : productName);
                     String searchName = productName.contains(" - ") ? productName.substring(0, productName.indexOf(" - ")).trim() : productName;
-                    String posCode = lookupProductPosCode(searchName);
-                    item.setPosCode(posCode != null ? posCode : "N/A");
-                    if (colSpec >= 0) item.setSpec(getCellStringValue(row.getCell(colSpec)));
+                    String itemPosCode = lookupProductPosCode(searchName);
+                    item.setPosCode(itemPosCode != null ? itemPosCode : "N/A");
+
+                    String specVal = colSpec >= 0 ? getCellStringValue(row.getCell(colSpec)) : "";
+                    item.setSpec(specVal.isEmpty() ? "pcs" : specVal);
                     if (colNote >= 0) item.setNote(getCellStringValue(row.getCell(colNote)));
                     Integer qty = colQty >= 0 ? parseInteger(getCellStringValue(row.getCell(colQty))) : null;
                     item.setOrderedQty(qty != null ? qty : 0);
                     if (colUnitPrice >= 0) item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(colUnitPrice))));
-                    if (colTotalForeign >= 0) item.setTotalAmountForeign(parseBigDecimal(getCellStringValue(row.getCell(colTotalForeign))));
                     if (colTotalVnd >= 0) item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(colTotalVnd))));
                     item.setCurrency(order.getCurrency());
                     item.setExchangeRate(order.getExchangeRate());
 
-                    if (order.getPosCode() == null) order.setPosCode("N/A");
-
                     order.getItems().add(item);
+                    orders.add(order);
 
                 } catch (Exception e) {
                     result.addError("Dòng " + (i + 1) + ": Lỗi xử lý - " + e.getMessage());
@@ -364,10 +363,10 @@ public class PurchaseOrderService {
             }
 
             result.setTotalRows(rowCount);
-            result.setTotalOrders(orderMap.size());
+            result.setTotalOrders(orders.size());
 
             int success = 0;
-            for (PurchaseOrderDTO dto : orderMap.values()) {
+            for (PurchaseOrderDTO dto : orders) {
                 try {
                     if (dto.getItems() == null || dto.getItems().isEmpty()) {
                         result.addError("Đơn hàng " + dto.getPoCode() + ": Không có sản phẩm nào");
