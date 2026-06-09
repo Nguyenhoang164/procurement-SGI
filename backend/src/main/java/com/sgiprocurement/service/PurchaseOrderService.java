@@ -299,8 +299,14 @@ public class PurchaseOrderService {
                         order.setCreatedBy(getCellStringValue(row.getCell(colRequester)));
                     }
                     if (colOrderDate >= 0) {
-                        LocalDateTime dt = parseDateTime(getCellStringValue(row.getCell(colOrderDate)));
-                        if (dt != null) order.setOrderDate(dt.toLocalDate());
+                        Cell cell = row.getCell(colOrderDate);
+                        LocalDate parsedDate = getCellDate(cell);
+                        if (parsedDate != null) {
+                            order.setOrderDate(parsedDate);
+                        } else {
+                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            if (dt != null) order.setOrderDate(dt.toLocalDate());
+                        }
                     }
                     if (order.getCompletedAt() == null && colCompletedAt >= 0) {
                         order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(colCompletedAt))));
@@ -370,6 +376,18 @@ public class PurchaseOrderService {
         return result;
     }
 
+    private LocalDate getCellDate(Cell cell) {
+        if (cell == null) return null;
+        try {
+            if (DateUtil.isCellDateFormatted(cell)) {
+                return cell.getDateCellValue().toInstant()
+                    .atZone(java.time.ZoneId.systemDefault())
+                    .toLocalDate();
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     private int findCol(Map<String, Integer> colMap, String... names) {
         for (String name : names) {
             Integer idx = colMap.get(name);
@@ -382,6 +400,25 @@ public class PurchaseOrderService {
         if (cell == null) return "";
         if (cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cell.getDateCellValue());
+        }
+        if (cell.getCellType() == CellType.FORMULA) {
+            try {
+                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(cell.getDateCellValue());
+            } catch (Exception e) {
+                try {
+                    double val = cell.getNumericCellValue();
+                    if (val == Math.floor(val) && !Double.isInfinite(val)) {
+                        return String.valueOf((long) val);
+                    }
+                    return String.valueOf(val);
+                } catch (Exception e2) {
+                    try {
+                        return cell.getStringCellValue().trim();
+                    } catch (Exception e3) {
+                        return "";
+                    }
+                }
+            }
         }
         return switch (cell.getCellType()) {
             case STRING -> cell.getStringCellValue().trim();
