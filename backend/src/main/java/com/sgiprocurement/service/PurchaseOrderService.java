@@ -222,6 +222,36 @@ public class PurchaseOrderService {
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null) {
+                result.addError("File Excel không có dòng tiêu đề");
+                return result;
+            }
+
+            Map<String, Integer> colMap = new HashMap<>();
+            for (int c = 0; c <= headerRow.getLastCellNum(); c++) {
+                Cell cell = headerRow.getCell(c);
+                if (cell == null) continue;
+                String header = getCellStringValue(cell).toLowerCase().replace(" ", "");
+                colMap.put(header, c);
+            }
+
+            int colPoCode = findCol(colMap, "chitiết_mãphiếudxnh", "mãphiếudxnh", "dxnh", "mãđềxuất", "po_code", "pocode", "mãpo");
+            int colStatus = findCol(colMap, "status", "trạngthái");
+            int colSubmittedAt = findCol(colMap, "submittedat", "thờigiantạo", "ngàytạo", "submitted_at", "created_at", "createdat");
+            int colCompletedAt = findCol(colMap, "completedat", "thờigianhoànthành", "completed_at");
+            int colRequester = findCol(colMap, "requester", "ngườitạo", "người tạo", "created_by", "createdby");
+            int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban", "department", "initiator_department");
+            int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
+            int colExchangeRate = findCol(colMap, "tỷgiá", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
+            int colCurrency = findCol(colMap, "tỷgiá-currency", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
+            int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "product_name", "productname", "tên sản phẩm");
+            int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quycách", "spec", "đvt");
+            int colNote = findCol(colMap, "chitiết_hànghoá_diễnảithêm lý do", "diễnảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem", "chitiết_hànghoá_diễn giảithêmlýdo");
+            int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "quantity", "ordered_qty", "orderedqty", "soluong");
+            int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
+            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "tiềnhànghoá", "thành tiền", "total_vnd", "totalamountvnd", "tienhang", "tien_hang_hoa");
+
             Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
             int rowCount = 0;
 
@@ -230,11 +260,12 @@ public class PurchaseOrderService {
                 if (row == null) continue;
                 rowCount++;
 
-                String poCode = getCellStringValue(row.getCell(0));
-                if (poCode.isEmpty()) {
+                String rawPoCode = colPoCode >= 0 ? getCellStringValue(row.getCell(colPoCode)) : "";
+                if (rawPoCode.isEmpty()) {
                     result.addError("Dòng " + (i + 1) + ": Thiếu Mã Phiếu DXNH");
                     continue;
                 }
+                final String poCode = rawPoCode;
 
                 try {
                     PurchaseOrderDTO order = orderMap.computeIfAbsent(poCode, k -> {
@@ -242,37 +273,39 @@ public class PurchaseOrderService {
                         dto.setPoCode(poCode);
                         dto.setStatus("COMPLETED");
                         dto.setPaymentStatus("CONFIRMED");
-                        dto.setCreatedBy(getCellStringValue(row.getCell(4)));
                         dto.setItems(new ArrayList<>());
                         return dto;
                     });
 
-                    if (order.getCreatedAt() == null) {
-                        order.setCreatedAt(parseDateTime(getCellStringValue(row.getCell(2))));
+                    if (order.getCreatedBy() == null && colRequester >= 0) {
+                        order.setCreatedBy(getCellStringValue(row.getCell(colRequester)));
                     }
-                    if (order.getCompletedAt() == null) {
-                        order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(3))));
+                    if (order.getCreatedAt() == null && colSubmittedAt >= 0) {
+                        order.setCreatedAt(parseDateTime(getCellStringValue(row.getCell(colSubmittedAt))));
                     }
-                    if (order.getInitiatorDepartment() == null) {
-                        order.setInitiatorDepartment(getCellStringValue(row.getCell(5)));
+                    if (order.getCompletedAt() == null && colCompletedAt >= 0) {
+                        order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(colCompletedAt))));
                     }
-                    if (order.getSourceType() == null) {
-                        order.setSourceType(getCellStringValue(row.getCell(6)));
+                    if (order.getInitiatorDepartment() == null && colDepartment >= 0) {
+                        order.setInitiatorDepartment(getCellStringValue(row.getCell(colDepartment)));
                     }
-                    if (order.getExchangeRate() == null) {
-                        order.setExchangeRate(parseBigDecimal(getCellStringValue(row.getCell(7))));
+                    if (order.getSourceType() == null && colSourceType >= 0) {
+                        order.setSourceType(getCellStringValue(row.getCell(colSourceType)));
                     }
-                    if (order.getCurrency() == null) {
-                        order.setCurrency(getCellStringValue(row.getCell(8)));
+                    if (order.getExchangeRate() == null && colExchangeRate >= 0) {
+                        order.setExchangeRate(parseBigDecimal(getCellStringValue(row.getCell(colExchangeRate))));
+                    }
+                    if (order.getCurrency() == null && colCurrency >= 0) {
+                        order.setCurrency(getCellStringValue(row.getCell(colCurrency)));
                     }
 
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
-                    item.setProductName(getCellStringValue(row.getCell(9)));
-                    item.setSpec(getCellStringValue(row.getCell(10)));
-                    item.setNote(getCellStringValue(row.getCell(11)));
-                    item.setOrderedQty(parseInteger(getCellStringValue(row.getCell(12))));
-                    item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(13))));
-                    item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(14))));
+                    if (colProductName >= 0) item.setProductName(getCellStringValue(row.getCell(colProductName)));
+                    if (colSpec >= 0) item.setSpec(getCellStringValue(row.getCell(colSpec)));
+                    if (colNote >= 0) item.setNote(getCellStringValue(row.getCell(colNote)));
+                    if (colQty >= 0) item.setOrderedQty(parseInteger(getCellStringValue(row.getCell(colQty))));
+                    if (colUnitPrice >= 0) item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(colUnitPrice))));
+                    if (colTotalVnd >= 0) item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(colTotalVnd))));
                     item.setCurrency(order.getCurrency());
                     item.setExchangeRate(order.getExchangeRate());
 
@@ -308,6 +341,14 @@ public class PurchaseOrderService {
         }
 
         return result;
+    }
+
+    private int findCol(Map<String, Integer> colMap, String... names) {
+        for (String name : names) {
+            Integer idx = colMap.get(name);
+            if (idx != null) return idx;
+        }
+        return -1;
     }
 
     private String getCellStringValue(Cell cell) {
