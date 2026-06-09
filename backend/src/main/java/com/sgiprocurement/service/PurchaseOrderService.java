@@ -9,12 +9,20 @@ import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.ExchangeRateConfigRepository;
 import com.sgiprocurement.repository.ProductRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
+import com.sgiprocurement.dto.PurchaseOrderImportResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -163,6 +171,9 @@ public class PurchaseOrderService {
         po.setFreightPaymentDate(dto.getFreightPaymentDate());
         po.setPaymentMethod(dto.getPaymentMethod());
         po.setNote(dto.getNote());
+        po.setInitiatorDepartment(dto.getInitiatorDepartment());
+        po.setSourceType(dto.getSourceType());
+        po.setCompletedAt(dto.getCompletedAt());
         po.setDepositVnd(dto.getDepositVnd());
 
         if (dto.getItems() != null) {
@@ -203,6 +214,150 @@ public class PurchaseOrderService {
             count++;
         }
         return count;
+    }
+
+    @Transactional
+    public PurchaseOrderImportResult importFromExcel(MultipartFile file) {
+        PurchaseOrderImportResult result = new PurchaseOrderImportResult();
+
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
+            int rowCount = 0;
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
+                rowCount++;
+
+                String poCode = getCellStringValue(row.getCell(0));
+                if (poCode.isEmpty()) {
+                    result.addError("Dòng " + (i + 1) + ": Thiếu Mã Phiếu DXNH");
+                    continue;
+                }
+
+                try {
+                    PurchaseOrderDTO order = orderMap.computeIfAbsent(poCode, k -> {
+                        PurchaseOrderDTO dto = new PurchaseOrderDTO();
+                        dto.setPoCode(poCode);
+                        dto.setStatus("COMPLETED");
+                        dto.setPaymentStatus("CONFIRMED");
+                        dto.setCreatedBy(getCellStringValue(row.getCell(4)));
+                        dto.setItems(new ArrayList<>());
+                        return dto;
+                    });
+
+                    if (order.getCreatedAt() == null) {
+                        order.setCreatedAt(parseDateTime(getCellStringValue(row.getCell(2))));
+                    }
+                    if (order.getCompletedAt() == null) {
+                        order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(3))));
+                    }
+                    if (order.getInitiatorDepartment() == null) {
+                        order.setInitiatorDepartment(getCellStringValue(row.getCell(5)));
+                    }
+                    if (order.getSourceType() == null) {
+                        order.setSourceType(getCellStringValue(row.getCell(6)));
+                    }
+                    if (order.getExchangeRate() == null) {
+                        order.setExchangeRate(parseBigDecimal(getCellStringValue(row.getCell(7))));
+                    }
+                    if (order.getCurrency() == null) {
+                        order.setCurrency(getCellStringValue(row.getCell(8)));
+                    }
+
+                    PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
+                    item.setProductName(getCellStringValue(row.getCell(9)));
+                    item.setSpec(getCellStringValue(row.getCell(10)));
+                    item.setNote(getCellStringValue(row.getCell(11)));
+                    item.setOrderedQty(parseInteger(getCellStringValue(row.getCell(12))));
+                    item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(13))));
+                    item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(14))));
+                    item.setCurrency(order.getCurrency());
+                    item.setExchangeRate(order.getExchangeRate());
+
+                    order.getItems().add(item);
+
+                } catch (Exception e) {
+                    result.addError("Dòng " + (i + 1) + ": Lỗi xử lý - " + e.getMessage());
+                }
+            }
+
+            result.setTotalRows(rowCount);
+            result.setTotalOrders(orderMap.size());
+
+            int success = 0;
+            for (PurchaseOrderDTO dto : orderMap.values()) {
+                try {
+                    if (dto.getItems() == null || dto.getItems().isEmpty()) {
+                        result.addError("Đơn hàng " + dto.getPoCode() + ": Không có sản phẩm nào");
+                        continue;
+                    }
+                    importPurchaseOrders(List.of(dto));
+                    success++;
+                } catch (Exception e) {
+                    result.addError("Đơn hàng " + dto.getPoCode() + ": " + e.getMessage());
+                }
+            }
+
+            result.setSuccessCount(success);
+            result.setErrorCount(rowCount - success);
+
+        } catch (Exception e) {
+            result.addError("Lỗi đọc file Excel: " + e.getMessage());
+        }
+
+        return result;
+    }
+
+    private String getCellStringValue(Cell cell) {
+        if (cell == null) return "";
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case NUMERIC -> {
+                double val = cell.getNumericCellValue();
+                if (val == Math.floor(val) && !Double.isInfinite(val)) {
+                    yield String.valueOf((long) val);
+                }
+                yield String.valueOf(val);
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            default -> "";
+        };
+    }
+
+    private BigDecimal parseBigDecimal(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return new BigDecimal(value.replace(",", "").trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Integer parseInteger(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            return Integer.parseInt(value.replace(",", "").trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private LocalDateTime parseDateTime(String value) {
+        if (value == null || value.isBlank()) return null;
+        value = value.trim();
+        String[] patterns = {"yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd", "dd/MM/yyyy"};
+        for (String pattern : patterns) {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                if (pattern.length() <= 10) {
+                    return LocalDate.parse(value, formatter).atStartOfDay();
+                }
+                return LocalDateTime.parse(value, formatter);
+            } catch (DateTimeParseException ignored) {}
+        }
+        return null;
     }
 
     public void deletePurchaseOrder(Long id) {
@@ -270,6 +425,9 @@ public class PurchaseOrderService {
         dto.setFreightPaymentDate(po.getFreightPaymentDate());
         dto.setPaymentMethod(po.getPaymentMethod());
         dto.setNote(po.getNote());
+        dto.setInitiatorDepartment(po.getInitiatorDepartment());
+        dto.setSourceType(po.getSourceType());
+        dto.setCompletedAt(po.getCompletedAt());
         dto.setDepositVnd(po.getDepositVnd());
         dto.setRemainingPaymentVnd(po.getRemainingPaymentVnd());
         dto.setStatus(po.getStatus());
@@ -322,6 +480,9 @@ public class PurchaseOrderService {
         po.setFreightPaymentDate(dto.getFreightPaymentDate());
         po.setPaymentMethod(dto.getPaymentMethod());
         po.setNote(dto.getNote());
+        po.setInitiatorDepartment(dto.getInitiatorDepartment());
+        po.setSourceType(dto.getSourceType());
+        po.setCompletedAt(dto.getCompletedAt());
         po.setUnitCostFullVnd(dto.getUnitCostFullVnd());
         po.setDepositVnd(dto.getDepositVnd());
         po.setRemainingPaymentVnd(dto.getRemainingPaymentVnd());
@@ -354,6 +515,7 @@ public class PurchaseOrderService {
         dto.setTotalAmountForeign(item.getTotalAmountForeign());
         dto.setTotalAmountVnd(item.getTotalAmountVnd());
         dto.setSpec(item.getSpec());
+        dto.setNote(item.getNote());
         dto.setSourceLink(item.getSourceLink());
         populateCostFromProduct(dto, item.getPosCode());
         return dto;
@@ -373,6 +535,7 @@ public class PurchaseOrderService {
         item.setTotalAmountForeign(dto.getTotalAmountForeign());
         item.setTotalAmountVnd(dto.getTotalAmountVnd());
         item.setSpec(dto.getSpec());
+        item.setNote(dto.getNote());
         item.setSourceLink(dto.getSourceLink());
         item.setWeightedAvgCostVnd(dto.getWeightedAvgCostVnd());
         item.setLatestUnitCostVnd(dto.getLatestUnitCostVnd());

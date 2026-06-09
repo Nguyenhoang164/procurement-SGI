@@ -1,12 +1,14 @@
 package com.sgiprocurement.controller;
 
 import com.sgiprocurement.dto.PurchaseOrderDTO;
+import com.sgiprocurement.dto.PurchaseOrderImportResult;
 import com.sgiprocurement.service.PurchaseOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +106,14 @@ public class PurchaseOrderController {
     public ResponseEntity<Map<String, Object>> importPurchaseOrders(@RequestBody List<PurchaseOrderDTO> orders) {
         int count = purchaseOrderService.importPurchaseOrders(orders);
         return ResponseEntity.ok(Map.of("imported", count, "message", "Đã import " + count + " đơn hàng"));
+    }
+
+    @PostMapping("/import/excel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
+    public ResponseEntity<PurchaseOrderImportResult> importExcel(@RequestParam("file") MultipartFile file) {
+        PurchaseOrderImportResult result = purchaseOrderService.importFromExcel(file);
+        HttpStatus status = result.getErrorCount() > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
+        return ResponseEntity.status(status).body(result);
     }
 
 }

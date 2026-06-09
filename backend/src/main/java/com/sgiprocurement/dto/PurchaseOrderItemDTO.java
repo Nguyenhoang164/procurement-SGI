@@ -23,6 +23,7 @@ public class PurchaseOrderItemDTO {
     private BigDecimal totalAmountForeign = BigDecimal.ZERO;
     private BigDecimal totalAmountVnd = BigDecimal.ZERO;
     private String spec;
+    private String note;
     private String sourceLink;
     private BigDecimal weightedAvgCostVnd;
     private BigDecimal latestUnitCostVnd;

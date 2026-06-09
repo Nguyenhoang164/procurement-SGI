@@ -77,6 +77,9 @@ public class PurchaseOrderDTO {
     private String paymentMethod;
 
     private String note;
+    private String initiatorDepartment;
+    private String sourceType;
+    private LocalDateTime completedAt;
 
     private BigDecimal depositVnd = BigDecimal.ZERO;
 

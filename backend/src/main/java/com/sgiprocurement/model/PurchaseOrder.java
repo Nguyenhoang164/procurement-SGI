@@ -113,6 +113,15 @@ public class PurchaseOrder {
     @Column(length = 1000)
     private String note;
 
+    @Column(name = "initiator_department", length = 100)
+    private String initiatorDepartment;
+
+    @Column(name = "source_type", length = 100)
+    private String sourceType;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @Column(precision = 10, scale = 2)
     private BigDecimal unitCostFullVnd = BigDecimal.ZERO;
 

@@ -55,6 +55,9 @@ public class PurchaseOrderItem {
     @Column(length = 255)
     private String spec;
 
+    @Column(columnDefinition = "TEXT")
+    private String note;
+
     @Column(name = "source_link", length = 500)
     private String sourceLink;
 

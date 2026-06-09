@@ -36,5 +36,23 @@
 
 - Phiếu mua hàng + vận chuyển đa số thanh toán bằng nhân dân tệ - nên e thống nhất nha theo mẫu của phiếu mua hàng nhé: chỗ đơn giá - thành tiền - quy đổi NVD
 
+- Chức năng import danh sách đơn hàng
+* Hiện trạng: 1 file exel đơn hàng gồm các cột và tập trung lấy thông tin các cột sau
++ Chi tiết _ Mã Phiếu DXNH
++ Status: mặc định trạng thái là hoàn thành và thanh toán là đã xác nhận
++ Submitted at: Thời gian tạo
++ Completed at: Thời gian hoàn thành
++ Requester: Người tạo
++ Initiator department: Phòng ban thực hiện
++ Nguồn nhập
++ Tỷ giá
++ Tỷ giá-Currency: Loại đơn vị tiền tệ
++ Chi Tiết_Hàng Hóa_Tên Sản Phẩm_Chuẩn Hóa: Tên sản phẩm có trong đơn hàng
++ Chi Tiết_Hàng Hóa_Đơn Vị Đo: Quy cách
++ Chi Tiết_Hàng Hoá_Diễn giải thêm lý do: Ghi chú
++ Chi Tiết_Hàng Hoá_Số Lượng: số lượng sản phẩm đó trong đơn hàng
++ Chi Tiết_Giá Nhập 1 SP: Đơn giá
++ TIỀN HÀNG HOÁ(VND): Quy đổi VND
 
-
+* Lưu ý
+- với 2 bản ghi có Chi tiết _ Mã Phiếu DXNH giống nhau, đó được coi là 1 đơn hàng
