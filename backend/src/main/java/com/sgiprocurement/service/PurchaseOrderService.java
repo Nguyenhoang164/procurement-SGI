@@ -270,6 +270,8 @@ public class PurchaseOrderService {
             int colTotalForeign = findCol(colMap, "tiềnhànghoá", "thành tiền", "total_amount", "totalamount", "total_foreign", "totalamountforeign", "tienhang", "tien_hang_hoa");
             int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
 
+            result.addError("[DEBUG] detected columns: orderDate=" + colOrderDate + " currency=" + colCurrency + " rate=" + colExchangeRate);
+
             Map<String, PurchaseOrderDTO> orderMap = new LinkedHashMap<>();
             int rowCount = 0;
 
@@ -305,7 +307,9 @@ public class PurchaseOrderService {
                             order.setOrderDate(date);
                             order.setCreatedAt(date.atStartOfDay());
                         } else {
-                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            String raw = getCellStringValue(cell);
+                            result.addError("[DEBUG] row " + (i+1) + " orderDate raw='" + raw + "' cellType=" + (cell != null ? cell.getCellType() : "null"));
+                            LocalDateTime dt = parseDateTime(raw);
                             if (dt != null) {
                                 order.setOrderDate(dt.toLocalDate());
                                 order.setCreatedAt(dt);
