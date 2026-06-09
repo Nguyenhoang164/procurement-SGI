@@ -8,6 +8,7 @@ import com.sgiprocurement.model.PurchaseOrderItem;
 import com.sgiprocurement.model.CostAlert;
 import com.sgiprocurement.repository.ProductRepository;
 import com.sgiprocurement.repository.CostAlertRepository;
+import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -202,6 +204,19 @@ public class ProductCostService {
      * Lấy danh sách cảnh báo về biến động giá
      * @return Danh sách các cảnh báo về biến động giá
      */
+    public void resetProductCost(String posCode) {
+        Product product = productRepository.findByPosCode(posCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with posCode: " + posCode));
+        product.setLotCount(0);
+        product.setTotalQty(0);
+        product.setLatestUnitCostVnd(BigDecimal.ZERO);
+        product.setWeightedAvgCostVnd(BigDecimal.ZERO);
+        product.setLatestOrderCode(null);
+        product.setLatestCostDate(null);
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
+    }
+
     public List<CostAlertDTO> getAllCostAlerts() {
         return costAlertRepository.findAll().stream()
                 .map(this::convertToDTO)

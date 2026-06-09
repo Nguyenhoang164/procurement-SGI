@@ -6,7 +6,9 @@ import com.sgiprocurement.service.ProductCostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,5 +40,12 @@ public class ProductCostController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
     public ResponseEntity<List<CostAlertDTO>> getCostAlertsByPosCode(@PathVariable String posCode) {
         return ResponseEntity.ok(productCostService.getCostAlertsByPosCode(posCode));
+    }
+
+    @DeleteMapping("/{posCode}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteProductCost(@PathVariable String posCode) {
+        productCostService.resetProductCost(posCode);
+        return ResponseEntity.noContent().build();
     }
 }
