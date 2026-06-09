@@ -301,14 +301,19 @@ public class PurchaseOrderService {
                     }
 
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
-                    if (colProductName >= 0) item.setProductName(getCellStringValue(row.getCell(colProductName)));
+                    item.setPosCode("N/A");
+                    String productName = colProductName >= 0 ? getCellStringValue(row.getCell(colProductName)) : "";
+                    item.setProductName(productName.isEmpty() ? "N/A" : productName);
                     if (colSpec >= 0) item.setSpec(getCellStringValue(row.getCell(colSpec)));
                     if (colNote >= 0) item.setNote(getCellStringValue(row.getCell(colNote)));
-                    if (colQty >= 0) item.setOrderedQty(parseInteger(getCellStringValue(row.getCell(colQty))));
+                    Integer qty = colQty >= 0 ? parseInteger(getCellStringValue(row.getCell(colQty))) : null;
+                    item.setOrderedQty(qty != null ? qty : 0);
                     if (colUnitPrice >= 0) item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(colUnitPrice))));
                     if (colTotalVnd >= 0) item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(colTotalVnd))));
                     item.setCurrency(order.getCurrency());
                     item.setExchangeRate(order.getExchangeRate());
+
+                    if (order.getPosCode() == null) order.setPosCode("N/A");
 
                     order.getItems().add(item);
 
@@ -566,11 +571,11 @@ public class PurchaseOrderService {
     private PurchaseOrderItem convertItemToEntity(PurchaseOrderItemDTO dto) {
         PurchaseOrderItem item = new PurchaseOrderItem();
         item.setId(dto.getId());
-        item.setPosCode(dto.getPosCode());
+        item.setPosCode(dto.getPosCode() != null ? dto.getPosCode() : "N/A");
         item.setProductName(dto.getProductName());
         item.setProductShortCode(dto.getProductShortCode());
         item.setProductType(dto.getProductType());
-        item.setOrderedQty(dto.getOrderedQty());
+        item.setOrderedQty(dto.getOrderedQty() != null ? dto.getOrderedQty() : 0);
         item.setUnitPrice(dto.getUnitPrice());
         item.setCurrency(dto.getCurrency());
         item.setExchangeRate(dto.getExchangeRate());
