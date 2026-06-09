@@ -1,11 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import '../styles/List.css';
 import { productCostAPI } from '../services/api';
+import { getUser, canDeleteProductCost } from '../utils/permissions';
 
 function ProductCostList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const userData = getUser();
+  const canDelete = canDeleteProductCost(userData);
 
   const loadCosts = useCallback(async () => {
     setLoading(true);
@@ -44,6 +47,16 @@ function ProductCostList() {
     link.download = 'gia-von-san-pham.csv';
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleDelete = async (posCode) => {
+    if (!window.confirm(`Xóa giá vốn của sản phẩm "${posCode}"?`)) return;
+    try {
+      await productCostAPI.delete(posCode);
+      setItems((current) => current.filter((row) => row.posCode !== posCode));
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -85,6 +98,7 @@ function ProductCostList() {
                     <th>GV lô gần nhất</th>
                     <th>GV BQ gia quyền</th>
                     <th>Chênh lệch</th>
+                    {canDelete && <th style={{width:60}}></th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -103,6 +117,11 @@ function ProductCostList() {
                           {diff > 0 ? '+' : ''}
                           {formatMoney(diff)}
                         </td>
+                        {canDelete && (
+                          <td>
+                            <button className="btn btn-sm btn-delete" onClick={() => handleDelete(row.posCode)}>Xóa</button>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

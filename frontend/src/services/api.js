@@ -256,7 +256,11 @@ export const exchangeRateAPI = {
 export const productCostAPI = {
   getAll: async () => requestJson(`${API_BASE_URL}/product-costs`, { headers: getHeaders() }),
   getAllAlerts: async () => requestJson(`${API_BASE_URL}/product-costs/alerts`, { headers: getHeaders() }),
-  getAlertsByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/product-costs/alerts/${encodeURIComponent(posCode)}`, { headers: getHeaders() })
+  getAlertsByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/product-costs/alerts/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
+  delete: async (posCode) => {
+    const response = await fetch(`${API_BASE_URL}/product-costs/${encodeURIComponent(posCode)}`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa giá vốn thất bại');
+  }
 };
 
 export const productAPI = {

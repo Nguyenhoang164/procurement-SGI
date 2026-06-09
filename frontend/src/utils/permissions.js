@@ -84,5 +84,8 @@ export function canDeleteTradeRoute(user) { return isAdmin(user); }
 export function canCrudBankAccount(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
 export function canDeleteBankAccount(user) { return isAdmin(user); }
 
+// Product Costs
+export function canDeleteProductCost(user) { return isAdmin(user); }
+
 // Shipment Tracking
 export function canCreateShipmentTracking(user) { return hasRole(user, ROLES.ADMIN, ROLES.WAREHOUSE); }
