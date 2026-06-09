@@ -339,9 +339,11 @@ public class PurchaseOrderService {
                     }
 
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
-                    item.setPosCode("N/A");
                     String productName = colProductName >= 0 ? getCellStringValue(row.getCell(colProductName)) : "";
                     item.setProductName(productName.isEmpty() ? "N/A" : productName);
+                    String searchName = productName.contains(" - ") ? productName.substring(0, productName.indexOf(" - ")).trim() : productName;
+                    String posCode = lookupProductPosCode(searchName);
+                    item.setPosCode(posCode != null ? posCode : "N/A");
                     if (colSpec >= 0) item.setSpec(getCellStringValue(row.getCell(colSpec)));
                     if (colNote >= 0) item.setNote(getCellStringValue(row.getCell(colNote)));
                     Integer qty = colQty >= 0 ? parseInteger(getCellStringValue(row.getCell(colQty))) : null;
@@ -386,6 +388,17 @@ public class PurchaseOrderService {
         }
 
         return result;
+    }
+
+    private String lookupProductPosCode(String name) {
+        if (name == null || name.isEmpty()) return null;
+        try {
+            Optional<Product> exact = productRepository.findByProductName(name);
+            if (exact.isPresent()) return exact.get().getPosCode();
+            List<Product> matches = productRepository.findByProductNameContainingIgnoreCase(name);
+            if (!matches.isEmpty()) return matches.get(0).getPosCode();
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private LocalDate getCellDate(Cell cell) {
