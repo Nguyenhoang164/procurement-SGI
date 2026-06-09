@@ -242,9 +242,9 @@ public class PurchaseOrderService {
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
-            Row headerRow = sheet.getRow(0);
+            Row headerRow = sheet.getRow(1);
             if (headerRow == null) {
-                result.addError("File Excel không có dòng tiêu đề");
+                result.addError("File Excel không có dòng tiêu đề (dòng 2)");
                 return result;
             }
 
@@ -281,7 +281,7 @@ public class PurchaseOrderService {
             int rowCount = 0;
             int seq = 0;
 
-            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+            for (int i = 2; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 rowCount++;
