@@ -246,7 +246,7 @@ public class PurchaseOrderService {
             int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
             int colExchangeRate = findCol(colMap, "tỷgiá", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
             int colCurrency = findCol(colMap, "tỷgiá-currency", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
-            int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "product_name", "productname", "tên sản phẩm");
+            int colProductName = findCol(colMap, "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "product_name", "productname", "tên sản phẩm", "dev_product_name", "devproductname");
             int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quycách", "spec", "đvt");
             int colNote = findCol(colMap, "chitiết_hànghoá_diễnảithêm lý do", "diễnảithêmlýdo", "ghichú", "note", "ghi chú", "dienthaikthem", "chitiết_hànghoá_diễn giảithêmlýdo");
             int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "quantity", "ordered_qty", "orderedqty", "soluong");
@@ -416,9 +416,14 @@ public class PurchaseOrderService {
     private void calculateItemAmounts(PurchaseOrderItem item) {
         if (item.getUnitPrice() != null && item.getOrderedQty() != null) {
             java.math.BigDecimal qty = new java.math.BigDecimal(item.getOrderedQty());
-            item.setTotalAmountForeign(item.getUnitPrice().multiply(qty));
+            java.math.BigDecimal amountForeign = item.getUnitPrice().multiply(qty);
+            if (item.getTotalAmountForeign() == null || item.getTotalAmountForeign().compareTo(java.math.BigDecimal.ZERO) == 0) {
+                item.setTotalAmountForeign(amountForeign);
+            }
             java.math.BigDecimal rate = item.getExchangeRate() != null ? item.getExchangeRate() : java.math.BigDecimal.ONE;
-            item.setTotalAmountVnd(item.getTotalAmountForeign().multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
+            if (item.getTotalAmountVnd() == null || item.getTotalAmountVnd().compareTo(java.math.BigDecimal.ZERO) == 0) {
+                item.setTotalAmountVnd(amountForeign.multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
+            }
         }
     }
 
