@@ -300,12 +300,16 @@ public class PurchaseOrderService {
                     }
                     if (colOrderDate >= 0) {
                         Cell cell = row.getCell(colOrderDate);
-                        LocalDate parsedDate = getCellDate(cell);
-                        if (parsedDate != null) {
-                            order.setOrderDate(parsedDate);
+                        LocalDate date = getCellDate(cell);
+                        if (date != null) {
+                            order.setOrderDate(date);
+                            order.setCreatedAt(date.atStartOfDay());
                         } else {
                             LocalDateTime dt = parseDateTime(getCellStringValue(cell));
-                            if (dt != null) order.setOrderDate(dt.toLocalDate());
+                            if (dt != null) {
+                                order.setOrderDate(dt.toLocalDate());
+                                order.setCreatedAt(dt);
+                            }
                         }
                     }
                     if (order.getCompletedAt() == null && colCompletedAt >= 0) {
