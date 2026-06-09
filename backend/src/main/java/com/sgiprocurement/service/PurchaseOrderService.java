@@ -254,7 +254,7 @@ public class PurchaseOrderService {
 
             int colPoCode = findCol(colMap, "chitiết_mãphiếudxnh", "mãphiếudxnh", "dxnh", "mãđềxuất", "po_code", "pocode", "mãpo");
             int colStatus = findCol(colMap, "status", "trạngthái");
-            int colSubmittedAt = findCol(colMap, "submittedat", "thờigiantạo", "ngàytạo", "submitted_at", "created_at", "createdat");
+            int colOrderDate = findCol(colMap, "submittedat", "ngày đặt hàng", "ngaydathang", "order_date", "orderdate", "ngày đặt", "submitted_at");
             int colCompletedAt = findCol(colMap, "completedat", "thờigianhoànthành", "completed_at");
             int colRequester = findCol(colMap, "requester", "ngườitạo", "người tạo", "created_by", "createdby");
             int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban", "department", "initiator_department");
@@ -297,8 +297,9 @@ public class PurchaseOrderService {
                     if (order.getCreatedBy() == null && colRequester >= 0) {
                         order.setCreatedBy(getCellStringValue(row.getCell(colRequester)));
                     }
-                    if (order.getCreatedAt() == null && colSubmittedAt >= 0) {
-                        order.setCreatedAt(parseDateTime(getCellStringValue(row.getCell(colSubmittedAt))));
+                    if (colOrderDate >= 0) {
+                        LocalDateTime dt = parseDateTime(getCellStringValue(row.getCell(colOrderDate)));
+                        if (dt != null) order.setOrderDate(dt.toLocalDate());
                     }
                     if (order.getCompletedAt() == null && colCompletedAt >= 0) {
                         order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(colCompletedAt))));
