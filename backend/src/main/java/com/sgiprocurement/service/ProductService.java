@@ -195,6 +195,10 @@ public class ProductService {
         productRepository.deleteAll(products);
     }
 
+    public void deleteAllProducts() {
+        productRepository.deleteAll();
+    }
+
     public List<ProductComboDTO> getCombos(Long productId) {
         getProductOrThrow(productId);
         return productComboRepository.findByProductIdOrderByIdAsc(productId).stream()

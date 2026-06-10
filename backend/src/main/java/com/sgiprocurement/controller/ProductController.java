@@ -112,6 +112,14 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    // DELETE ALL products
+    @DeleteMapping("/delete-all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAll() {
+        productService.deleteAllProducts();
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{id:\\d+}/combos")
     public ResponseEntity<List<ProductComboDTO>> getCombos(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getCombos(id));

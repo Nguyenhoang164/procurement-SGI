@@ -305,6 +305,12 @@ export const productAPI = {
       method: 'POST', headers: getHeaders(), body: JSON.stringify(ids)
     });
     if (!response.ok) throw new Error('Xóa hàng loạt thất bại');
+  },
+  deleteAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/products/delete-all`, {
+      method: 'DELETE', headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Xóa toàn bộ sản phẩm thất bại');
   }
 };
 

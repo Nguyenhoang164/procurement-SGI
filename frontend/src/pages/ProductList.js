@@ -63,6 +63,18 @@ function ProductList() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa TOÀN BỘ sản phẩm? Hành động này không thể hoàn tác!')) return;
+    if (!window.confirm('XÁC NHẬN LẦN 2: Toàn bộ sản phẩm sẽ bị xóa vĩnh viễn. Tiếp tục?')) return;
+    try {
+      await productAPI.deleteAll();
+      setSelectedIds(new Set());
+      fetchProducts();
+    } catch (err) {
+      alert('Lỗi khi xóa toàn bộ: ' + err.message);
+    }
+  };
+
   const normalizeKey = (key) => key.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   const findKey = (obj, ...patterns) => {
@@ -172,6 +184,9 @@ function ProductList() {
               Xóa đã chọn ({selectedIds.size})
             </button>
           )}
+          <button className="btn btn-delete" onClick={handleDeleteAll} style={{ border: '2px solid #dc2626' }}>
+            Xóa toàn bộ sản phẩm
+          </button>
         </div>
       </div>
 
@@ -262,7 +277,6 @@ function ProductList() {
                     <input type="checkbox" checked={filteredProducts.length > 0 && selectedIds.size === filteredProducts.length} onChange={toggleSelectAll} style={{ cursor: 'pointer' }} />
                   </th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>MÃ SẢN PHẨM (POS)</th>
-                  <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>MÃ POS CŨ</th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>SẢN PHẨM</th>
                   <th style={{ padding: '16px 20px', textAlign: 'left', color: '#475569', fontSize: '13px' }}>TÊN TIẾNG VIỆT</th>
                   <th style={{ padding: '16px 20px', textAlign: 'center', color: '#475569', fontSize: '13px' }}>THỊ TRƯỜNG</th>
@@ -285,9 +299,6 @@ function ProductList() {
                           style={{ fontWeight: '700', color: '#1d4ed8', backgroundColor: '#eff6ff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>
                           {p.posCode}
                         </code>
-                      </td>
-                      <td style={{ padding: '16px 20px' }}>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>{p.oldPosCode || 'N/A'}</div>
                       </td>
                       <td style={{ padding: '16px 20px' }}>
                         <div style={{ fontWeight: '600', color: '#1e293b' }}>{p.productName}</div>
@@ -324,7 +335,7 @@ function ProductList() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px' }}>Không có dữ liệu</td></tr>
+                  <tr><td colSpan="9" style={{ textAlign: 'center', padding: '40px' }}>Không có dữ liệu</td></tr>
                 )}
               </tbody>
             </table>
