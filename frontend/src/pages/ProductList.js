@@ -233,7 +233,7 @@ function ProductList() {
           <select
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', minWidth: 160 }}
+            style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px' }}
           >
             <option value="">Tất cả phòng ban</option>
             {uniqueDepartments.map(d => (
