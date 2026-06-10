@@ -201,6 +201,20 @@ public class ProductCostService {
     }
 
     /**
+     * Cập nhật giá vốn sản phẩm ngay khi import đơn hàng (không cần chờ nhập kho).
+     * Chỉ xử lý các item có posCode khác "N/A".
+     */
+    public void applyCostsFromImport(PurchaseOrder po) {
+        if (po == null || po.getItems() == null || po.getItems().isEmpty()) return;
+
+        for (PurchaseOrderItem item : po.getItems()) {
+            if (item.getPosCode() == null || "N/A".equals(item.getPosCode())) continue;
+            if (item.getOrderedQty() == null || item.getOrderedQty() <= 0) continue;
+            applySingleItem(item, item.getOrderedQty(), po.getPoCode(), po.getUpdatedAt());
+        }
+    }
+
+    /**
      * Lấy danh sách cảnh báo về biến động giá
      * @return Danh sách các cảnh báo về biến động giá
      */

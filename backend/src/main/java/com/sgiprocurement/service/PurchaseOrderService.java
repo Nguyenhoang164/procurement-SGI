@@ -43,6 +43,9 @@ public class PurchaseOrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ProductCostService productCostService;
+
     public List<PurchaseOrderDTO> getAllPurchaseOrders() {
         return purchaseOrderRepository.findAll()
                 .stream()
@@ -230,7 +233,8 @@ public class PurchaseOrderService {
             }
 
             costCalculatorService.calculateCosts(po);
-            purchaseOrderRepository.save(po);
+            PurchaseOrder savedPo = purchaseOrderRepository.save(po);
+            productCostService.applyCostsFromImport(savedPo);
             count++;
         }
         return count;
