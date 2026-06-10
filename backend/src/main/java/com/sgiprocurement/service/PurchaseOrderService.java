@@ -272,7 +272,7 @@ public class PurchaseOrderService {
             int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
             int colExchangeRate = findCol(colMap, "tỷgiá", "tỉ giá ngày tt", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
             int colCurrency = findCol(colMap, "tỷgiá-currency", "loạiđơnvịtiềntệ", "loại tiền tệ", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
-            int colProductName = findCol(colMap, "mã sp trên pos", "mãsptrênpos", "chitiết_hànghóa_tênsảnphẩm_chuẩnhóa", "tênsảnphẩm", "tên sản phẩm", "product_name", "productname", "dev_product_name", "devproductname");
+            int colProductName = findCol(colMap, "mã sp trên pos", "mãsptrênpos");
             int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quy cách", "quycách", "spec", "đvt");
             int colNote = findCol(colMap, "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghichú", "ghi chú", "note", "dienthaikthem");
             int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "sl đặt(pcs)", "sldặt", "quantity", "ordered_qty", "orderedqty", "soluong");
