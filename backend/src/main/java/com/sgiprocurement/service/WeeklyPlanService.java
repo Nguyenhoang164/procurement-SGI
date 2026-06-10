@@ -191,6 +191,7 @@ public class WeeklyPlanService {
         dto.setSourceLink(item.getSourceLink());
         dto.setPriorityLevel(item.getPriorityLevel());
         dto.setLanding(item.getLanding());
+        dto.setDepartment(item.getDepartment());
         return dto;
     }
 
@@ -210,6 +211,7 @@ public class WeeklyPlanService {
         item.setSourceLink(dto.getSourceLink());
         item.setPriorityLevel(dto.getPriorityLevel());
         item.setLanding(dto.getLanding());
+        item.setDepartment(dto.getDepartment());
         return item;
     }
 

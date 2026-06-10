@@ -61,6 +61,9 @@ public class PurchaseOrderItem {
     @Column(name = "source_link", length = 500)
     private String sourceLink;
 
+    @Column(length = 100)
+    private String department;
+
     @Transient
     private BigDecimal weightedAvgCostVnd;
 

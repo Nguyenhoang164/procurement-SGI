@@ -6,20 +6,29 @@
 + Thêm thông tin role mà user đó đang thực hiện
 
 - Trang kế hoạch tuần
++ Thêm cột mã biến thể(SKU) dành cho các biến thể của sản phẩm, cấu trúc mã gồm = Mã sản phẩm - tên biến thể
++ Hiển thị cột dữ liệu mã biến thể(SKU) cho từng biến thể của sản phẩm đó ở màn hình trang danh sách kế hoạch tuần
+
 + Nút tạo đơn ở danh sách: hiện tại role nào cũng thấy được nút này, chỉ hiển thị với các role thực hiện nhiệm vụ còn lại ẩn
 + Thêm trường thời gian tạo kế hoạch
 
 - Trang đơn hàng
++ Thêm cột mã biến thể(SKU) dành cho các biến thể của sản phẩm, cấu trúc mã gồm = Mã sản phẩm - tên biến thể
++ Hiển thị cột dữ liệu mã biến thể(SKU) cho từng biến thể của sản phẩm đó ở màn hình trang danh sách kế hoạch tuần
+
 + Thêm trường thời gian tạo đơn
 
 - Thay đổi tên quyền hạn người dùng
 + Chuyển đổi tên vai trò nhân viên kinh doanh = lead kinh doanh (Lead kinh doanh)
+
 
 - Bảng điều khiển
 + Màn hình danh sách đơn hàng gần đây: Cột mã đơn, mã Pos và số lượng, các biến thể đang chưa thể hiện được, cần cải tiến hoặc đơn giản hơn là lấy danh sách đơn hàng của trang đơn hàng rồi đưa vào
 + Thêm tính năng tìm kiếm nâng cao, có thể search được bất kì dữ liệu nào ở màn khác, biểu diễn sao cho khoa học thì tự nghiên cứu đi
 
 - Trang đề nghị thanh toán
++ Bỏ cột bộ phận và Phòng ban TH -> Phòng kinh doanh và thông số dựa vào trường phòng ban/bộ phận trong biểu mẫu đề nghị thanh toán
+
 + Tạo đề nghị thanh toán: tại form thông tin chuyển khoản, trường thông tin ngân hàng đang bị để là [Object Object] còn thêm thủ công tên ngân hàng thì bình thường, xử lý vấn đề này
 
 - Trang đăng nhập
@@ -30,6 +39,11 @@
 + Chia làm 2 màn chính gồm màn hiển thị quy trình mua hàng tổng trong hệ thống bằng sơ đồ, màn thứ 2 là quy trình cho user đang đăng nhập thực hiện vai trò
 
 - Danh mục sản phẩm
++ Thêm cột phòng kinh doanh , trang tạo sản phẩm hoặc khi thêm sản phẩm vào bất kì ở màn kế hoạch tuần, đơn hàng thì cần thêm cả trường phòng kinh doanh
++ Thay đổi quy tắc tạo mã sản phẩm tự động áp dụng cho phần đề xuất mã tự động = giá trị cột PKD (3 chữ) - tên sản phẩm (4 chữ cái đầu của tên sản phẩm) - XXX ( chuỗi số tự động tăng dần)
++ Thêm validate check trùng tên sản phẩm
++ Đổi tên cột Mã POS -> Mã sản phẩm (POS)
+
 + Thêm cột tên tiếng việt cho sản phẩm ở đằng sau, vì file exel không có nên cần linh hoạt trong việc dịch sang tiếng việt
 + Thêm cột Mã pos cũ với cột file exel POS variation ID , nếu file khác không có cột đó thì để giá trị mặc định là N/A
 + Trong trường hợp nếu add 2 sản phẩm giống nhau về tên thì tiến hành hiển thị cửa sổ sản phẩm nào trùng để có thể xử lý
@@ -89,3 +103,4 @@
   - posCode của item: lookup từ productName (giá trị cột C) vào bảng products
   - Code tự động phát hiện dòng tiêu đề (dòng 1 hoặc dòng 2), data bắt đầu từ dòng kế tiếp
   - Không tính toán gì, gán data trực tiếp
+

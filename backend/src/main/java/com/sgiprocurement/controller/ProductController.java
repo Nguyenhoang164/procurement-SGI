@@ -59,12 +59,12 @@ public class ProductController {
     public ResponseEntity<String> generateCode(
             @RequestParam(required = false) String productName,
             @RequestParam(required = false) String market,
+            @RequestParam(required = false) String department,
             @RequestParam(required = false) String category,
             @RequestParam(required = false, defaultValue = "0") int iteration) {
         
-        // Ưu tiên dùng productName nếu có, nếu không thì dùng category (để tương thích ngược)
         String nameToUse = (productName != null && !productName.isEmpty()) ? productName : category;
-        String code = productService.generatePosCode(nameToUse, market, iteration);
+        String code = productService.generatePosCode(nameToUse, market, department, iteration);
         return ResponseEntity.ok(code);
     }
 

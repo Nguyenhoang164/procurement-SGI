@@ -194,7 +194,9 @@ function WeeklyPlanList() {
                         <th style={{ width: 40 }}>#</th>
                         <th style={{ width: 180 }}>Tên sản phẩm</th>
                         <th style={{ width: 110 }}>Mã POS</th>
+                        <th style={{ width: 150 }}>MÃ BIẾN THỂ (SKU)</th>
                         <th style={{ width: 100 }}>Loại SP</th>
+                        <th style={{ width: 120 }}>PHÒNG KINH DOANH</th>
                         <th style={{ width: 60 }}>SL</th>
                         <th style={{ width: 110 }}>Tuyến hàng</th>
                         <th style={{ width: 90 }}>VC</th>
@@ -230,7 +232,9 @@ function WeeklyPlanList() {
                                 </a>
                               ) : '-'}
                             </td>
+                            <td></td>
                             <td>{item.productType === 'NEW' ? 'Hàng mới' : item.productType === 'USED' ? 'Hàng cũ' : item.productType || '-'}</td>
+                            <td>{item.department || '-'}</td>
                             <td>{item.suggestedQty}</td>
                             <td>{item.tradeRoute || '-'}</td>
                             <td>{item.shippingMethod || '-'}</td>
@@ -258,6 +262,8 @@ function WeeklyPlanList() {
                                 <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
                                   <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                 </td>
+                                <td></td>
+                                <td style={{ fontSize: 13 }}>{item.posCode} - {v.name}</td>
                                 <td></td>
                                 <td></td>
                                 <td style={{ fontSize: 13 }}>{v.qty || 0}</td>

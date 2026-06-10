@@ -60,4 +60,6 @@ public class WeeklyPlanItem {
     @Column(length = 200)
     private String landing;
 
+    @Column(length = 100)
+    private String department;
 }

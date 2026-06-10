@@ -281,8 +281,8 @@ export const productAPI = {
   getById: async (id) => requestJson(`${API_BASE_URL}/products/${id}`, { headers: getHeaders() }),
   getByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/products/by-pos-code/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
   search: async (query) => requestJson(`${API_BASE_URL}/products/search?query=${encodeURIComponent(query)}`, { headers: getHeaders() }),
-  generateCode: async (market, productName, iteration = 0) => {
-    const params = new URLSearchParams({ market, productName, category: productName, iteration: String(iteration) });
+  generateCode: async (market, productName, department, iteration = 0) => {
+    const params = new URLSearchParams({ market, productName, category: productName, department: department || '', iteration: String(iteration) });
     return requestText(`${API_BASE_URL}/products/generate-code?${params.toString()}`, {
       method: 'GET', headers: getHeaders()
     });

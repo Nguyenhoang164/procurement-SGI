@@ -1,0 +1,3 @@
+ALTER TABLE products ADD COLUMN department VARCHAR(100) DEFAULT NULL;
+ALTER TABLE weekly_plan_items ADD COLUMN department VARCHAR(100) DEFAULT NULL;
+ALTER TABLE purchase_order_items ADD COLUMN department VARCHAR(100) DEFAULT NULL;

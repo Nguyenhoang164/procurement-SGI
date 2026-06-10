@@ -69,6 +69,9 @@ public class Product {
     @Column(name = "product_type", length = 20)
     private String productType;
 
+    @Column(length = 100)
+    private String department;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

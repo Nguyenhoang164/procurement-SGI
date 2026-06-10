@@ -25,6 +25,7 @@ public class PurchaseOrderItemDTO {
     private String spec;
     private String note;
     private String sourceLink;
+    private String department;
     private BigDecimal weightedAvgCostVnd;
     private BigDecimal latestUnitCostVnd;
     private String latestOrderCode;

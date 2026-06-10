@@ -35,6 +35,8 @@ public class ProductDTO {
 
     private String productType;
 
+    private String department;
+
     private List<ProductImageDTO> images;
 
     private LocalDateTime createdAt;

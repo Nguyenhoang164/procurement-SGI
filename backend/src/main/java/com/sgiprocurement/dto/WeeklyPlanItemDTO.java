@@ -25,4 +25,5 @@ public class WeeklyPlanItemDTO {
     private String priorityLevel;
     private String landing;
 
+    private String department;
 }

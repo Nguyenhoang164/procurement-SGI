@@ -244,6 +244,7 @@ function PurchaseOrderList() {
                         <th style={{ width: 40 }}>#</th>
                         <th style={{ width: 180 }}>Tên sản phẩm</th>
                         <th style={{ width: 110 }}>Mã POS</th>
+                        <th style={{ width: 150 }}>MÃ BIẾN THỂ (SKU)</th>
                         <th style={{ width: 100 }}>Chi tiết</th>
                         <th style={{ width: 60, textAlign: 'right' }}>SL</th>
                         <th style={{ width: 110, textAlign: 'right' }}>Đơn giá</th>
@@ -278,6 +279,7 @@ function PurchaseOrderList() {
                                 {item.posCode}
                               </a>
                             ) : '-'}</td>
+                            <td style={{ fontSize: 12, color: '#94a3b8' }}>(main product)</td>
                             <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td style={{ textAlign: 'right' }}>{item.orderedQty}</td>
                             <td style={{ textAlign: 'right' }}>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
@@ -316,7 +318,7 @@ function PurchaseOrderList() {
                                 <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
                                   <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                 </td>
-                                <td></td>
+                                <td style={{ fontSize: 13 }}>{item.posCode} - {v.name}</td>
                                 <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
                                 <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
                                 <td></td>

@@ -64,7 +64,8 @@ public class ProductService {
         if (product.getPosCode() == null || product.getPosCode().isEmpty()) {
             String code = productNamingService.generatePosCode(
                     product.getProductName(),
-                    product.getMarketCode()
+                    product.getMarketCode(),
+                    product.getDepartment()
             );
             product.setPosCode(code);
         }
@@ -98,6 +99,7 @@ public class ProductService {
         product.setStatus(productDTO.getStatus());
         product.setSourceLink(productDTO.getSourceLink());
         product.setProductType(productDTO.getProductType());
+        product.setDepartment(productDTO.getDepartment());
 
         Product updatedProduct = productRepository.save(product);
 
@@ -115,12 +117,12 @@ public class ProductService {
         return convertToDTO(updatedProduct);
     }
 
-    public String generatePosCode(String prefix, String market) {
-        return productNamingService.generatePosCode(prefix, market, 0);
+    public String generatePosCode(String productName, String market, String department) {
+        return productNamingService.generatePosCode(productName, market, department, 0);
     }
 
-    public String generatePosCode(String prefix, String market, int iteration) {
-        return productNamingService.generatePosCode(prefix, market, iteration);
+    public String generatePosCode(String productName, String market, String department, int iteration) {
+        return productNamingService.generatePosCode(productName, market, department, iteration);
     }
 
     public ProductImportResult importProducts(List<ProductDTO> products) {
@@ -151,10 +153,11 @@ public class ProductService {
                 product.setUnit(dto.getUnit());
                 product.setSourceLink(dto.getSourceLink());
                 product.setProductType(dto.getProductType());
+                product.setDepartment(dto.getDepartment());
                 product.setStatus("ACTIVE");
 
                 String code = productNamingService.generatePosCode(
-                        product.getProductName(), product.getMarketCode()
+                        product.getProductName(), product.getMarketCode(), product.getDepartment()
                 );
                 product.setPosCode(code);
 
@@ -295,6 +298,7 @@ public class ProductService {
         dto.setStatus(product.getStatus());
         dto.setSourceLink(product.getSourceLink());
         dto.setProductType(product.getProductType());
+        dto.setDepartment(product.getDepartment());
         dto.setCreatedAt(product.getCreatedAt());
         dto.setUpdatedAt(product.getUpdatedAt());
         List<ProductImage> images = productImageRepository.findByProductIdOrderBySortOrderAsc(product.getId());
@@ -318,6 +322,7 @@ public class ProductService {
         p.setStatus(productDTO.getStatus() != null ? productDTO.getStatus() : "ACTIVE");
         p.setSourceLink(productDTO.getSourceLink());
         p.setProductType(productDTO.getProductType());
+        p.setDepartment(productDTO.getDepartment());
         p.setCreatedAt(productDTO.getCreatedAt());
         p.setUpdatedAt(productDTO.getUpdatedAt());
         return p;

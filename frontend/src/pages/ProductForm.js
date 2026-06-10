@@ -18,7 +18,8 @@ function ProductForm({ onSuccess }) {
     unit: '',
     productType: 'NEW',
     status: 'ACTIVE',
-    sourceLink: ''
+    sourceLink: '',
+    department: ''
   });
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -48,11 +49,11 @@ function ProductForm({ onSuccess }) {
     }
   }, [id]);
 
-  const handleAutoGenerate = async (productName, marketCode) => {
+  const handleAutoGenerate = async (productName, marketCode, department) => {
     if (!productName || productName.trim().length < 2) return;
     setGenerating(true);
     try {
-      const code = await productAPI.generateCode(marketCode, productName);
+      const code = await productAPI.generateCode(marketCode, productName, department);
       if (code) {
         setFormData(prev => ({ ...prev, posCode: code }));
       }
@@ -66,11 +67,11 @@ function ProductForm({ onSuccess }) {
   useEffect(() => {
     if (!id && formData.productName.trim().length >= 2) {
       const timer = setTimeout(() => {
-        handleAutoGenerate(formData.productName, formData.marketCode);
+        handleAutoGenerate(formData.productName, formData.marketCode, formData.department);
       }, 700);
       return () => clearTimeout(timer);
     }
-  }, [formData.productName, formData.marketCode, id]);
+  }, [formData.productName, formData.marketCode, formData.department, id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -166,7 +167,7 @@ function ProductForm({ onSuccess }) {
                 </select>
               </div>
               <div className="form-group">
-                <label>Mã POS (Tự động đề xuất)</label>
+                <label>Mã sản phẩm (POS) (Tự động đề xuất)</label>
                 <div style={{ position: 'relative' }}>
                   <input type="text" value={formData.posCode} readOnly className="form-input read-only"
                     style={{ backgroundColor: '#f8fafc', fontWeight: 'bold', color: '#1d4ed8' }} />
@@ -176,9 +177,15 @@ function ProductForm({ onSuccess }) {
                 </div>
               </div>
             </div>
-            <div className="form-group">
-              <label>Mã POS cũ</label>
-              <input type="text" name="oldPosCode" value={formData.oldPosCode} onChange={handleChange} className="form-input" placeholder="POS variation ID từ file Excel..." />
+            <div className="form-row">
+              <div className="form-group">
+                <label>Mã POS cũ</label>
+                <input type="text" name="oldPosCode" value={formData.oldPosCode} onChange={handleChange} className="form-input" placeholder="POS variation ID từ file Excel..." />
+              </div>
+              <div className="form-group">
+                <label>Phòng kinh doanh</label>
+                <input type="text" name="department" value={formData.department} onChange={handleChange} className="form-input" placeholder="VD: KINH DOANH, KỸ THUẬT..." />
+              </div>
             </div>
           </div>
 
