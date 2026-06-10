@@ -13,6 +13,7 @@ function ProductList() {
   const [importResult, setImportResult] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [departmentFilter, setDepartmentFilter] = useState('');
   const pageSize = 20;
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -42,11 +43,14 @@ function ProductList() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, departmentFilter]);
+
+  const uniqueDepartments = [...new Set(products.map(p => p.department).filter(Boolean))].sort();
 
   const filteredProducts = products.filter((p) =>
-    p.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.posCode?.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.posCode?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (!departmentFilter || p.department === departmentFilter)
   );
 
   const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1;
@@ -226,6 +230,16 @@ function ProductList() {
               style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
             />
           </div>
+          <select
+            value={departmentFilter}
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+            style={{ padding: '12px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '14px', minWidth: 180 }}
+          >
+            <option value="">Tất cả phòng ban</option>
+            {uniqueDepartments.map(d => (
+              <option key={d} value={d}>{d}</option>
+            ))}
+          </select>
           <button className="btn btn-secondary" onClick={fetchProducts}>Làm mới</button>
         </div>
 
