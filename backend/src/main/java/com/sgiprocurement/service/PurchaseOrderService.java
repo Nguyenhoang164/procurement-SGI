@@ -287,6 +287,23 @@ public class PurchaseOrderService {
             int colDomesticShipping = findCol(colMap, "vc nội địatq/vn (vnđ)", "vc nội địa", "vcnộiđịa", "domestic_shipping_vnd", "domesticshippingvnd");
             int colShippingMethod = findCol(colMap, "hìnhthức vận chuyển", "hình thức vc", "hìnhthứcvc", "hìnhthức vận tải", "shipping_method", "shippingmethod");
 
+            int colExpectedWarehouseArrivalDate = findCol(colMap, "ngày đến kho tq/vn", "ngaydenkhotqvn", "expected_warehouse_arrival_date", "expectedwarehousearrivaldate");
+            int colGoodsPaymentDate = findCol(colMap, "ngày thanh toán tiền hàng", "ngaythanhtoantienhang", "goods_payment_date", "goodspaymentdate");
+            int colFreightPaymentDate = findCol(colMap, "ngày thanh toán cước vc", "ngaythanhtoancuocvc", "freight_payment_date", "freightpaymentdate");
+            int colTotalAmountForeign = findCol(colMap, "tiền hàng(theo cột f)", "tienhangtheocotf", "total_amount_foreign", "totalamountforeign");
+            int colProductShortCode = findCol(colMap, "mã viết tắt sp", "maviettatsp", "product_short_code", "productshortcode");
+            int colSupplierName = findCol(colMap, "ncc", "nhà cung cấp", "nhacungcap", "supplier_name", "suppliername");
+            int colOrderFeeVnd = findCol(colMap, "phí order(vnđ)", "phiordervnd", "order_fee_vnd", "orderfeevnd");
+            int colIntlShippingUnitPrice = findCol(colMap, "đơn giá vc quốc tế(kg/m3)", "dongiavacquoctekgm3", "international_shipping_unit_price_vnd", "internationalshippingunitpricevnd");
+            int colIntlShippingVnd = findCol(colMap, "cước vc quốc tế(vnđ)", "cuocvacquoctevnd", "intl_shipping_vnd", "intlshippingvnd");
+            int colLocalDeliveryFeeVnd = findCol(colMap, "phí ship phil/malay nội địa(vnđ)", "phishipperuoidiavnd", "local_delivery_fee_vnd", "localdeliveryfeevnd");
+            int colTotalLotCostVnd = findCol(colMap, "tổng tiền lô(vnđ)", "tongtienlovnd", "total_lot_cost_vnd", "totallotcostvnd");
+            int colUnitCostFullVnd = findCol(colMap, "gv đầy đủ 1 sp(vnđ)", "gvdaydu1spvnd", "unit_cost_full_vnd", "unitcostfullvnd");
+            int colPaymentMethod = findCol(colMap, "phương thức thanh toán", "phuongthucthanhtoan", "payment_method", "paymentmethod");
+            int colDepositVnd = findCol(colMap, "đã cọc(vnđ)", "dacocvnd", "deposit_vnd", "depositvnd");
+            int colRemainingPaymentVnd = findCol(colMap, "còn phải tt(vnđ)", "conphaitivnd", "remaining_payment_vnd", "remainingpaymentvnd");
+            int colPackageMeasurement = findCol(colMap, "khối lượng / thể tích", "khoiluongthetich", "package_measurement", "packagemeasurement");
+
             List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
             int seq = 0;
@@ -348,6 +365,78 @@ public class PurchaseOrderService {
                         order.setShippingMethod(getCellStringValue(row.getCell(colShippingMethod)));
                     }
 
+                    if (colExpectedWarehouseArrivalDate >= 0) {
+                        Cell cell = row.getCell(colExpectedWarehouseArrivalDate);
+                        LocalDate date = getCellDate(cell);
+                        if (date != null) {
+                            order.setExpectedWarehouseArrivalDate(date);
+                        } else {
+                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            if (dt != null) order.setExpectedWarehouseArrivalDate(dt.toLocalDate());
+                        }
+                    }
+                    if (colGoodsPaymentDate >= 0) {
+                        Cell cell = row.getCell(colGoodsPaymentDate);
+                        LocalDate date = getCellDate(cell);
+                        if (date != null) {
+                            order.setGoodsPaymentDate(date);
+                        } else {
+                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            if (dt != null) order.setGoodsPaymentDate(dt.toLocalDate());
+                        }
+                    }
+                    if (colFreightPaymentDate >= 0) {
+                        Cell cell = row.getCell(colFreightPaymentDate);
+                        LocalDate date = getCellDate(cell);
+                        if (date != null) {
+                            order.setFreightPaymentDate(date);
+                        } else {
+                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            if (dt != null) order.setFreightPaymentDate(dt.toLocalDate());
+                        }
+                    }
+                    if (colSupplierName >= 0) {
+                        order.setSupplierName(getCellStringValue(row.getCell(colSupplierName)));
+                    }
+                    if (colOrderFeeVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colOrderFeeVnd)));
+                        if (val != null) order.setOrderFeeVnd(val);
+                    }
+                    if (colIntlShippingUnitPrice >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colIntlShippingUnitPrice)));
+                        if (val != null) order.setInternationalShippingUnitPriceVnd(val);
+                    }
+                    if (colIntlShippingVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colIntlShippingVnd)));
+                        if (val != null) order.setIntlShippingVnd(val);
+                    }
+                    if (colLocalDeliveryFeeVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colLocalDeliveryFeeVnd)));
+                        if (val != null) order.setLocalDeliveryFeeVnd(val);
+                    }
+                    if (colTotalLotCostVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colTotalLotCostVnd)));
+                        if (val != null) order.setTotalLotCostVnd(val);
+                    }
+                    if (colUnitCostFullVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colUnitCostFullVnd)));
+                        if (val != null) order.setUnitCostFullVnd(val);
+                    }
+                    if (colPaymentMethod >= 0) {
+                        order.setPaymentMethod(getCellStringValue(row.getCell(colPaymentMethod)));
+                    }
+                    if (colDepositVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colDepositVnd)));
+                        if (val != null) order.setDepositVnd(val);
+                    }
+                    if (colRemainingPaymentVnd >= 0) {
+                        BigDecimal val = parseBigDecimal(getCellStringValue(row.getCell(colRemainingPaymentVnd)));
+                        if (val != null) order.setRemainingPaymentVnd(val);
+                    }
+                    if (colPackageMeasurement >= 0) {
+                        order.setPackageMeasurement(getCellStringValue(row.getCell(colPackageMeasurement)));
+                    }
+
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
                     String productName = colProductName >= 0 ? getCellStringValue(row.getCell(colProductName)) : "";
                     item.setProductName(productName.isEmpty() ? "N/A" : productName);
@@ -362,6 +451,8 @@ public class PurchaseOrderService {
                     item.setOrderedQty(qty != null ? qty : 0);
                     if (colUnitPrice >= 0) item.setUnitPrice(parseBigDecimal(getCellStringValue(row.getCell(colUnitPrice))));
                     if (colTotalVnd >= 0) item.setTotalAmountVnd(parseBigDecimal(getCellStringValue(row.getCell(colTotalVnd))));
+                    if (colTotalAmountForeign >= 0) item.setTotalAmountForeign(parseBigDecimal(getCellStringValue(row.getCell(colTotalAmountForeign))));
+                    if (colProductShortCode >= 0) item.setProductShortCode(getCellStringValue(row.getCell(colProductShortCode)));
                     item.setCurrency(order.getCurrency());
                     item.setExchangeRate(order.getExchangeRate());
 
