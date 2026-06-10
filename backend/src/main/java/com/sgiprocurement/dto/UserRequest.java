@@ -25,4 +25,6 @@ public class UserRequest {
     private String market;
 
     private Boolean active = true;
+
+    private String department;
 }

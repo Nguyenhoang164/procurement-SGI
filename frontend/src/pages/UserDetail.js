@@ -74,6 +74,7 @@ function UserDetail() {
               {ROLE_LABELS[user.role] || user.role}
             </span>
           } />
+          <Row label="Phòng kinh doanh" value={user.department || '—'} />
           <Row label="Thị trường" value={user.market || '—'} />
           <Row label="Trạng thái" value={
             <span style={{

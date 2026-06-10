@@ -32,6 +32,9 @@ public class User {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(length = 100)
+    private String department;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

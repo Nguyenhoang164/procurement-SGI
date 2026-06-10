@@ -46,6 +46,7 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setMarket(request.getMarket());
+        user.setDepartment(request.getDepartment());
         user.setActive(request.getActive() != null ? request.getActive() : true);
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
@@ -70,6 +71,9 @@ public class UserService {
         }
         if (request.getMarket() != null) {
             user.setMarket(request.getMarket());
+        }
+        if (request.getDepartment() != null) {
+            user.setDepartment(request.getDepartment());
         }
         if (request.getActive() != null) {
             user.setActive(request.getActive());
@@ -100,6 +104,7 @@ public class UserService {
                 user.getRole(),
                 user.getMarket(),
                 user.getActive(),
+                user.getDepartment(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );

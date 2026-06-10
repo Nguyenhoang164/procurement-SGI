@@ -25,8 +25,11 @@ function UserForm() {
     password: '',
     role: 'PENDING',
     market: '',
+    department: '',
     active: true
   });
+
+  const showDepartment = formData.role === 'SALES' || formData.role === 'SALES_MANAGER';
 
   useEffect(() => {
     if (!id) return;
@@ -38,6 +41,7 @@ function UserForm() {
           password: '',
           role: data.role || 'USER',
           market: data.market || '',
+          department: data.department || '',
           active: data.active
         });
       })
@@ -141,6 +145,19 @@ function UserForm() {
               placeholder="Ví dụ: Vietnam, China, All Markets"
             />
           </div>
+
+          {showDepartment && (
+            <div className="form-group">
+              <label className="form-label">Phòng kinh doanh</label>
+              <input
+                className="form-input"
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                placeholder="VD: KD1, KD2, KD3..."
+              />
+            </div>
+          )}
 
           <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input

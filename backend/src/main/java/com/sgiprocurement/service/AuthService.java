@@ -81,6 +81,7 @@ public class AuthService {
                 user.getRole(),
                 user.getMarket(),
                 user.getActive(),
+                user.getDepartment(),
                 user.getCreatedAt(),
                 user.getUpdatedAt()
         );

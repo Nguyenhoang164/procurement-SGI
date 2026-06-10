@@ -112,6 +112,7 @@ function UserList() {
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>STT</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Tên đăng nhập</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Vai trò</th>
+                  <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Phòng kinh doanh</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Thị trường</th>
                   <th style={{ textAlign: 'center', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Trạng thái</th>
                   <th style={{ textAlign: 'left', padding: '10px 12px', borderBottom: '2px solid #e5e7eb' }}>Ngày tạo</th>
@@ -124,6 +125,7 @@ function UserList() {
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', fontWeight: 600 }}>{u.username}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{ROLE_LABELS[u.role] || u.role}</td>
+                    <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{u.department || '—'}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6' }}>{u.market || '—'}</td>
                     <td style={{ padding: '10px 12px', borderBottom: '1px solid #f3f4f6', textAlign: 'center' }}>
                       <span style={{

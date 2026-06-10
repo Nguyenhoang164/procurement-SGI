@@ -15,6 +15,7 @@ public class UserResponse {
     private String role;
     private String market;
     private Boolean active;
+    private String department;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
