@@ -246,9 +246,15 @@ public class PurchaseOrderService {
 
         try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
             Sheet sheet = workbook.getSheetAt(0);
-            Row headerRow = sheet.getRow(1);
+            Row headerRow = sheet.getRow(0);
+            if (headerRow == null || isRowNumeric(headerRow)) {
+                Row fallback = sheet.getRow(1);
+                if (fallback != null && !isRowNumeric(fallback)) {
+                    headerRow = fallback;
+                }
+            }
             if (headerRow == null) {
-                result.addError("File Excel không có dòng tiêu đề (dòng 2)");
+                result.addError("File Excel không có dòng tiêu đề");
                 return result;
             }
 
@@ -285,7 +291,8 @@ public class PurchaseOrderService {
             int rowCount = 0;
             int seq = 0;
 
-            for (int i = 2; i <= sheet.getLastRowNum(); i++) {
+            int dataStartRow = headerRow.getRowNum() + 1;
+            for (int i = dataStartRow; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
                 rowCount++;
@@ -414,6 +421,17 @@ public class PurchaseOrderService {
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private boolean isRowNumeric(Row row) {
+        if (row == null) return true;
+        for (int i = 0; i <= row.getLastCellNum() && i < 3; i++) {
+            Cell cell = row.getCell(i);
+            if (cell == null) continue;
+            String val = getCellStringValue(cell);
+            if (!val.isEmpty() && !val.matches("\\d+[\\.]?\\d*")) return false;
+        }
+        return true;
     }
 
     private int findCol(Map<String, Integer> colMap, String... names) {

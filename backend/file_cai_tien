@@ -37,26 +37,55 @@
 - Phiếu mua hàng + vận chuyển đa số thanh toán bằng nhân dân tệ - nên e thống nhất nha theo mẫu của phiếu mua hàng nhé: chỗ đơn giá - thành tiền - quy đổi NVD
 
 - Chức năng import danh sách đơn hàng
-* Hiện trạng: 1 file exel đơn hàng gồm các cột và tập trung lấy thông tin các cột sau
-+ Chi tiết _ Mã Phiếu DXNH -> tự động tạo theo quy tắc hệ thống
-+ Status: mặc định trạng thái là hoàn thành và thanh toán là đã thanh toán
-+ Submitted at -> Ngày đặt hàng: Thời gian tạo
-+ Completed at -> Ngày thanh toán: Thời gian hoàn thành
-+ Requester -> mặc định là unkown: Người tạo
-+ Initiator department -> mặc định là unkown: Phòng ban thực hiện
-+ Nguồn nhập -> Nguồn nhập
-+ Tỷ giá -> Tỉ giá ngày TT
-+ Tỷ giá-Currency - > Loại tiền tệ: Loại đơn vị tiền tệ
-+ Chi Tiết_Hàng Hóa_Tên Sản Phẩm_Chuẩn Hóa -> Tên sản phẩm: Tên sản phẩm có trong đơn hàng
-+ Chi Tiết_Hàng Hóa_Đơn Vị Đo -> mặc định là pcs: Quy cách
-+ Chi Tiết_Hàng Hoá_Diễn giải thêm lý do -> Ghi chú: Ghi chú
-+ Chi Tiết_Hàng Hoá_Số Lượng -> SL đặt(pcs): số lượng sản phẩm đó trong đơn hàng
-+ Chi Tiết_Giá Nhập 1 SP - Đơn giá nhập(theo cột F): Đơn giá
-+ TIỀN HÀNG HOÁ(VND) -> Tổng tiền hàng (VND): Quy đổi VND
-+ VC nội địaTQ/VN (VNĐ): VC nội địa
-+ Hình thức vận chuyển: Hình thức VC
+* File Excel mẫu mới (từ file test) gồm các cột sau:
 
-* Lưu ý
-- sau dấu mũi tên -> là tên cột mới
-- chỉ cần gán data trực tiếp không cần tính toán
-- data dữ liệu thực xuất phát từ dònh số 3 và tên cột ở dòng 2
+  Cột Excel                        | Trường backend               | Ghi chú
+  ----------------------------------|------------------------------|-------------------------------------------------------
+  Ngày đặt hàng (I)                | orderDate                    | Ngày đặt hàng
+  Ngày đến kho TQ/VN (J)           | expectedWarehouseArrivalDate | Chưa map, cần bổ sung
+  Ngày thanh toán tiền hàng (Q)    | goodsPaymentDate             | Chưa map, cần bổ sung
+  Ngày thanh toán cước VC (W)      | freightPaymentDate           | Chưa map, cần bổ sung
+  Ngày về thực tế (AD)             | -                            | Chưa map
+  SL đặt (pcs) (K)                 | orderedQty (item)            | Số lượng
+  Đơn giá nhập (theo cột F) (L)    | unitPrice (item)             | Đơn giá
+  VC nội địa TQ/VN (VNĐ) (M)       | domesticShippingVnd          | VC nội địa
+  Tiền hàng (theo cột F) (N)       | totalAmountForeign (item)    | Thành tiền ngoại tệ - chưa map
+  Tỷ giá ngày TT (O)               | exchangeRate                 | Tỷ giá
+  Tổng tiền hàng (VND) (P)         | totalAmountVnd (item)        | Quy đổi VND
+  Phí order (VNĐ) (R)              | orderFeeVnd                  | Chưa map, cần bổ sung
+  Đơn giá VC quốc tế (kg/m3) (T)   | internationalShippingUnitPriceVnd | Chưa map, cần bổ sung
+  Cước VC quốc tế (VNĐ) (V)        | intlShippingVnd              | Chưa map, cần bổ sung
+  Phí ship Phil/Malay nội địa (VNĐ) (X) | localDeliveryFeeVnd       | Chưa map, cần bổ sung
+  Tổng tiền lô (VNĐ) (Y)           | totalLotCostVnd              | Chưa map, cần bổ sung
+  GV đầy đủ 1 SP (VNĐ) (Z)         | unitCostFullVnd              | Chưa map, cần bổ sung
+  Phương thức thanh toán (AA)      | paymentMethod                | Chưa map, cần bổ sung
+  Đã cọc (VNĐ) (AB)                | depositVnd                   | Chưa map, cần bổ sung
+  Còn phải TT (VNĐ) (AC)           | remainingPaymentVnd           | Chưa map, cần bổ sung
+  Mã SP trên POS (C)               | productName (item)           | Dùng làm tên sản phẩm
+  Mã viết tắt SP (D)               | productShortCode (item)      | Chưa map, cần bổ sung
+  Nguồn nhập (E)                   | sourceType                   | Nguồn nhập
+  NCC (F)                          | supplierName                 | Chưa map, cần bổ sung
+  Loại tiền tệ (G)                 | currency                     | Loại tiền tệ
+  Hình thức vận chuyển (H)         | shippingMethod               | Hình thức VC
+  Ghi chú (AG)                     | note (item)                  | Ghi chú
+  Người check (AF)                 | -                            | Chưa map
+  SL kho nhận (pcs) (AE)           | -                            | Chưa map
+  STT (A)                          | -                            | Bỏ qua (số thứ tự)
+  Tên sản phẩm (B)                 | -                            | BỎ, không lấy cột này
+  Khối lượng / Thể tích (S)        | packageMeasurement           | Chưa map, cần bổ sung
+  Ngày thanh toán (AI)             | completedAt                  | Chưa map chính xác
+
+* Các trường mặc định khi import:
+  - poCode: tự động sinh IMP-YYYYMMDD-NNN
+  - status: "COMPLETED"
+  - paymentStatus: "PAID"
+  - createdBy: "unkown" (chưa có cột người tạo trong file)
+  - initiatorDepartment: "unkown" (chưa có cột phòng ban trong file)
+  - spec (item): "pcs"
+  - currency & exchangeRate (item): lấy từ order
+
+* Lưu ý:
+  - Chỉ lấy cột "Mã SP trên POS" (C) làm tên sản phẩm, KHÔNG lấy "Tên sản phẩm" (B)
+  - posCode của item: lookup từ productName (giá trị cột C) vào bảng products
+  - Code tự động phát hiện dòng tiêu đề (dòng 1 hoặc dòng 2), data bắt đầu từ dòng kế tiếp
+  - Không tính toán gì, gán data trực tiếp
