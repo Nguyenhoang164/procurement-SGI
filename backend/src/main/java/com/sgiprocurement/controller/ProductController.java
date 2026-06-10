@@ -120,6 +120,14 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
 
+    // REGENERATE all product codes
+    @PostMapping("/regenerate-codes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Integer> regenerateCodes() {
+        int count = productService.regenerateAllCodes();
+        return ResponseEntity.ok(count);
+    }
+
     @GetMapping("/{id:\\d+}/combos")
     public ResponseEntity<List<ProductComboDTO>> getCombos(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getCombos(id));

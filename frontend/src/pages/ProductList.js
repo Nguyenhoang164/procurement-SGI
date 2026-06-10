@@ -75,6 +75,17 @@ function ProductList() {
     }
   };
 
+  const handleRegenerateCodes = async () => {
+    if (!window.confirm('Cập nhật mã sản phẩm theo quy tắc mới cho tất cả sản phẩm?')) return;
+    try {
+      const count = await productAPI.regenerateCodes();
+      alert(`Đã cập nhật mã cho ${count} sản phẩm`);
+      fetchProducts();
+    } catch (err) {
+      alert('Lỗi: ' + err.message);
+    }
+  };
+
   const normalizeKey = (key) => key.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
   const findKey = (obj, ...patterns) => {
@@ -186,6 +197,9 @@ function ProductList() {
           )}
           <button className="btn btn-delete" onClick={handleDeleteAll} style={{ border: '2px solid #dc2626' }}>
             Xóa toàn bộ sản phẩm
+          </button>
+          <button className="btn btn-secondary" onClick={handleRegenerateCodes}>
+            Cập nhật mã SP
           </button>
         </div>
       </div>

@@ -100,6 +100,7 @@ public class ProductService {
         product.setSourceLink(productDTO.getSourceLink());
         product.setProductType(productDTO.getProductType());
         product.setDepartment(productDTO.getDepartment());
+        product.setPosCode(productDTO.getPosCode());
 
         Product updatedProduct = productRepository.save(product);
 
@@ -197,6 +198,22 @@ public class ProductService {
 
     public void deleteAllProducts() {
         productRepository.deleteAll();
+    }
+
+    public int regenerateAllCodes() {
+        List<Product> products = productRepository.findAll();
+        int count = 0;
+        for (Product product : products) {
+            String newCode = productNamingService.generatePosCode(
+                    product.getProductName(), product.getMarketCode(), product.getDepartment()
+            );
+            if (!newCode.equals(product.getPosCode())) {
+                product.setPosCode(newCode);
+                productRepository.save(product);
+                count++;
+            }
+        }
+        return count;
     }
 
     public List<ProductComboDTO> getCombos(Long productId) {

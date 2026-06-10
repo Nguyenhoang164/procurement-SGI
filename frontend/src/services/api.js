@@ -311,6 +311,13 @@ export const productAPI = {
       method: 'DELETE', headers: getHeaders()
     });
     if (!response.ok) throw new Error('Xóa toàn bộ sản phẩm thất bại');
+  },
+  regenerateCodes: async () => {
+    const response = await fetch(`${API_BASE_URL}/products/regenerate-codes`, {
+      method: 'POST', headers: getHeaders()
+    });
+    if (!response.ok) throw new Error('Cập nhật mã sản phẩm thất bại');
+    return response.json();
   }
 };
 
