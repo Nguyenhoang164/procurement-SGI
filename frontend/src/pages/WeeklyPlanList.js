@@ -232,7 +232,7 @@ function WeeklyPlanList() {
                                 </a>
                               ) : '-'}
                             </td>
-                            <td></td>
+                            <td style={{ fontSize: 13, color: '#94a3b8' }}>{item.posCode}</td>
                             <td>{item.productType === 'NEW' ? 'Hàng mới' : item.productType === 'USED' ? 'Hàng cũ' : item.productType || '-'}</td>
                             <td>{item.department || '-'}</td>
                             <td>{item.suggestedQty}</td>

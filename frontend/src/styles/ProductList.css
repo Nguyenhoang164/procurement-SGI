@@ -57,3 +57,18 @@
     padding: 15px;
   }
 }
+
+.app-table td,
+.app-table th {
+  word-break: break-word;
+  white-space: normal;
+  vertical-align: top;
+}
+
+.app-table code {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

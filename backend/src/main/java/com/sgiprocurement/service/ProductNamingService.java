@@ -18,7 +18,7 @@ public class ProductNamingService {
 
         long count = productRepository.countByPosCodeStartingWith(finalPrefix);
         long seq = count + 1 + iteration;
-        return finalPrefix + seq;
+        return finalPrefix + String.format("%03d", seq);
     }
 
     public String generatePosCode(String productName, String market, String department) {

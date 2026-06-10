@@ -65,13 +65,13 @@ function ProductForm({ onSuccess }) {
   };
 
   useEffect(() => {
-    if (!id && formData.productName.trim().length >= 2) {
+    if (formData.productName.trim().length >= 2) {
       const timer = setTimeout(() => {
         handleAutoGenerate(formData.productName, formData.marketCode, formData.department);
       }, 700);
       return () => clearTimeout(timer);
     }
-  }, [formData.productName, formData.marketCode, formData.department, id]);
+  }, [formData.productName, formData.marketCode, formData.department]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

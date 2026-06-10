@@ -279,7 +279,7 @@ function PurchaseOrderList() {
                                 {item.posCode}
                               </a>
                             ) : '-'}</td>
-                            <td style={{ fontSize: 12, color: '#94a3b8' }}>(main product)</td>
+                            <td style={{ fontSize: 12, color: '#94a3b8' }}>{item.posCode}</td>
                             <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td style={{ textAlign: 'right' }}>{item.orderedQty}</td>
                             <td style={{ textAlign: 'right' }}>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
@@ -309,27 +309,28 @@ function PurchaseOrderList() {
                             <td style={{ textAlign: 'right', color: order.paymentStatus === 'REJECTED' ? 'var(--muted)' : 'var(--blue)', fontWeight: 600 }}>{vnd.toLocaleString()} đ</td>
                           </tr>
                         );
-                        if (hasVariants) {
-                          itemVariants.forEach((v, vi) => {
-                            if (!v.name && !v.qty) return;
-                            rows.push(
-                              <tr key={`${item.id || idx}-v${vi}`} style={{ background: '#f8fafc' }}>
-                                <td></td>
-                                <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
-                                  <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
-                                </td>
-                                <td style={{ fontSize: 13 }}>{item.posCode} - {v.name}</td>
-                                <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
-                                <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                              </tr>
-                            );
-                          });
-                        }
+                          if (hasVariants) {
+                            itemVariants.forEach((v, vi) => {
+                              if (!v.name && !v.qty) return;
+                              rows.push(
+                                <tr key={`${item.id || idx}-v${vi}`} style={{ background: '#f8fafc' }}>
+                                  <td></td>
+                                  <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
+                                    <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
+                                  </td>
+                                  <td></td>
+                                  <td style={{ fontSize: 12, color: '#64748b' }}>{item.posCode} - {v.name}</td>
+                                  <td style={{ fontSize: 12, color: '#475569' }}>{v.name}</td>
+                                  <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                  <td></td>
+                                </tr>
+                              );
+                            });
+                          }
                         return rows;
                       })}
                     </tbody>

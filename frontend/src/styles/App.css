@@ -756,8 +756,8 @@ textarea {
 
 /* S?a l?i l?ch c?t b?ng */
 .app-table {
-  table-layout: auto !important;
-  width: 100% !important;
+  table-layout: fixed;
+  width: 100%;
 }
 
 .app-table th, .app-table td {

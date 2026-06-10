@@ -255,7 +255,7 @@ function ProductList() {
           <div className="error-message">{error}</div>
         ) : (
           <div className="table-card" style={{ backgroundColor: 'white', borderRadius: '12px', overflow: 'hidden', width: '100%' }}>
-            <table className="app-table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto' }}>
+            <table className="app-table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #edf2f7' }}>
                   <th style={{ width: 40, padding: '16px 12px', textAlign: 'center' }}>
