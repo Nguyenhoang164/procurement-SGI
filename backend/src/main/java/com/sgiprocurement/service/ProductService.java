@@ -209,7 +209,7 @@ public class ProductService {
             );
             if (!newCode.equals(product.getPosCode())) {
                 product.setPosCode(newCode);
-                productRepository.save(product);
+                productRepository.saveAndFlush(product);
                 count++;
             }
         }
