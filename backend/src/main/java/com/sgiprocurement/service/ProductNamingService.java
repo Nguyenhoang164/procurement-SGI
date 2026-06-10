@@ -37,10 +37,15 @@ public class ProductNamingService {
         if (productName == null || productName.trim().isEmpty()) {
             return "XXXX";
         }
-        String cleaned = productName.trim().replaceAll("[^\\p{L}\\p{N}]+", "");
-        if (cleaned.isEmpty()) return "XXXX";
-        int len = Math.min(4, cleaned.length());
-        return cleaned.substring(0, len).toUpperCase();
+        String[] parts = productName.trim().split("[^\\p{L}\\p{N}]+");
+        StringBuilder prefix = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            prefix.append(Character.toUpperCase(part.charAt(0)));
+            if (prefix.length() >= 4) break;
+        }
+        while (prefix.length() < 4) prefix.append('X');
+        return prefix.toString();
     }
 
 }
