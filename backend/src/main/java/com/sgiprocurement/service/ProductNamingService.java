@@ -37,9 +37,10 @@ public class ProductNamingService {
         if (productName == null || productName.trim().isEmpty()) {
             return "XXXX";
         }
-        String noSpaces = productName.trim().replaceAll("\\s+", "");
-        int len = Math.min(4, noSpaces.length());
-        return noSpaces.substring(0, len).toUpperCase();
+        String cleaned = productName.trim().replaceAll("[^\\p{L}\\p{N}]+", "");
+        if (cleaned.isEmpty()) return "XXXX";
+        int len = Math.min(4, cleaned.length());
+        return cleaned.substring(0, len).toUpperCase();
     }
 
 }
