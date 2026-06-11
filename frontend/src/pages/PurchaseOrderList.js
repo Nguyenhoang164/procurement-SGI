@@ -272,14 +272,14 @@ function PurchaseOrderList() {
                           <tr key={item.id || idx}>
                             <td>{idx + 1}</td>
                             <td>{getName(item)}</td>
-                            <td>{item.posCode ? (
+                            <td>{item.posCode && item.posCode !== 'N/A' ? (
                               <a href="#"
                                 onClick={(e) => { e.preventDefault(); navigate('/products', { state: { search: item.posCode } }); }}
                                 style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
                                 {item.posCode}
                               </a>
                             ) : '-'}</td>
-                            <td style={{ fontSize: 12, color: '#94a3b8' }}>{item.posCode}</td>
+                            <td style={{ fontSize: 12, color: '#94a3b8' }}>{item.posCode && item.posCode !== 'N/A' ? item.posCode : '-'}</td>
                             <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td style={{ textAlign: 'right' }}>{item.orderedQty}</td>
                             <td style={{ textAlign: 'right' }}>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>

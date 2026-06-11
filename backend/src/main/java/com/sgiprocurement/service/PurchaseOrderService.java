@@ -262,47 +262,50 @@ public class PurchaseOrderService {
             for (int c = 0; c <= headerRow.getLastCellNum(); c++) {
                 Cell cell = headerRow.getCell(c);
                 if (cell == null) continue;
-                String header = getCellStringValue(cell)
+                String raw = getCellStringValue(cell);
+                String header = raw
                         .toLowerCase()
                         .replace(" ", "")
+                        .replace("\n", "").replace("\r", "")
                         .replace("（", "(")
                         .replace("）", ")")
-                        .replace("：", ":");
+                        .replace("：", ":")
+                        .replaceAll("[（(][^）)]*[）)]", "");
                 colMap.put(header, c);
             }
 
-            int colOrderDate = findCol(colMap, "submittedat", "ngày đặt hàng", "ngaydathang", "order_date", "orderdate", "ngày đặt", "submitted_at");
-            int colCompletedAt = findCol(colMap, "completedat", "ngày thanh toán", "thờigianhoànthành", "completed_at");
-            int colRequester = findCol(colMap, "requester", "ngườitạo", "người tạo", "created_by", "createdby");
+            int colOrderDate = findCol(colMap, "ngàyđặthàng", "ngày đặt hàng", "ngaydathang", "order_date", "orderdate", "submittedat", "submitted_at");
+            int colCompletedAt = findCol(colMap, "ngàythanhtoán", "ngàythanhtoántiềnhàng", "completedat", "thờigianhoànthành", "completed_at");
+            int colRequester = findCol(colMap, "requester", "ngườicheck", "ngườitạo", "created_by", "createdby");
             int colDepartment = findCol(colMap, "initiatordepartment", "phòngban", "phòng ban thực hiện", "department", "initiator_department");
             int colSourceType = findCol(colMap, "nguồnnhập", "nguồn nhập", "sourcetype", "source_type", "nguonnhap");
-            int colExchangeRate = findCol(colMap, "tỷgiá", "tỉ giá ngày tt", "tỷ giá", "tygia", "exchange_rate", "exchangeRate", "tỉgiá", "tỉ giá");
-            int colCurrency = findCol(colMap, "tỷgiá-currency", "loạiđơnvịtiềntệ", "loại tiền tệ", "currency", "loạiđơnvịtiềntệ", "loại tiền", "tiente", "tỷ giá - currency");
-            int colProductName = findCol(colMap, "mã sp trên pos", "mãsptrênpos");
+            int colExchangeRate = findCol(colMap, "tỉgiángàytt", "tỷgiá", "tỉ giá ngày tt", "tỷ giá", "tygia", "exchange_rate", "exchangeRate");
+            int colCurrency = findCol(colMap, "loạitiềntệ", "tỷgiá-currency", "loạiđơnvịtiềntệ", "loại tiền tệ", "currency", "loại tiền", "tiente");
+            int colProductName = findCol(colMap, "mãsptrênpos", "mã sp trên pos");
             int colSpec = findCol(colMap, "chitiết_hànghóa_đơnvịđo", "đơnvịđo", "đơn vị đo", "quy cách", "quycách", "spec", "đvt");
-            int colNote = findCol(colMap, "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghichú", "ghi chú", "note", "dienthaikthem");
-            int colQty = findCol(colMap, "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "sl đặt(pcs)", "sldặt", "quantity", "ordered_qty", "orderedqty", "soluong");
-            int colUnitPrice = findCol(colMap, "chitiết_giánhập1sp", "đơngiánhập(theocộtf)", "đơngiá", "đơn giá nhập", "giánhập1sp", "đơngiá", "đơn giá", "unit_price", "unitprice", "gianhap");
-            int colTotalVnd = findCol(colMap, "tiềnhànghoá(vnd)", "tổng tiền hàng (vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
-            int colDomesticShipping = findCol(colMap, "vc nội địatq/vn (vnđ)", "vc nội địa", "vcnộiđịa", "domestic_shipping_vnd", "domesticshippingvnd");
-            int colShippingMethod = findCol(colMap, "hìnhthức vận chuyển", "hình thức vc", "hìnhthứcvc", "hìnhthức vận tải", "shipping_method", "shippingmethod");
+            int colNote = findCol(colMap, "ghichú", "chitiết_hànghoá_diễngiảithêmlýdo", "diễngiảithêmlýdo", "ghi chú", "note", "dienthaikthem");
+            int colQty = findCol(colMap, "slđặt", "chitiết_hànghoá_sốlượng", "sốlượng", "số lượng", "sldặt", "quantity", "ordered_qty", "orderedqty", "soluong");
+            int colUnitPrice = findCol(colMap, "đơngiánhập", "chitiết_giánhập1sp", "đơngiánhập(theocộtf)", "đơngiá", "đơn giá nhập", "giánhập1sp", "đơn giá", "unit_price", "unitprice", "gianhap");
+            int colTotalVnd = findCol(colMap, "tổngtiềnhàng", "tiềnhànghoá(vnd)", "tổng tiền hàng (vnd)", "tiềnhànhhoávnd", "quyđổivnd", "quy đổi vnd", "total_vnd", "totalamountvnd", "tienhangvnd");
+            int colDomesticShipping = findCol(colMap, "vcnộiđịatq/vn", "vc nội địatq/vn (vnđ)", "vc nội địa", "vcnộiđịa", "domestic_shipping_vnd", "domesticshippingvnd");
+            int colShippingMethod = findCol(colMap, "hìnhthứcvậnchuyển", "hìnhthức vận chuyển", "hình thức vc", "hìnhthứcvc", "hìnhthức vận tải", "shipping_method", "shippingmethod");
 
-            int colExpectedWarehouseArrivalDate = findCol(colMap, "ngày đến kho tq/vn", "ngaydenkhotqvn", "expected_warehouse_arrival_date", "expectedwarehousearrivaldate");
-            int colGoodsPaymentDate = findCol(colMap, "ngày thanh toán tiền hàng", "ngaythanhtoantienhang", "goods_payment_date", "goodspaymentdate");
-            int colFreightPaymentDate = findCol(colMap, "ngày thanh toán cước vc", "ngaythanhtoancuocvc", "freight_payment_date", "freightpaymentdate");
-            int colTotalAmountForeign = findCol(colMap, "tiền hàng(theo cột f)", "tienhangtheocotf", "total_amount_foreign", "totalamountforeign");
-            int colProductShortCode = findCol(colMap, "mã viết tắt sp", "maviettatsp", "product_short_code", "productshortcode");
+            int colExpectedWarehouseArrivalDate = findCol(colMap, "ngàyđếnkhotq/vn", "ngày đến kho tq/vn", "ngaydenkhotqvn", "expected_warehouse_arrival_date", "expectedwarehousearrivaldate");
+            int colGoodsPaymentDate = findCol(colMap, "ngàythanhtoántiềnhàng", "ngày thanh toán tiền hàng", "ngaythanhtoantienhang", "goods_payment_date", "goodspaymentdate");
+            int colFreightPaymentDate = findCol(colMap, "ngàythanhtoáncướcvc", "ngày thanh toán cước vc", "ngaythanhtoancuocvc", "freight_payment_date", "freightpaymentdate");
+            int colTotalAmountForeign = findCol(colMap, "tiềnhàng", "tiền hàng(theo cột f)", "tienhangtheocotf", "total_amount_foreign", "totalamountforeign");
+            int colProductShortCode = findCol(colMap, "mãviếttắtsp", "mã viết tắt sp", "maviettatsp", "product_short_code", "productshortcode");
             int colSupplierName = findCol(colMap, "ncc", "nhà cung cấp", "nhacungcap", "supplier_name", "suppliername");
-            int colOrderFeeVnd = findCol(colMap, "phí order(vnđ)", "phiordervnd", "order_fee_vnd", "orderfeevnd");
-            int colIntlShippingUnitPrice = findCol(colMap, "đơn giá vc quốc tế(kg/m3)", "dongiavacquoctekgm3", "international_shipping_unit_price_vnd", "internationalshippingunitpricevnd");
-            int colIntlShippingVnd = findCol(colMap, "cước vc quốc tế(vnđ)", "cuocvacquoctevnd", "intl_shipping_vnd", "intlshippingvnd");
-            int colLocalDeliveryFeeVnd = findCol(colMap, "phí ship phil/malay nội địa(vnđ)", "phishipperuoidiavnd", "local_delivery_fee_vnd", "localdeliveryfeevnd");
-            int colTotalLotCostVnd = findCol(colMap, "tổng tiền lô(vnđ)", "tongtienlovnd", "total_lot_cost_vnd", "totallotcostvnd");
-            int colUnitCostFullVnd = findCol(colMap, "gv đầy đủ 1 sp(vnđ)", "gvdaydu1spvnd", "unit_cost_full_vnd", "unitcostfullvnd");
-            int colPaymentMethod = findCol(colMap, "phương thức thanh toán", "phuongthucthanhtoan", "payment_method", "paymentmethod");
-            int colDepositVnd = findCol(colMap, "đã cọc(vnđ)", "dacocvnd", "deposit_vnd", "depositvnd");
-            int colRemainingPaymentVnd = findCol(colMap, "còn phải tt(vnđ)", "conphaitivnd", "remaining_payment_vnd", "remainingpaymentvnd");
-            int colPackageMeasurement = findCol(colMap, "khối lượng / thể tích", "khoiluongthetich", "package_measurement", "packagemeasurement");
+            int colOrderFeeVnd = findCol(colMap, "phíorder", "phí order(vnđ)", "phiordervnd", "order_fee_vnd", "orderfeevnd");
+            int colIntlShippingUnitPrice = findCol(colMap, "đơngiávcquốctế", "đơn giá vc quốc tế(kg/m3)", "dongiavacquoctekgm3", "international_shipping_unit_price_vnd", "internationalshippingunitpricevnd");
+            int colIntlShippingVnd = findCol(colMap, "cướcvcquốctế", "cước vc quốc tế(vnđ)", "cuocvacquoctevnd", "intl_shipping_vnd", "intlshippingvnd");
+            int colLocalDeliveryFeeVnd = findCol(colMap, "phíshipphil/malaynộiđịa", "phí ship phil/malay nội địa(vnđ)", "phishipperuoidiavnd", "local_delivery_fee_vnd", "localdeliveryfeevnd");
+            int colTotalLotCostVnd = findCol(colMap, "tổngtiềnlô", "tổng tiền lô(vnđ)", "tongtienlovnd", "total_lot_cost_vnd", "totallotcostvnd");
+            int colUnitCostFullVnd = findCol(colMap, "gvđầyđủ1sp", "gv đầy đủ 1 sp(vnđ)", "gvdaydu1spvnd", "unit_cost_full_vnd", "unitcostfullvnd");
+            int colPaymentMethod = findCol(colMap, "phươngthứcthanhtoán", "phương thức thanh toán", "phuongthucthanhtoan", "payment_method", "paymentmethod");
+            int colDepositVnd = findCol(colMap, "đãcọc", "đã cọc(vnđ)", "dacocvnd", "deposit_vnd", "depositvnd");
+            int colRemainingPaymentVnd = findCol(colMap, "cònphảitt", "còn phải tt(vnđ)", "conphaitivnd", "remaining_payment_vnd", "remainingpaymentvnd");
+            int colPackageMeasurement = findCol(colMap, "khốilượng/thểtích", "khối lượng / thể tích", "khoiluongthetich", "package_measurement", "packagemeasurement");
 
             List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
@@ -335,15 +338,29 @@ public class PurchaseOrderService {
                             order.setOrderDate(date);
                             order.setCreatedAt(date.atStartOfDay());
                         } else {
-                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
+                            String raw = getCellStringValue(cell);
+                            LocalDateTime dt = parseDateTime(raw);
                             if (dt != null) {
                                 order.setOrderDate(dt.toLocalDate());
                                 order.setCreatedAt(dt);
+                            } else {
+                                LocalDate serialDate = parseExcelSerialDate(raw);
+                                if (serialDate != null) {
+                                    order.setOrderDate(serialDate);
+                                    order.setCreatedAt(serialDate.atStartOfDay());
+                                }
                             }
                         }
                     }
                     if (colCompletedAt >= 0) {
-                        order.setCompletedAt(parseDateTime(getCellStringValue(row.getCell(colCompletedAt))));
+                        String raw = getCellStringValue(row.getCell(colCompletedAt));
+                        LocalDateTime dt = parseDateTime(raw);
+                        if (dt != null) {
+                            order.setCompletedAt(dt);
+                        } else {
+                            LocalDate serialDate = parseExcelSerialDate(raw);
+                            if (serialDate != null) order.setCompletedAt(serialDate.atStartOfDay());
+                        }
                     }
                     if (colSourceType >= 0) {
                         order.setSourceType(getCellStringValue(row.getCell(colSourceType)));
@@ -371,8 +388,14 @@ public class PurchaseOrderService {
                         if (date != null) {
                             order.setExpectedWarehouseArrivalDate(date);
                         } else {
-                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
-                            if (dt != null) order.setExpectedWarehouseArrivalDate(dt.toLocalDate());
+                            String raw = getCellStringValue(cell);
+                            LocalDateTime dt = parseDateTime(raw);
+                            if (dt != null) {
+                                order.setExpectedWarehouseArrivalDate(dt.toLocalDate());
+                            } else {
+                                LocalDate serialDate = parseExcelSerialDate(raw);
+                                if (serialDate != null) order.setExpectedWarehouseArrivalDate(serialDate);
+                            }
                         }
                     }
                     if (colGoodsPaymentDate >= 0) {
@@ -381,8 +404,14 @@ public class PurchaseOrderService {
                         if (date != null) {
                             order.setGoodsPaymentDate(date);
                         } else {
-                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
-                            if (dt != null) order.setGoodsPaymentDate(dt.toLocalDate());
+                            String raw = getCellStringValue(cell);
+                            LocalDateTime dt = parseDateTime(raw);
+                            if (dt != null) {
+                                order.setGoodsPaymentDate(dt.toLocalDate());
+                            } else {
+                                LocalDate serialDate = parseExcelSerialDate(raw);
+                                if (serialDate != null) order.setGoodsPaymentDate(serialDate);
+                            }
                         }
                     }
                     if (colFreightPaymentDate >= 0) {
@@ -391,8 +420,14 @@ public class PurchaseOrderService {
                         if (date != null) {
                             order.setFreightPaymentDate(date);
                         } else {
-                            LocalDateTime dt = parseDateTime(getCellStringValue(cell));
-                            if (dt != null) order.setFreightPaymentDate(dt.toLocalDate());
+                            String raw = getCellStringValue(cell);
+                            LocalDateTime dt = parseDateTime(raw);
+                            if (dt != null) {
+                                order.setFreightPaymentDate(dt.toLocalDate());
+                            } else {
+                                LocalDate serialDate = parseExcelSerialDate(raw);
+                                if (serialDate != null) order.setFreightPaymentDate(serialDate);
+                            }
                         }
                     }
                     if (colSupplierName >= 0) {
@@ -597,11 +632,12 @@ public class PurchaseOrderService {
             "yyyy/M/d h:mm:ss a", "yyyy/M/d H:mm:ss",
             "d/M/yyyy h:mm:ss a", "d/M/yyyy H:mm:ss",
             "M/d/yyyy h:mm:ss a", "M/d/yyyy H:mm:ss",
-            "yyyy-MM-dd", "dd/MM/yyyy", "yyyy/M/d", "d/M/yyyy", "M/d/yyyy"
+            "yyyy-MM-dd", "dd/MM/yyyy", "yyyy/M/d", "d/M/yyyy", "M/d/yyyy",
+            "M/d/yy", "d/M/yy", "yy-M-d"
         };
         for (String pattern : patterns) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, java.util.Locale.US);
                 if (pattern.length() <= 10) {
                     return LocalDate.parse(value, formatter).atStartOfDay();
                 }
@@ -609,6 +645,22 @@ public class PurchaseOrderService {
             } catch (DateTimeParseException ignored) {}
         }
         return null;
+    }
+
+    private LocalDate parseExcelSerialDate(String value) {
+        if (value == null || value.isBlank()) return null;
+        try {
+            long serial = Long.parseLong(value.replace(",", "").trim());
+            if (serial < 1 || serial > 200000) return null;
+            // Excel epoch: Jan 1, 1900 = serial 1 (with leap year bug for 1900)
+            if (serial > 60) {
+                return LocalDate.of(1900, 1, 1).plusDays(serial - 2);
+            } else {
+                return LocalDate.of(1900, 1, 1).plusDays(serial - 1);
+            }
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public void deletePurchaseOrder(Long id) {
