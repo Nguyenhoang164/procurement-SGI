@@ -474,10 +474,14 @@ public class PurchaseOrderService {
 
                     PurchaseOrderItemDTO item = new PurchaseOrderItemDTO();
                     String productName = colProductName >= 0 ? getCellStringValue(row.getCell(colProductName)) : "";
-                    item.setProductName(productName.isEmpty() ? "N/A" : productName);
-                    String searchName = productName.contains(" - ") ? productName.substring(0, productName.indexOf(" - ")).trim() : productName;
-                    String itemPosCode = lookupProductPosCode(searchName);
-                    item.setPosCode(itemPosCode != null ? itemPosCode : "N/A");
+                    if (productName.isEmpty()) {
+                        item.setProductName("N/A");
+                        item.setPosCode("N/A");
+                    } else {
+                        item.setProductName(productName);
+                        String searchName = productName.contains(" - ") ? productName.substring(0, productName.indexOf(" - ")).trim() : productName;
+                        item.setPosCode(resolveProductPosCode(searchName, colProductShortCode >= 0 ? getCellStringValue(row.getCell(colProductShortCode)) : null));
+                    }
 
                     String specVal = colSpec >= 0 ? getCellStringValue(row.getCell(colSpec)) : "";
                     item.setSpec(specVal.isEmpty() ? "pcs" : specVal);
@@ -526,15 +530,49 @@ public class PurchaseOrderService {
         return result;
     }
 
-    private String lookupProductPosCode(String name) {
+    private String resolveProductPosCode(String name, String shortCode) {
         if (name == null || name.isEmpty()) return null;
         try {
             Optional<Product> exact = productRepository.findByProductName(name);
             if (exact.isPresent()) return exact.get().getPosCode();
             List<Product> matches = productRepository.findByProductNameContainingIgnoreCase(name);
             if (!matches.isEmpty()) return matches.get(0).getPosCode();
+            return createImportProduct(name, shortCode);
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private String createImportProduct(String productName, String shortCode) {
+        Product product = new Product();
+        product.setProductName(productName);
+        product.setPosCode(generateImportPosCode(productName));
+        product.setVietnameseName(productName);
+        product.setStatus("ACTIVE");
+        product.setLotCount(0);
+        product.setTotalQty(0);
+        product.setLatestUnitCostVnd(BigDecimal.ZERO);
+        product.setWeightedAvgCostVnd(BigDecimal.ZERO);
+        productRepository.save(product);
+        return product.getPosCode();
+    }
+
+    private String generateImportPosCode(String productName) {
+        String prefix = "IMP-" + getNamePrefix(productName) + "-";
+        long count = productRepository.countByPosCodeStartingWith(prefix);
+        return prefix + String.format("%04d", count + 1);
+    }
+
+    private String getNamePrefix(String productName) {
+        if (productName == null || productName.trim().isEmpty()) return "XXXX";
+        String[] parts = productName.trim().split("[^\\p{L}\\p{N}]+");
+        StringBuilder prefix = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            prefix.append(Character.toUpperCase(part.charAt(0)));
+            if (prefix.length() >= 4) break;
+        }
+        while (prefix.length() < 4) prefix.append('X');
+        return prefix.toString();
     }
 
     private LocalDate getCellDate(Cell cell) {
