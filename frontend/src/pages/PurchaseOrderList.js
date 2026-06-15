@@ -149,6 +149,10 @@ function PurchaseOrderList() {
     XLSX.writeFile(wb, `don-hang-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
+  const totalPages = Math.ceil(orders.length / pageSize);
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageOrders = orders.slice(startIdx, startIdx + pageSize);
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
@@ -187,11 +191,7 @@ function PurchaseOrderList() {
         ) : orders.length === 0 ? (
           <div className="empty-state">Chưa có đơn hàng nào.</div>
         ) : (
-          (() => {
-            const totalPages = Math.ceil(orders.length / pageSize);
-            const startIdx = (currentPage - 1) * pageSize;
-            const pageOrders = orders.slice(startIdx, startIdx + pageSize);
-            return pageOrders.map((order) => (
+          pageOrders.map((order) => (
             <div key={order.id} className="table-card" style={{ marginBottom: 20 }}>
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -351,14 +351,12 @@ function PurchaseOrderList() {
               )}
             </div>
           ))
-            )();
-          }
         )}
-        {orders.length > pageSize && (
+        {totalPages > 1 && (
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '16px 0' }}>
             <button className="btn btn-sm btn-secondary" disabled={currentPage === 1}
               onClick={() => setCurrentPage(p => p - 1)}>‹ Trước</button>
-            {Array.from({ length: Math.ceil(orders.length / pageSize) }, (_, i) => i + 1).map(p => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
               <button key={p}
                 style={{
                   minWidth: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4,
@@ -368,7 +366,7 @@ function PurchaseOrderList() {
                 }}
                 onClick={() => setCurrentPage(p)}>{p}</button>
             ))}
-            <button className="btn btn-sm btn-secondary" disabled={currentPage === Math.ceil(orders.length / pageSize)}
+            <button className="btn btn-sm btn-secondary" disabled={currentPage === totalPages}
               onClick={() => setCurrentPage(p => p + 1)}>Sau ›</button>
           </div>
         )}
