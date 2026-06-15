@@ -136,6 +136,7 @@ function PurchaseOrderList() {
       return items.map((item, idx) => ({
         'Mã PO': order.poCode || 'PO-' + order.id,
         'Trạng thái': statusLabels[order.status] || order.status,
+        'Phòng ban': order.initiatorDepartment || '',
         'Nhà cung cấp': order.supplierName || '',
         'Tên sản phẩm': getName(item),
         'Mã POS': item.posCode || '',
@@ -232,6 +233,9 @@ function PurchaseOrderList() {
                   <span style={{ color: '#94a3b8', fontSize: 12 }}>
                     {order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : ''}
                   </span>
+                  {order.initiatorDepartment && (
+                    <span style={{ color: '#059669', fontSize: 13, fontWeight: 600 }}>{order.initiatorDepartment}</span>
+                  )}
                   {order.supplierName && (
                     <span style={{ color: '#64748b', fontSize: 13 }}>{order.supplierName}</span>
                   )}
