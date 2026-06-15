@@ -344,10 +344,10 @@ public class PurchaseOrderService {
                     order.setItems(new ArrayList<>());
 
                     String requester = colRequester >= 0 ? getCellStringValue(row.getCell(colRequester)) : "";
-                    order.setCreatedBy(requester.isEmpty() ? "unkown" : requester);
+                    order.setCreatedBy(requester.isEmpty() ? null : requester);
 
                     String dept = colDepartment >= 0 ? getCellStringValue(row.getCell(colDepartment)) : "";
-                    order.setInitiatorDepartment(dept.isEmpty() ? "unkown" : dept);
+                    order.setInitiatorDepartment(dept.isEmpty() ? null : dept);
 
                     if (colOrderDate >= 0) {
                         Cell cell = row.getCell(colOrderDate);

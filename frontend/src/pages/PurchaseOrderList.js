@@ -234,7 +234,7 @@ function PurchaseOrderList() {
                     {order.createdAt ? new Date(order.createdAt).toLocaleDateString('vi-VN') : ''}
                   </span>
                   {order.initiatorDepartment && (
-                    <span style={{ color: '#059669', fontSize: 13, fontWeight: 600 }}>{order.initiatorDepartment}</span>
+                    <span style={{ color: '#059669', fontSize: 13, fontWeight: 600 }}>Phòng ban: {order.initiatorDepartment}</span>
                   )}
                   {order.supplierName && (
                     <span style={{ color: '#64748b', fontSize: 13 }}>{order.supplierName}</span>
