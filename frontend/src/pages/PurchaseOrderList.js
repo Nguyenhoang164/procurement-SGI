@@ -292,7 +292,7 @@ function PurchaseOrderList() {
                             <td style={{ textAlign: 'right' }}>
                               {item.posCode && costMap[item.posCode]?.latestUnitCostVnd ? (
                                 <span style={{ fontSize: 12 }}>
-                                  {Number(costMap[item.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} ₫
+                                  {Number(costMap[item.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} {costMap[item.posCode].latestCurrency || '₫'}
                                   {costMap[item.posCode].latestOrderCode && (
                                     <><br/><span style={{ color: '#64748b', fontSize: 11 }}>
                                       {costMap[item.posCode].latestOrderCode}

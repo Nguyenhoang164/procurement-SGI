@@ -1,0 +1,1 @@
+ALTER TABLE products ADD COLUMN latest_currency VARCHAR(10) DEFAULT NULL;

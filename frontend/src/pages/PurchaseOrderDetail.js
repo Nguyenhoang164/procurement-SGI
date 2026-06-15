@@ -411,7 +411,7 @@ function PurchaseOrderDetail() {
                         <td style={{ fontSize: 13, color: '#475569', maxWidth: 120 }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                         <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency}</td>
                         <td className="money">{Number(item.totalAmountForeign || 0).toLocaleString()} {item.currency}</td>
-                        <td className="money">{Number(item.totalAmountVnd || 0).toLocaleString()} ₫</td>
+                        <td className="money">{Number(item.totalAmountVnd || 0).toLocaleString()} {item.currency === 'VND' ? '₫' : item.currency}</td>
                         <td className="money">
                           {item.posCode && costMap[item.posCode]?.weightedAvgCostVnd
                             ? Number(costMap[item.posCode].weightedAvgCostVnd).toLocaleString('vi-VN')
@@ -420,7 +420,7 @@ function PurchaseOrderDetail() {
                         <td className="money">
                           {item.posCode && costMap[item.posCode]?.latestUnitCostVnd ? (
                             <span style={{ fontSize: 12 }}>
-                              {Number(costMap[item.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} ₫
+                              {Number(costMap[item.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} {costMap[item.posCode].latestCurrency || '₫'}
                               {costMap[item.posCode].latestOrderCode && (
                                 <><br/><span style={{ color: '#64748b', fontSize: 11 }}>
                                   {costMap[item.posCode].latestOrderCode}

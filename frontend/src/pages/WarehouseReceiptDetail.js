@@ -227,7 +227,7 @@ function WarehouseReceiptDetail() {
                         <td style={{ fontSize: 11 }}>
                           {p.posCode && costMap[p.posCode]?.latestUnitCostVnd ? (
                             <span>
-                              <strong>{Number(costMap[p.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} ₫</strong>
+                              <strong>{Number(costMap[p.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} {costMap[p.posCode].latestCurrency || '₫'}</strong>
                               {costMap[p.posCode].latestOrderCode && (
                                 <><br/><span style={{ color: '#64748b' }}>{costMap[p.posCode].latestOrderCode}</span></>
                               )}

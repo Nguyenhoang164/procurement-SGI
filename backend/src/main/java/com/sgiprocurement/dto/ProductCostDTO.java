@@ -20,5 +20,6 @@ public class ProductCostDTO {
     private BigDecimal costDifferenceVnd;
     private String latestOrderCode;
     private LocalDateTime latestCostDate;
+    private String latestCurrency;
 
 }

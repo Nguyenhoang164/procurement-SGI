@@ -136,6 +136,7 @@ public class ProductCostService {
         product.setWeightedAvgCostVnd(newAvg);
         product.setLatestOrderCode(poCode);
         product.setLatestCostDate(updatedAt != null ? updatedAt : java.time.LocalDateTime.now());
+        product.setLatestCurrency(item.getCurrency());
         productRepository.save(product);
 
         checkAndCreateCostAlert(product, oldAvg, lotUnitCost);
@@ -197,6 +198,7 @@ public class ProductCostService {
         dto.setCostDifferenceVnd(diff);
         dto.setLatestOrderCode(product.getLatestOrderCode());
         dto.setLatestCostDate(product.getLatestCostDate());
+        dto.setLatestCurrency(product.getLatestCurrency());
         return dto;
     }
 
@@ -227,6 +229,7 @@ public class ProductCostService {
         product.setWeightedAvgCostVnd(BigDecimal.ZERO);
         product.setLatestOrderCode(null);
         product.setLatestCostDate(null);
+        product.setLatestCurrency(null);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
     }

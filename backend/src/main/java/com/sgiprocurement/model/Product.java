@@ -63,6 +63,9 @@ public class Product {
     @Column(name = "latest_cost_date")
     private LocalDateTime latestCostDate;
 
+    @Column(name = "latest_currency", length = 10)
+    private String latestCurrency;
+
     @Column(name = "source_link", length = 500)
     private String sourceLink;
 

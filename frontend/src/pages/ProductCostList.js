@@ -29,7 +29,7 @@ function ProductCostList() {
 
   const handleExport = () => {
     if (items.length === 0) return;
-    const header = ['Mã POS', 'Tên SP', 'Số lô', 'Tổng SL', 'GV lô gần nhất', 'GV BQ gia quyền', 'Chênh lệch'];
+    const header = ['Mã POS', 'Tên SP', 'Số lô', 'Tổng SL', 'GV lô gần nhất', 'GV BQ gia quyền', 'Chênh lệch', 'Tiền tệ'];
     const rows = items.map((row) => [
       row.posCode,
       row.productName,
@@ -37,7 +37,8 @@ function ProductCostList() {
       row.totalQty,
       row.latestUnitCostVnd,
       row.weightedAvgCostVnd,
-      row.costDifferenceVnd
+      row.costDifferenceVnd,
+      row.latestCurrency || 'VND'
     ]);
     const csv = [header, ...rows].map((line) => line.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -98,6 +99,7 @@ function ProductCostList() {
                     <th>GV lô gần nhất</th>
                     <th>GV BQ gia quyền</th>
                     <th>Chênh lệch</th>
+                    <th>Tiền tệ</th>
                     {canDelete && <th style={{width:60}}></th>}
                   </tr>
                 </thead>
@@ -111,12 +113,13 @@ function ProductCostList() {
                         <td>{row.productName}</td>
                         <td>{row.lotCount}</td>
                         <td>{row.totalQty?.toLocaleString('vi-VN')}</td>
-                        <td className="money">{formatMoney(row.latestUnitCostVnd)}</td>
-                        <td className="money">{formatMoney(row.weightedAvgCostVnd)}</td>
+                        <td className="money">{formatMoney(row.latestUnitCostVnd, row.latestCurrency)}</td>
+                        <td className="money">{formatMoney(row.weightedAvgCostVnd, row.latestCurrency)}</td>
                         <td className={`money ${diffClass}`}>
                           {diff > 0 ? '+' : ''}
-                          {formatMoney(diff)}
+                          {formatMoney(diff, row.latestCurrency)}
                         </td>
+                        <td>{row.latestCurrency || 'VND'}</td>
                         {canDelete && (
                           <td>
                             <button className="btn btn-sm btn-delete" onClick={() => handleDelete(row.posCode)}>Xóa</button>
@@ -135,10 +138,25 @@ function ProductCostList() {
   );
 }
 
-function formatMoney(value) {
+function getCurrencySymbol(currency) {
+  const map = {
+    VND: '₫',
+    USD: '$',
+    CNY: '¥',
+    EUR: '€',
+    GBP: '£',
+    JPY: '¥',
+    KRW: '₩',
+    PHP: '₱',
+  };
+  return map[currency] || '₫';
+}
+
+function formatMoney(value, currency) {
   const num = Number(value);
   if (!Number.isFinite(num)) return '—';
-  return `${num.toLocaleString('vi-VN')}₫`;
+  const symbol = getCurrencySymbol(currency);
+  return `${num.toLocaleString('vi-VN')}${symbol}`;
 }
 
 export default ProductCostList;
