@@ -7,11 +7,14 @@ function ProductCostList() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const userData = getUser();
   const canDelete = canDeleteProductCost(userData);
 
   const loadCosts = useCallback(async () => {
     setLoading(true);
+    setCurrentPage(1);
     try {
       const data = await productCostAPI.getAll();
       setItems(data);
@@ -71,6 +74,10 @@ function ProductCostList() {
     }
   };
 
+  const totalPages = Math.ceil(items.length / pageSize);
+  const startIdx = (currentPage - 1) * pageSize;
+  const pageItems = items.slice(startIdx, startIdx + pageSize);
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
@@ -120,7 +127,7 @@ function ProductCostList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((row) => {
+                  {pageItems.map((row) => {
                     const diff = Number(row.costDifferenceVnd ?? 0);
                     const diffClass = diff > 0 ? 'cost-diff-up' : diff < 0 ? 'cost-diff-down' : '';
                     return (
@@ -147,6 +154,24 @@ function ProductCostList() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+                <button className="btn btn-sm btn-secondary" disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => p - 1)}>‹ Trước</button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <button key={p}
+                    style={{
+                      minWidth: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4,
+                      background: p === currentPage ? '#2563eb' : '#fff',
+                      color: p === currentPage ? '#fff' : '#374151',
+                      fontWeight: p === currentPage ? 700 : 400, cursor: 'pointer'
+                    }}
+                    onClick={() => setCurrentPage(p)}>{p}</button>
+                ))}
+                <button className="btn btn-sm btn-secondary" disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => p + 1)}>Sau ›</button>
+              </div>
+            )}
           </div>
         )}
       </div>
