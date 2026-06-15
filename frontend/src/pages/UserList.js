@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Form.css';
+import Pagination from '../components/Pagination';
 import { userAPI } from '../services/userApi';
 
 const ROLE_LABELS = {
@@ -162,22 +163,14 @@ function UserList() {
               </tbody>
             </table>
 
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 20, alignItems: 'center' }}>
-                <button className="btn btn-sm btn-outline" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>
-                  Trước
-                </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button key={p} className={`btn btn-sm ${p === safePage ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setPage(p)}>
-                    {p}
-                  </button>
-                ))}
-                <button className="btn btn-sm btn-outline" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>
-                  Sau
-                </button>
-              </div>
-            )}
+            <Pagination
+              currentPage={safePage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={(p) => setPage(p)}
+              label="người dùng"
+            />
           </>
         )}
       </div>

@@ -2,6 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { productAPI } from '../services/api';
 import * as XLSX from 'xlsx';
+import Pagination from '../components/Pagination';
 import '../styles/ProductList.css';
 
 function ProductList() {
@@ -367,34 +368,14 @@ function ProductList() {
                 )}
               </tbody>
             </table>
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderTop: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: 13, color: '#64748b' }}>
-                  {filteredProducts.length} sản phẩm
-                </span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button disabled={currentPage <= 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: currentPage <= 1 ? 'default' : 'pointer', opacity: currentPage <= 1 ? 0.5 : 1 }}>
-                    ‹
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button key={page} onClick={() => setCurrentPage(page)}
-                      style={{
-                        padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: 6,
-                        background: page === currentPage ? '#2563eb' : '#fff',
-                        color: page === currentPage ? '#fff' : '#1e293b',
-                        fontWeight: page === currentPage ? 600 : 400, cursor: 'pointer'
-                      }}>
-                      {page}
-                    </button>
-                  ))}
-                  <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: 6, background: '#fff', cursor: currentPage >= totalPages ? 'default' : 'pointer', opacity: currentPage >= totalPages ? 0.5 : 1 }}>
-                    ›
-                  </button>
-                </div>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filteredProducts.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              label="sản phẩm"
+            />
           </div>
         )}
       </div>

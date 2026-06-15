@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import '../styles/List.css';
 import { productCostAPI } from '../services/api';
+import Pagination from '../components/Pagination';
+import { formatMoney } from '../utils/paymentUtils';
 import { getUser, canDeleteProductCost } from '../utils/permissions';
 
 function ProductCostList() {
@@ -154,50 +156,19 @@ function ProductCostList() {
                 </tbody>
               </table>
             </div>
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '16px 0' }}>
-                <button className="btn btn-sm btn-secondary" disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(p => p - 1)}>‹ Trước</button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                  <button key={p}
-                    style={{
-                      minWidth: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4,
-                      background: p === currentPage ? '#2563eb' : '#fff',
-                      color: p === currentPage ? '#fff' : '#374151',
-                      fontWeight: p === currentPage ? 700 : 400, cursor: 'pointer'
-                    }}
-                    onClick={() => setCurrentPage(p)}>{p}</button>
-                ))}
-                <button className="btn btn-sm btn-secondary" disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(p => p + 1)}>Sau ›</button>
-              </div>
-            )}
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={items.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              label="chi phí"
+            />
           </div>
         )}
       </div>
     </div>
   );
-}
-
-function getCurrencySymbol(currency) {
-  const map = {
-    VND: '₫',
-    USD: '$',
-    CNY: '¥',
-    EUR: '€',
-    GBP: '£',
-    JPY: '¥',
-    KRW: '₩',
-    PHP: '₱',
-  };
-  return map[currency] || '₫';
-}
-
-function formatMoney(value, currency) {
-  const num = Number(value);
-  if (!Number.isFinite(num)) return '—';
-  const symbol = getCurrencySymbol(currency);
-  return `${num.toLocaleString('vi-VN')}${symbol}`;
 }
 
 export default ProductCostList;

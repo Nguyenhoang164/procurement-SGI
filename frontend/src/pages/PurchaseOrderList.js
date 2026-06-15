@@ -4,6 +4,7 @@ import '../styles/List.css';
 import '../styles/ProductList.css';
 import { purchaseOrderAPI, productAPI, productCostAPI } from '../services/api';
 import * as XLSX from 'xlsx';
+import Pagination from '../components/Pagination';
 import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
 
 const statusLabels = {
@@ -407,24 +408,14 @@ function PurchaseOrderList() {
             </div>
           ))
         )}
-        {totalPages > 1 && (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '16px 0' }}>
-            <button className="btn btn-sm btn-secondary" disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => p - 1)}>‹ Trước</button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <button key={p}
-                style={{
-                  minWidth: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4,
-                  background: p === currentPage ? '#2563eb' : '#fff',
-                  color: p === currentPage ? '#fff' : '#374151',
-                  fontWeight: p === currentPage ? 700 : 400, cursor: 'pointer'
-                }}
-                onClick={() => setCurrentPage(p)}>{p}</button>
-            ))}
-            <button className="btn btn-sm btn-secondary" disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(p => p + 1)}>Sau ›</button>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={orders.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          label="đơn hàng"
+        />
       </div>
     </div>
   );
