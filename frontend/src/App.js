@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Navigate, Route, Routes } from 'react-router-d
 import './styles/App.css';
 import AppLayout from './components/AppLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ToastProvider } from './components/Toast';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -119,13 +120,9 @@ function App() {
           Tài khoản đã bị vô hiệu hóa. Đăng xuất sau {deactivateCountdown} giây...
         </div>
       )}
-      {roleChanged && (
-        <div className="role-changed-banner">
-          Vai trò của bạn đã được cập nhật.
-        </div>
-      )}
       <Router>
-        <Routes>
+        <ToastProvider>
+          <Routes>
           <Route
             path="/login"
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />}
@@ -197,6 +194,7 @@ function App() {
             element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
           />
         </Routes>
+        </ToastProvider>
       </Router>
     </>
   );

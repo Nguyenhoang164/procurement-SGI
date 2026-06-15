@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import '../styles/Form.css';
 import { warehouseAPI } from '../services/api';
+import { useToast } from '../components/Toast';
 import { canCrudWarehouseReceipt, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
@@ -25,6 +26,7 @@ function WarehouseList() {
   const [receiveTarget, setReceiveTarget] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [form, setForm] = useState({
     receivedQty: '',
@@ -61,7 +63,7 @@ function WarehouseList() {
       setPending(data);
       setError('');
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -116,17 +118,17 @@ function WarehouseList() {
       for (const item of form.itemForms) {
         const qty = Number(item.receivedQty);
         if (!Number.isFinite(qty) || qty < 0) {
-          setError('Số lượng nhận của sản phẩm "' + (item.productName || '') + '" không hợp lệ.'); return;
+          toast.error('Số lượng nhận của sản phẩm "' + (item.productName || '') + '" không hợp lệ.'); return;
         }
       }
     } else {
       const receivedQty = Number(form.receivedQty);
       if (!Number.isFinite(receivedQty) || receivedQty <= 0) {
-        setError('Số lượng nhận phải lớn hơn 0.'); return;
+        toast.error('Số lượng nhận phải lớn hơn 0.'); return;
       }
       const maxQty = receiveTarget.remainingQty ?? receiveTarget.orderedQty;
       if (receivedQty > maxQty) {
-        setError('Số lượng nhận không được vượt quá số lượng còn lại (' + maxQty + ').'); return;
+        toast.error('Số lượng nhận không được vượt quá số lượng còn lại (' + maxQty + ').'); return;
       }
     }
 
@@ -191,7 +193,7 @@ function WarehouseList() {
         await loadPending();
       }
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -493,7 +495,7 @@ function WarehouseList() {
                                         const selected = Array.from(e.target.files).slice(0, 3);
                                         const totalSize = selected.reduce((s, f) => s + f.size, 0);
                                         if (totalSize > MAX_FILE_SIZE) {
-                                          alert('Tổng dung lượng ảnh vượt quá 20MB.');
+                                        toast.error('Tổng dung lượng ảnh vượt quá 20MB.');
                                           return;
                                         }
                                         setVariantFiles(prev => ({ ...prev, [key]: selected }));
@@ -597,7 +599,7 @@ function WarehouseList() {
               {(!form.itemForms || form.itemForms.length === 0) && (
                 <div className="form-row">
                   <div className="form-group">
-                    <label>SL thực tế nhập kho *</label>
+                    <label>SL thực tế nhập kho <span className="required">*</span></label>
                     <input type="number" min="1" max={receiveTarget.remainingQty ?? receiveTarget.orderedQty} value={form.receivedQty}
                       onChange={(e) => setForm(f => ({ ...f, receivedQty: e.target.value.replace(/[^0-9.,-]/g, '') }))}
                       onBeforeInput={handleNumberBeforeInput} onPaste={handleNumberPaste} required />
@@ -640,7 +642,7 @@ function WarehouseList() {
                   const files = Array.from(e.target.files).slice(0, 3);
                   const totalSize = files.reduce((s, f) => s + f.size, 0);
                   if (totalSize > MAX_FILE_SIZE) {
-                    alert('Tổng dung lượng ảnh vượt quá 20MB. Vui lòng chọn ảnh nhỏ hơn.');
+                    toast.error('Tổng dung lượng ảnh vượt quá 20MB. Vui lòng chọn ảnh nhỏ hơn.');
                     return;
                   }
                   setReceiveFiles(files);

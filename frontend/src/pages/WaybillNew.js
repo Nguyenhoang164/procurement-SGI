@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { waybillAPI, purchaseOrderAPI, paymentRequestAPI } from '../services/api';
 import { formatDnttCode } from '../utils/paymentUtils';
+import { useToast } from '../components/Toast';
 import PosCodeSelector from '../components/PosCodeSelector';
 
 const parseVariants = (spec) => {
@@ -30,6 +31,7 @@ function WaybillNew() {
   const isEdit = Boolean(id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const toast = useToast();
   const [paymentRequests, setPaymentRequests] = useState([]);
   const [products, setProducts] = useState([]);
   const [linkedWaybills, setLinkedWaybills] = useState([]);
@@ -109,7 +111,7 @@ function WaybillNew() {
             if (Array.isArray(parsed)) setProducts(parsed);
           } catch {}
         }
-      } catch (err) { setError(err.message); }
+      } catch (err) { toast.error(err.message); }
       finally { setLoading(false); }
     };
     load();
@@ -121,9 +123,9 @@ function WaybillNew() {
   };
 
   const addOrUpdateProduct = () => {
-    if (!productForm.productName) { setError('Thiếu tên sản phẩm.'); return; }
+    if (!productForm.productName) { toast.error('Thiếu tên sản phẩm.'); return; }
     const totalQty = calcTotalQty(formVariants);
-    if (totalQty <= 0) { setError('Thiếu số lượng cho biến thể.'); return; }
+    if (totalQty <= 0) { toast.error('Thiếu số lượng cho biến thể.'); return; }
     setError('');
     const productPayload = {
       ...productForm,
@@ -179,7 +181,7 @@ function WaybillNew() {
         const created = await waybillAPI.create(payload);
         navigate(`/waybills/${created.id}`);
       }
-    } catch (err) { setError(err.message); }
+    } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   };
 
@@ -206,8 +208,8 @@ function WaybillNew() {
               )}
             </div>
             <div className="form-group">
-              <label>Đơn vị vận chuyển</label>
-              <input name="carrier" value={form.carrier} onChange={handleChange} placeholder="VD: DHL, FedEx" />
+              <label>Đơn vị vận chuyển <span className="required">*</span></label>
+              <input name="carrier" value={form.carrier} onChange={handleChange} placeholder="VD: DHL, FedEx" required />
             </div>
           </div>
 
@@ -271,8 +273,8 @@ function WaybillNew() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>SL dự kiến</label>
-              <input type="number" name="expectedQty" value={form.expectedQty} onChange={handleChange} placeholder="0" />
+              <label>SL dự kiến <span className="required">*</span></label>
+              <input type="number" name="expectedQty" value={form.expectedQty} onChange={handleChange} placeholder="0" required />
             </div>
             <div className="form-group">
               <label>SL thực tế</label>

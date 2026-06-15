@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { paymentRequestAPI, productAPI, purchaseOrderAPI, bankAccountAPI, resolveFileUrl } from '../services/api';
+import { useToast } from '../components/Toast';
 import {
   PAYMENT_TYPES, PAPER_TYPES, canCreatePayment,
   getAttachmentFileName, getPaymentStatusBadgeClass, getPaymentStatusLabel, getPaymentTypeLabel, isPaymentEligibleOrder, parseAttachmentUrls,
@@ -18,8 +19,8 @@ function PaymentRequestNew() {
   const [selectedOrders, setSelectedOrders] = useState([]);
   const [poIdToAdd, setPoIdToAdd] = useState(searchParams.get('poId') || '');
   const [loading, setLoading] = useState(false);
-  const [loadingOrders, setLoadingOrders] = useState(true);
   const [error, setError] = useState('');
+  const toast = useToast();
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [existingAttachments, setExistingAttachments] = useState([]);
   const [productMap, setProductMap] = useState({});
@@ -63,39 +64,7 @@ function PaymentRequestNew() {
       setOrders(data);
       setError('');
     } catch (err) {
-      setError(err.message);
-    } finally { setLoadingOrders(false); }
-  }, []);
-
-  const loadPayment = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      const data = await paymentRequestAPI.getById(id);
-      const type = data.type === 'GOODS' || data.type === 'INTL_SHIPPING' || data.type === 'DEPOSIT' || data.type === 'BALANCE' || data.type === 'FULL_PAYMENT' ? 'MUA_HANG' : (data.type || 'MUA_HANG');
-      setFormData({
-        type, amountVnd: data.amountVnd ?? '',
-        currency: data.currency || 'VND', note: data.note || '',
-        exchangeRateDiffVnd: data.exchangeRateDiffVnd ?? '0',
-        additionalShippingVnd: data.additionalShippingVnd ?? '0'
-      });
-      setExistingAttachments(parseAttachmentUrls(data.attachments));
-      if (data.customFees) setCustomFees(data.customFees);
-      if (data.sourceDnttIds) {
-        try {
-          const ids = JSON.parse(data.sourceDnttIds);
-          setSelectedSourceDntts(ids);
-        } catch {}
-      }
-      if (data.shipmentItems) {
-        try {
-          const items = JSON.parse(data.shipmentItems);
-          setShipmentItems(items);
-        } catch {}
-      }
-      setError('');
-    } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally { setLoading(false); }
   }, [id]);
 
@@ -226,7 +195,7 @@ function PaymentRequestNew() {
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 8) {
-      alert('Chỉ được chọn tối đa 8 file trong một lần.');
+      toast.error('Chỉ được chọn tối đa 8 file trong một lần.');
       event.target.value = '';
       return;
     }
@@ -271,7 +240,7 @@ function PaymentRequestNew() {
         setQuickViewDnttOrders([]);
       }
     } catch (err) {
-      alert('Lỗi tải thông tin DNTT: ' + err.message);
+      toast.error('Lỗi tải thông tin DNTT: ' + err.message);
     } finally {
       setQuickViewDnttLoading(false);
     }
@@ -396,15 +365,15 @@ function PaymentRequestNew() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!maySubmit) { setError('Tài khoản của bạn không có quyền lập đề nghị thanh toán.'); return; }
+    if (!maySubmit) { toast.error('Tài khoản của bạn không có quyền lập đề nghị thanh toán.'); return; }
     if (formData.type === 'MUA_HANG') {
-      if (selectedOrders.length === 0) { setError('Vui lòng chọn ít nhất một đơn hàng.'); return; }
+      if (selectedOrders.length === 0) { toast.error('Vui lòng chọn ít nhất một đơn hàng.'); return; }
     }
     const amount = formData.type === 'VAN_CHUYEN'
       ? shipmentItems.reduce((s, item) => s + item.total, 0)
       : Number(formData.amountVnd);
-    if (!Number.isFinite(amount) || amount <= 0) { setError('Số tiền phải lớn hơn 0.'); return; }
-    if (!formData.reason?.trim()) { setError('Vui lòng nhập lý do thanh toán.'); return; }
+    if (!Number.isFinite(amount) || amount <= 0) { toast.error('Số tiền phải lớn hơn 0.'); return; }
+    if (!formData.reason?.trim()) { toast.error('Vui lòng nhập lý do thanh toán.'); return; }
 
     setLoading(true); setError('');
     const poIds = formData.type === 'VAN_CHUYEN'
@@ -459,7 +428,7 @@ function PaymentRequestNew() {
       if (selectedFiles.length > 0) await paymentRequestAPI.uploadAttachments(paymentId, selectedFiles);
       navigate(`/payments/${paymentId}`);
     } catch (err) {
-      setError(err.message);
+      toast.error(err.message);
     } finally { setLoading(false); }
   };
 
@@ -488,7 +457,7 @@ function PaymentRequestNew() {
 
         <form id="paymentForm" className="app-form" onSubmit={handleSubmit}>
           <fieldset>
-            <legend>Loại thanh toán</legend>
+            <legend>Loại thanh toán <span className="required">*</span></legend>
             <div className="form-group">
               <select name="type" value={formData.type} onChange={(e) => {
                 setFormData(prev => ({ ...prev, type: e.target.value }));
@@ -567,7 +536,7 @@ function PaymentRequestNew() {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="amountVnd">Số tiền (VNĐ) *</label>
+                  <label htmlFor="amountVnd">Số tiền (VNĐ) <span className="required">*</span></label>
                   <input id="amountVnd" name="amountVnd" type="number" min="1" step="1" value={formData.amountVnd}
                     onChange={handleChange} onBeforeInput={handleNumberBeforeInput} onPaste={handleNumberPaste} required />
                 </div>
@@ -735,7 +704,7 @@ function PaymentRequestNew() {
               </div>
             </div>
             <div className="form-group">
-              <label>Lý do thanh toán</label>
+              <label>Lý do thanh toán <span className="required">*</span></label>
               <textarea name="reason" rows={2} value={formData.reason}
                 onChange={handleChange} placeholder="Nhập lý do / nội dung thanh toán" />
             </div>
@@ -803,7 +772,7 @@ function PaymentRequestNew() {
                 <button type="button" className="btn btn-sm btn-primary" onClick={async () => {
                   if (!newBankNameInput.trim()) return;
                   try { await bankAccountAPI.addBankName({ bankName: newBankNameInput.trim() }); setBankNames(prev => [...prev, newBankNameInput.trim()]); setNewBankNameInput(''); setShowAddBankName(false); }
-                  catch (e) { alert(e.message); }
+                  catch (e) { toast.error(e.message); }
                 }}>Lưu</button>
                 <button type="button" className="btn btn-sm btn-secondary" onClick={() => setShowAddBankName(false)}>Hủy</button>
               </div>
