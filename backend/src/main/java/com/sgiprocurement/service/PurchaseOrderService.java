@@ -335,11 +335,17 @@ public class PurchaseOrderService {
             List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
             int seq = 0;
+            int emptyRowCounter = 0;
 
             int dataStartRow = headerRow.getRowNum() + 1;
             for (int i = dataStartRow; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
-                if (row == null) continue;
+                if (row == null || isRowEmpty(row)) {
+                    emptyRowCounter++;
+                    if (emptyRowCounter >= 3) break;
+                    continue;
+                }
+                emptyRowCounter = 0;
                 rowCount++;
 
                 try {
@@ -619,6 +625,20 @@ public class PurchaseOrderService {
             if (cell == null) continue;
             String val = getCellStringValue(cell);
             if (!val.isEmpty() && !val.matches("\\d+[\\.]?\\d*")) return false;
+        }
+        return true;
+    }
+
+    private boolean isRowEmpty(Row row) {
+        if (row == null) return true;
+        int lastCell = row.getLastCellNum();
+        if (lastCell < 0) return true;
+        for (int i = 0; i < lastCell; i++) {
+            Cell cell = row.getCell(i);
+            if (cell != null) {
+                String val = getCellStringValue(cell);
+                if (!val.isEmpty()) return false;
+            }
         }
         return true;
     }
