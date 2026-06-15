@@ -334,7 +334,16 @@ public class PurchaseOrderService {
 
             List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
-            int seq = 0;
+            String todayPrefix = "IMP-" + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd")) + "-";
+            int seq = purchaseOrderRepository.findMaxPoCodeByPrefix(todayPrefix + "%")
+                .map(maxCode -> {
+                    try {
+                        return Integer.parseInt(maxCode.substring(todayPrefix.length()));
+                    } catch (Exception e) {
+                        return 0;
+                    }
+                })
+                .orElse(0);
             int emptyRowCounter = 0;
 
             int dataStartRow = headerRow.getRowNum() + 1;
