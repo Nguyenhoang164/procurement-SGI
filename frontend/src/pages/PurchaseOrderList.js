@@ -65,6 +65,17 @@ function PurchaseOrderList() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Xóa TẤT CẢ đơn hàng? Hành động này không thể hoàn tác!')) return;
+    try {
+      await purchaseOrderAPI.deleteAll();
+      setOrders([]);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const handleSearch = async () => {
     setCurrentPage(1);
     if (!searchKeyword.trim()) { fetchOrders(); return; }
@@ -171,6 +182,9 @@ function PurchaseOrderList() {
             </>
           )}
           <button className="btn btn-secondary" onClick={handleExportExcel}>Xuất Excel</button>
+          {isAdminUser && (
+            <button className="btn btn-danger" onClick={handleDeleteAll} style={{ marginLeft: 8 }}>Xóa tất cả</button>
+          )}
         </div>
       </div>
 

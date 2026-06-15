@@ -707,6 +707,10 @@ public class PurchaseOrderService {
         purchaseOrderRepository.delete(po);
     }
 
+    public void deleteAllPurchaseOrders() {
+        purchaseOrderRepository.deleteAll();
+    }
+
     private void calculateItemAmounts(PurchaseOrderItem item) {
         if (item.getUnitPrice() != null && item.getOrderedQty() != null) {
             java.math.BigDecimal qty = new java.math.BigDecimal(item.getOrderedQty());

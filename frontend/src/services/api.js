@@ -106,6 +106,10 @@ export const purchaseOrderAPI = {
     const response = await fetch(`${API_BASE_URL}/purchase-orders/${id}`, { method: 'DELETE', headers: getHeaders() });
     if (!response.ok) throw new Error('Xóa đơn hàng thất bại');
   },
+  deleteAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/purchase-orders`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa tất cả đơn hàng thất bại');
+  },
   importExcel: async (file) => {
     const token = localStorage.getItem('token');
     const formData = new FormData();
@@ -273,6 +277,10 @@ export const productCostAPI = {
   delete: async (posCode) => {
     const response = await fetch(`${API_BASE_URL}/product-costs/${encodeURIComponent(posCode)}`, { method: 'DELETE', headers: getHeaders() });
     if (!response.ok) throw new Error('Xóa giá vốn thất bại');
+  },
+  deleteAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/product-costs`, { method: 'DELETE', headers: getHeaders() });
+    if (!response.ok) throw new Error('Xóa tất cả giá vốn thất bại');
   }
 };
 

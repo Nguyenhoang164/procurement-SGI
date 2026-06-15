@@ -220,6 +220,21 @@ public class ProductCostService {
      * Lấy danh sách cảnh báo về biến động giá
      * @return Danh sách các cảnh báo về biến động giá
      */
+    public void resetAllProductCosts() {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            product.setLotCount(0);
+            product.setTotalQty(0);
+            product.setLatestUnitCostVnd(BigDecimal.ZERO);
+            product.setWeightedAvgCostVnd(BigDecimal.ZERO);
+            product.setLatestOrderCode(null);
+            product.setLatestCostDate(null);
+            product.setLatestCurrency(null);
+            product.setUpdatedAt(LocalDateTime.now());
+        }
+        productRepository.saveAll(products);
+    }
+
     public void resetProductCost(String posCode) {
         Product product = productRepository.findByPosCode(posCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with posCode: " + posCode));

@@ -48,4 +48,11 @@ public class ProductCostController {
         productCostService.resetProductCost(posCode);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAllProductCosts() {
+        productCostService.resetAllProductCosts();
+        return ResponseEntity.noContent().build();
+    }
 }

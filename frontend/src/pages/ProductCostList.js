@@ -60,6 +60,17 @@ function ProductCostList() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (!window.confirm('Xóa TẤT CẢ giá vốn sản phẩm? Hành động này không thể hoàn tác!')) return;
+    try {
+      await productCostAPI.deleteAll();
+      setItems([]);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
@@ -74,6 +85,11 @@ function ProductCostList() {
           <button type="button" className="btn btn-primary" onClick={handleExport} disabled={items.length === 0}>
             Export
           </button>
+          {canDelete && (
+            <button type="button" className="btn btn-danger" onClick={handleDeleteAll} style={{ marginLeft: 8 }}>
+              Xóa tất cả
+            </button>
+          )}
         </div>
       </div>
 

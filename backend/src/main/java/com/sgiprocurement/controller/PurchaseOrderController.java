@@ -58,6 +58,13 @@ public class PurchaseOrderController {
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAllPurchaseOrders() {
+        purchaseOrderService.deleteAllPurchaseOrders();
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/{id}/submit")
     @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
     public ResponseEntity<PurchaseOrderDTO> submitForApproval(@PathVariable Long id) {
