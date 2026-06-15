@@ -714,13 +714,44 @@ public class PurchaseOrderService {
         }
     }
 
+    @Autowired
+    private PaymentRequestPurchaseOrderRepository paymentRequestPurchaseOrderRepository;
+    @Autowired
+    private PaymentRequestRepository paymentRequestRepository;
+    @Autowired
+    private WarehouseReceiptRepository warehouseReceiptRepository;
+    @Autowired
+    private WarehouseReceiptItemRepository warehouseReceiptItemRepository;
+    @Autowired
+    private CostCommentRepository costCommentRepository;
+
     public void deletePurchaseOrder(Long id) {
+        paymentRequestPurchaseOrderRepository.findByPoId(id)
+                .forEach(prpo -> paymentRequestPurchaseOrderRepository.delete(prpo));
+        warehouseReceiptRepository.findAllByPoId(id)
+                .forEach(wr -> {
+                    warehouseReceiptItemRepository.findByReceiptId(wr.getId())
+                            .forEach(item -> warehouseReceiptItemRepository.delete(item));
+                    warehouseReceiptRepository.delete(wr);
+                });
+        paymentRequestRepository.findByPoId(id)
+                .forEach(pr -> paymentRequestRepository.delete(pr));
+        costCommentRepository.findByPoIdOrderByCreatedAtDesc(id)
+                .forEach(cc -> costCommentRepository.delete(cc));
         PurchaseOrder po = purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Purchase order not found with id: " + id));
         purchaseOrderRepository.delete(po);
     }
 
     public void deleteAllPurchaseOrders() {
+        paymentRequestPurchaseOrderRepository.deleteAll();
+        warehouseReceiptRepository.findAll().forEach(wr -> {
+            warehouseReceiptItemRepository.findByReceiptId(wr.getId())
+                    .forEach(item -> warehouseReceiptItemRepository.delete(item));
+            warehouseReceiptRepository.delete(wr);
+        });
+        paymentRequestRepository.deleteAll();
+        costCommentRepository.findAll().forEach(cc -> costCommentRepository.delete(cc));
         purchaseOrderRepository.deleteAll();
     }
 
