@@ -122,7 +122,7 @@ public class PurchaseOrder {
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
-    @Column(precision = 10, scale = 2)
+    @Column(precision = 15, scale = 2)
     private BigDecimal unitCostFullVnd = BigDecimal.ZERO;
 
     @Column(precision = 15, scale = 0)
