@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
+import '../styles/ProductList.css';
 import { purchaseOrderAPI, productAPI, productCostAPI } from '../services/api';
-import { getPaymentStatusLabel } from '../utils/paymentUtils';
 import * as XLSX from 'xlsx';
 import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
 
@@ -209,23 +209,31 @@ function PurchaseOrderList() {
       </div>
 
       <div className="page-content">
-        <div className="search-bar" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <input type="text" placeholder="Tìm kiếm theo mã PO..." value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} />
+        <div className="search-bar-container" style={{ 
+          display: 'flex', gap: '12px', marginBottom: '24px',
+          backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)', width: '100%'
+        }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13 }}>🔍</span>
+            <input type="text" placeholder="Tìm kiếm theo mã PO..." value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              className="search-input"
+              style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          </div>
           {departments.length > 0 && (
             <select value={selectedDepartment} onChange={handleDepartmentChange}
               disabled={isDeptRestricted}
-              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', minWidth: 160 }}>
-              <option value="">{isDeptRestricted ? userDept || 'Phòng ban của tôi' : 'Tất cả phòng ban'}</option>
+              style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', background: '#fff', cursor: isDeptRestricted ? 'not-allowed' : 'pointer', opacity: isDeptRestricted ? 0.7 : 1, minWidth: 110 }}>
+              <option value="">{isDeptRestricted ? userDept || 'Phòng ban' : 'Tất cả phòng ban'}</option>
               {departments.map(d => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
           )}
-          <button className="btn btn-secondary" onClick={handleSearch}>Tìm</button>
-          <button className="btn btn-secondary" onClick={() => fetchOrders()}>Làm mới</button>
+          <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: 13 }}>Tìm</button>
+          <button className="btn btn-secondary" onClick={() => fetchOrders()} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: 13 }}>Làm mới</button>
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}
