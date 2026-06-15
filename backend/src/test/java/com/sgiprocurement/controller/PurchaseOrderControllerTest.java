@@ -45,7 +45,7 @@ class PurchaseOrderControllerTest {
     @Test
     @WithMockUser
     void getAllPurchaseOrders_shouldReturnList() throws Exception {
-        when(purchaseOrderService.getAllPurchaseOrders()).thenReturn(List.of(createDTO()));
+        when(purchaseOrderService.getAllPurchaseOrders(null)).thenReturn(List.of(createDTO()));
 
         mockMvc.perform(get("/v1/purchase-orders"))
                 .andExpect(status().isOk())

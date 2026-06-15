@@ -57,7 +57,7 @@ class PurchaseOrderServiceTest {
     void getAllPurchaseOrders_shouldReturnAll() {
         when(purchaseOrderRepository.findAll()).thenReturn(List.of(po));
 
-        List<PurchaseOrderDTO> result = purchaseOrderService.getAllPurchaseOrders();
+        List<PurchaseOrderDTO> result = purchaseOrderService.getAllPurchaseOrders(null);
 
         assertEquals(1, result.size());
     }

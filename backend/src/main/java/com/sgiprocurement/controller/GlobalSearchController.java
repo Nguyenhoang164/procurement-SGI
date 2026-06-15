@@ -32,7 +32,7 @@ public class GlobalSearchController {
     public ResponseEntity<Map<String, Object>> globalSearch(@RequestParam String keyword) {
         Map<String, Object> results = new LinkedHashMap<>();
 
-        List<PurchaseOrderDTO> pos = purchaseOrderService.searchByKeyword(keyword);
+        List<PurchaseOrderDTO> pos = purchaseOrderService.searchByKeyword(keyword, null);
         results.put("purchaseOrders", pos);
 
         List<PaymentRequestDTO> paymentRequests = paymentRequestService.getAllPaymentRequests().stream()
