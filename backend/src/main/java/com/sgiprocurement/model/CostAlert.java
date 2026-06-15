@@ -33,7 +33,7 @@ public class CostAlert {
     @Column(name = "variance_amount_vnd", precision = 15, scale = 0)
     private BigDecimal varianceAmountVnd;
 
-    @Column(name = "variance_percentage", precision = 5, scale = 2)
+    @Column(name = "variance_percentage", precision = 7, scale = 2)
     private BigDecimal variancePercentage;
 
     @Column(name = "alert_type", length = 50)
