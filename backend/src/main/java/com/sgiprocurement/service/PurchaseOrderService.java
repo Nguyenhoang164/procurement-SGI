@@ -618,7 +618,14 @@ public class PurchaseOrderService {
 
     private int findCol(Map<String, Integer> colMap, String... names) {
         for (String name : names) {
-            Integer idx = colMap.get(name);
+            String key = name.toLowerCase()
+                .replace(" ", "")
+                .replace("\n", "").replace("\r", "")
+                .replace("（", "(")
+                .replace("）", ")")
+                .replace("：", ":")
+                .replaceAll("[（(][^）)]*[）)]", "");
+            Integer idx = colMap.get(key);
             if (idx != null) return idx;
         }
         return -1;
