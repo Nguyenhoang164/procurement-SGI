@@ -94,7 +94,11 @@ export const weeklyPlanAPI = {
 };
 
 export const purchaseOrderAPI = {
-  getAll: async () => requestJson(`${API_BASE_URL}/purchase-orders`, { headers: getHeaders() }),
+  getAll: async (department) => {
+    let url = `${API_BASE_URL}/purchase-orders`;
+    if (department) url += `?department=${encodeURIComponent(department)}`;
+    return requestJson(url, { headers: getHeaders() });
+  },
   getById: async (id) => requestJson(`${API_BASE_URL}/purchase-orders/${id}`, { headers: getHeaders() }),
   create: async (data) => requestJson(`${API_BASE_URL}/purchase-orders`, {
     method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
@@ -140,12 +144,15 @@ export const purchaseOrderAPI = {
       method: 'POST', headers: getHeaders()
     });
   },
-  search: async (keyword) => requestJson(`${API_BASE_URL}/purchase-orders/search?keyword=${encodeURIComponent(keyword)}`, {
-    headers: getHeaders()
-  }),
+  search: async (keyword, department) => {
+    let url = `${API_BASE_URL}/purchase-orders/search?keyword=${encodeURIComponent(keyword)}`;
+    if (department) url += `&department=${encodeURIComponent(department)}`;
+    return requestJson(url, { headers: getHeaders() });
+  },
   importOrders: async (orders) => requestJson(`${API_BASE_URL}/purchase-orders/import`, {
     method: 'POST', headers: getHeaders(), body: JSON.stringify(orders)
-  })
+  }),
+  getDepartments: async () => requestJson(`${API_BASE_URL}/purchase-orders/departments`, { headers: getHeaders() })
 };
 
 export const paymentRequestAPI = {

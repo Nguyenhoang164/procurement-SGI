@@ -57,11 +57,18 @@ public class PurchaseOrderService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<PurchaseOrderDTO> getAllPurchaseOrders() {
-        return purchaseOrderRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public List<PurchaseOrderDTO> getAllPurchaseOrders(String department) {
+        String role = getCurrentUserRole();
+        String userDept = getCurrentUserDepartment();
+        List<PurchaseOrder> list;
+        if (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty()) {
+            list = purchaseOrderRepository.findByInitiatorDepartment(userDept);
+        } else if (department != null && !department.isEmpty()) {
+            list = purchaseOrderRepository.findByInitiatorDepartment(department);
+        } else {
+            list = purchaseOrderRepository.findAll();
+        }
+        return list.stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public PurchaseOrderDTO getPurchaseOrderById(Long id) {
@@ -788,12 +795,47 @@ public class PurchaseOrderService {
         }
     }
 
-    public List<PurchaseOrderDTO> searchByKeyword(String keyword) {
+    public List<PurchaseOrderDTO> searchByKeyword(String keyword, String department) {
+        String role = getCurrentUserRole();
+        String userDept = getCurrentUserDepartment();
+        String effectiveDept = (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty())
+                ? userDept : department;
         return purchaseOrderRepository.findAll().stream()
                 .filter(po -> (po.getPoCode() != null && po.getPoCode().contains(keyword))
                         || (po.getPosCode() != null && po.getPosCode().contains(keyword)))
+                .filter(po -> effectiveDept == null || effectiveDept.isEmpty()
+                        || (po.getInitiatorDepartment() != null && po.getInitiatorDepartment().equals(effectiveDept)))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<String> getAllDepartments() {
+        return purchaseOrderRepository.findDistinctDepartments();
+    }
+
+    private String getCurrentUserRole() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            return auth.getAuthorities().stream()
+                    .map(g -> g.getAuthority().replace("ROLE_", ""))
+                    .findFirst().orElse(null);
+        }
+        return null;
+    }
+
+    private String getCurrentUserDepartment() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+            String username = auth.getName();
+            return userRepository.findByUsername(username)
+                    .map(User::getDepartment)
+                    .orElse(null);
+        }
+        return null;
+    }
+
+    private boolean isDepartmentRestricted(String role) {
+        return "SALES".equals(role) || "SALES_MANAGER".equals(role);
     }
 
     private PurchaseOrderDTO convertToDTO(PurchaseOrder po) {

@@ -33,4 +33,9 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     Optional<PurchaseOrder> findByPoCode(String poCode);
 
+    List<PurchaseOrder> findByInitiatorDepartment(String initiatorDepartment);
+
+    @Query("SELECT DISTINCT po.initiatorDepartment FROM PurchaseOrder po WHERE po.initiatorDepartment IS NOT NULL AND po.initiatorDepartment <> '' ORDER BY po.initiatorDepartment")
+    List<String> findDistinctDepartments();
+
 }

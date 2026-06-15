@@ -20,15 +20,23 @@ function PurchaseOrderList() {
   const [productMap, setProductMap] = useState({});
   const [costMap, setCostMap] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [departments, setDepartments] = useState([]);
   const pageSize = 10;
   const navigate = useNavigate();
 
   const userData = getUser();
   const isAdminUser = isAdmin(userData);
   const canApprove = canApprovePO_L1(userData);
+  const userRole = userData?.role;
+  const userDept = userData?.department;
+  const isDeptRestricted = userRole === 'SALES' || userRole === 'SALES_MANAGER';
+
+  const [selectedDepartment, setSelectedDepartment] = useState(
+    isDeptRestricted && userDept ? userDept : ''
+  );
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrders(selectedDepartment);
     productAPI.getAll().then(products => {
       const map = {};
       products.forEach(p => { if (p.posCode) map[p.posCode] = p.productName; });
@@ -39,13 +47,17 @@ function PurchaseOrderList() {
       costs.forEach(c => { if (c.posCode) map[c.posCode] = c; });
       setCostMap(map);
     }).catch(() => {});
+    purchaseOrderAPI.getDepartments().then(list => {
+      setDepartments(list);
+    }).catch(() => {});
   }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (dept) => {
     setLoading(true);
     setCurrentPage(1);
     try {
-      const data = await purchaseOrderAPI.getAll();
+      const department = dept || (isDeptRestricted ? userDept : selectedDepartment);
+      const data = await purchaseOrderAPI.getAll(department);
       setOrders(data);
       setError('');
     } catch (err) {
@@ -78,13 +90,20 @@ function PurchaseOrderList() {
 
   const handleSearch = async () => {
     setCurrentPage(1);
-    if (!searchKeyword.trim()) { fetchOrders(); return; }
+    const dept = isDeptRestricted ? userDept : selectedDepartment;
+    if (!searchKeyword.trim()) { fetchOrders(dept); return; }
     try {
-      const data = await purchaseOrderAPI.search(searchKeyword);
+      const data = await purchaseOrderAPI.search(searchKeyword, dept);
       setOrders(data);
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const handleDepartmentChange = (e) => {
+    const dept = e.target.value;
+    setSelectedDepartment(dept);
+    fetchOrders(dept);
   };
 
   const handleImport = () => {
@@ -195,8 +214,18 @@ function PurchaseOrderList() {
             onChange={(e) => setSearchKeyword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} />
+          {departments.length > 0 && (
+            <select value={selectedDepartment} onChange={handleDepartmentChange}
+              disabled={isDeptRestricted}
+              style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff', minWidth: 160 }}>
+              <option value="">{isDeptRestricted ? userDept || 'Phòng ban của tôi' : 'Tất cả phòng ban'}</option>
+              {departments.map(d => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+          )}
           <button className="btn btn-secondary" onClick={handleSearch}>Tìm</button>
-          <button className="btn btn-secondary" onClick={fetchOrders}>Làm mới</button>
+          <button className="btn btn-secondary" onClick={() => fetchOrders()}>Làm mới</button>
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}

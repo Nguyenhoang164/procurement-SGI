@@ -23,9 +23,16 @@ public class PurchaseOrderController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
-    public ResponseEntity<List<PurchaseOrderDTO>> getAllPurchaseOrders() {
-        List<PurchaseOrderDTO> orders = purchaseOrderService.getAllPurchaseOrders();
+    public ResponseEntity<List<PurchaseOrderDTO>> getAllPurchaseOrders(
+            @RequestParam(required = false) String department) {
+        List<PurchaseOrderDTO> orders = purchaseOrderService.getAllPurchaseOrders(department);
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/departments")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    public ResponseEntity<List<String>> getAllDepartments() {
+        return ResponseEntity.ok(purchaseOrderService.getAllDepartments());
     }
 
     @GetMapping("/{id}")
@@ -104,8 +111,10 @@ public class PurchaseOrderController {
 
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
-    public ResponseEntity<List<PurchaseOrderDTO>> search(@RequestParam String keyword) {
-        return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword));
+    public ResponseEntity<List<PurchaseOrderDTO>> search(
+            @RequestParam String keyword,
+            @RequestParam(required = false) String department) {
+        return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword, department));
     }
 
     @PostMapping("/import")
