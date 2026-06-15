@@ -3,14 +3,17 @@ package com.sgiprocurement.service;
 import com.sgiprocurement.model.PurchaseOrder;
 import com.sgiprocurement.model.PurchaseOrderItem;
 import com.sgiprocurement.model.Product;
+import com.sgiprocurement.model.User;
 import com.sgiprocurement.dto.PurchaseOrderDTO;
 import com.sgiprocurement.dto.PurchaseOrderItemDTO;
 import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.ExchangeRateConfigRepository;
 import com.sgiprocurement.repository.ProductRepository;
+import com.sgiprocurement.repository.UserRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.dto.PurchaseOrderImportResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +49,9 @@ public class PurchaseOrderService {
     @Autowired
     private ProductCostService productCostService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public List<PurchaseOrderDTO> getAllPurchaseOrders() {
         return purchaseOrderRepository.findAll()
                 .stream()
@@ -67,9 +73,16 @@ public class PurchaseOrderService {
     }
 
     public PurchaseOrderDTO createPurchaseOrder(PurchaseOrderDTO dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUsername(username).orElse(null);
+
         PurchaseOrder po = convertToEntity(dto);
         po.setStatus("PENDING_L1");
         po.setPaymentStatus(null);
+        po.setCreatedBy(username);
+        if (po.getInitiatorDepartment() == null || po.getInitiatorDepartment().isEmpty()) {
+            po.setInitiatorDepartment(currentUser != null ? currentUser.getDepartment() : null);
+        }
 
         if (po.getExchangeRate() != null && po.getExchangeRate().compareTo(java.math.BigDecimal.ONE) == 0 && po.getCurrency() != null) {
             fetchExchangeRate(po);
