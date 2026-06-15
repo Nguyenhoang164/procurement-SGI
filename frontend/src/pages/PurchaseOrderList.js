@@ -225,15 +225,15 @@ function PurchaseOrderList() {
           {departments.length > 0 && (
             <select value={selectedDepartment} onChange={handleDepartmentChange}
               disabled={isDeptRestricted}
-              style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', background: '#fff', cursor: isDeptRestricted ? 'not-allowed' : 'pointer', opacity: isDeptRestricted ? 0.7 : 1, minWidth: 110 }}>
-              <option value="">{isDeptRestricted ? userDept || 'Phòng ban' : 'Tất cả phòng ban'}</option>
+              style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '12px', background: '#fff', cursor: isDeptRestricted ? 'not-allowed' : 'pointer', opacity: isDeptRestricted ? 0.7 : 1, minWidth: 90 }}>
+              <option value="">{isDeptRestricted ? userDept || 'Phòng ban' : 'Tất cả'}</option>
               {departments.map(d => (
                 <option key={d} value={d}>{d}</option>
               ))}
             </select>
           )}
-          <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: 13 }}>Tìm</button>
-          <button className="btn btn-secondary" onClick={() => fetchOrders()} style={{ padding: '8px 16px', borderRadius: '8px', fontSize: 13 }}>Làm mới</button>
+          <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '6px 12px', borderRadius: '6px', fontSize: 12 }}>Tìm</button>
+          <button className="btn btn-secondary" onClick={() => fetchOrders()} style={{ padding: '6px 12px', borderRadius: '6px', fontSize: 12 }}>Làm mới</button>
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}
