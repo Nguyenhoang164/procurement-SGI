@@ -19,6 +19,8 @@ function PurchaseOrderList() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [productMap, setProductMap] = useState({});
   const [costMap, setCostMap] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   const userData = getUser();
@@ -41,6 +43,7 @@ function PurchaseOrderList() {
 
   const fetchOrders = async () => {
     setLoading(true);
+    setCurrentPage(1);
     try {
       const data = await purchaseOrderAPI.getAll();
       setOrders(data);
@@ -63,6 +66,7 @@ function PurchaseOrderList() {
   };
 
   const handleSearch = async () => {
+    setCurrentPage(1);
     if (!searchKeyword.trim()) { fetchOrders(); return; }
     try {
       const data = await purchaseOrderAPI.search(searchKeyword);
@@ -183,7 +187,11 @@ function PurchaseOrderList() {
         ) : orders.length === 0 ? (
           <div className="empty-state">Chưa có đơn hàng nào.</div>
         ) : (
-          orders.map((order) => (
+          (() => {
+            const totalPages = Math.ceil(orders.length / pageSize);
+            const startIdx = (currentPage - 1) * pageSize;
+            const pageOrders = orders.slice(startIdx, startIdx + pageSize);
+            return pageOrders.map((order) => (
             <div key={order.id} className="table-card" style={{ marginBottom: 20 }}>
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -343,6 +351,26 @@ function PurchaseOrderList() {
               )}
             </div>
           ))
+            )();
+          }
+        )}
+        {orders.length > pageSize && (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '16px 0' }}>
+            <button className="btn btn-sm btn-secondary" disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}>‹ Trước</button>
+            {Array.from({ length: Math.ceil(orders.length / pageSize) }, (_, i) => i + 1).map(p => (
+              <button key={p}
+                style={{
+                  minWidth: 32, height: 32, border: '1px solid #d1d5db', borderRadius: 4,
+                  background: p === currentPage ? '#2563eb' : '#fff',
+                  color: p === currentPage ? '#fff' : '#374151',
+                  fontWeight: p === currentPage ? 700 : 400, cursor: 'pointer'
+                }}
+                onClick={() => setCurrentPage(p)}>{p}</button>
+            ))}
+            <button className="btn btn-sm btn-secondary" disabled={currentPage === Math.ceil(orders.length / pageSize)}
+              onClick={() => setCurrentPage(p => p + 1)}>Sau ›</button>
+          </div>
         )}
       </div>
     </div>
