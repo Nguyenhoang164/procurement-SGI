@@ -17,6 +17,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByPosCode(String posCode);
 
+    List<Product> findByPosCodeIn(List<String> posCodes);
+
     long countByPosCodeStartingWith(String prefix);
 
     @Query("SELECT COUNT(p) FROM Product p WHERE p.status = 'ACTIVE'")

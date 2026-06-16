@@ -1,6 +1,8 @@
 package com.sgiprocurement.repository;
 
 import com.sgiprocurement.model.PurchaseOrder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -40,6 +42,14 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items")
     List<PurchaseOrder> findAllWithItems();
+
+    @Query(value = "SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items",
+           countQuery = "SELECT COUNT(DISTINCT po) FROM PurchaseOrder po")
+    Page<PurchaseOrder> findAllWithItemsPaged(Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE po.initiatorDepartment = :dept",
+           countQuery = "SELECT COUNT(DISTINCT po) FROM PurchaseOrder po WHERE po.initiatorDepartment = :dept")
+    Page<PurchaseOrder> findByInitiatorDepartmentWithItemsPaged(@Param("dept") String dept, Pageable pageable);
 
     @Query("SELECT DISTINCT po.initiatorDepartment FROM PurchaseOrder po WHERE po.initiatorDepartment IS NOT NULL AND po.initiatorDepartment <> '' ORDER BY po.initiatorDepartment")
     List<String> findDistinctDepartments();

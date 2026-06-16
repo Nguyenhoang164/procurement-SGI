@@ -94,10 +94,12 @@ export const weeklyPlanAPI = {
 };
 
 export const purchaseOrderAPI = {
-  getAll: async (department) => {
-    let url = `${API_BASE_URL}/purchase-orders`;
-    if (department) url += `?department=${encodeURIComponent(department)}`;
-    return requestJson(url, { headers: getHeaders() });
+  getAll: async (department, page = 0, size = 10) => {
+    const params = new URLSearchParams();
+    if (department) params.set('department', department);
+    params.set('page', page);
+    params.set('size', size);
+    return requestJson(`${API_BASE_URL}/purchase-orders?${params.toString()}`, { headers: getHeaders() });
   },
   getById: async (id) => requestJson(`${API_BASE_URL}/purchase-orders/${id}`, { headers: getHeaders() }),
   create: async (data) => requestJson(`${API_BASE_URL}/purchase-orders`, {

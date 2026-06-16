@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,10 +24,12 @@ public class PurchaseOrderController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
-    public ResponseEntity<List<PurchaseOrderDTO>> getAllPurchaseOrders(
-            @RequestParam(required = false) String department) {
-        List<PurchaseOrderDTO> orders = purchaseOrderService.getAllPurchaseOrders(department);
-        return ResponseEntity.ok(orders);
+    public ResponseEntity<Map<String, Object>> getAllPurchaseOrders(
+            @RequestParam(required = false) String department,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Map<String, Object> result = purchaseOrderService.getAllPurchaseOrdersPaged(department, page, size);
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/departments")

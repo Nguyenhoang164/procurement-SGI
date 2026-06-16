@@ -18,7 +18,8 @@ function PurchaseOrderList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
   const [departments, setDepartments] = useState([]);
   const pageSize = 10;
   const navigate = useNavigate();
@@ -35,19 +36,20 @@ function PurchaseOrderList() {
   );
 
   useEffect(() => {
-    fetchOrders(selectedDepartment);
+    fetchOrders(selectedDepartment, 0);
     purchaseOrderAPI.getDepartments().then(list => {
       setDepartments(list);
     }).catch(() => {});
   }, []);
 
-  const fetchOrders = async (dept) => {
+  const fetchOrders = async (dept, page = 0) => {
     setLoading(true);
-    setCurrentPage(1);
+    setCurrentPage(page);
     try {
       const department = dept || (isDeptRestricted ? userDept : selectedDepartment);
-      const data = await purchaseOrderAPI.getAll(department);
-      setOrders(data);
+      const data = await purchaseOrderAPI.getAll(department, page, pageSize);
+      setOrders(data.orders || data);
+      setTotalItems(data.total || data.length || 0);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -78,9 +80,9 @@ function PurchaseOrderList() {
   };
 
   const handleSearch = async () => {
-    setCurrentPage(1);
+    setCurrentPage(0);
     const dept = isDeptRestricted ? userDept : selectedDepartment;
-    if (!searchKeyword.trim()) { fetchOrders(dept); return; }
+    if (!searchKeyword.trim()) { fetchOrders(dept, 0); return; }
     try {
       const data = await purchaseOrderAPI.search(searchKeyword, dept);
       setOrders(data);
@@ -92,7 +94,7 @@ function PurchaseOrderList() {
   const handleDepartmentChange = (e) => {
     const dept = e.target.value;
     setSelectedDepartment(dept);
-    fetchOrders(dept);
+    fetchOrders(dept, 0);
   };
 
   const handleImport = () => {
@@ -108,7 +110,7 @@ function PurchaseOrderList() {
         const orders = Array.isArray(data) ? data : [data];
         const result = await purchaseOrderAPI.importOrders(orders);
         alert(result.message || 'Import thành công!');
-        fetchOrders();
+        fetchOrders(selectedDepartment, 0);
       } catch (err) {
         alert('Lỗi import: ' + err.message);
       }
@@ -128,7 +130,7 @@ function PurchaseOrderList() {
         const msg = `Import ${result.successCount}/${result.totalOrders} đơn hàng thành công` +
           (result.errors?.length ? `\n${result.errors.join('\n')}` : '');
         alert(msg);
-        fetchOrders();
+        fetchOrders(selectedDepartment, 0);
       } catch (err) {
         alert('Lỗi import Excel: ' + err.message);
       }
@@ -169,9 +171,8 @@ function PurchaseOrderList() {
     XLSX.writeFile(wb, `don-hang-${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
-  const totalPages = Math.ceil(orders.length / pageSize);
-  const startIdx = (currentPage - 1) * pageSize;
-  const pageOrders = orders.slice(startIdx, startIdx + pageSize);
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const pageOrders = orders;
 
   return (
     <div className="page-screen">
@@ -222,7 +223,7 @@ function PurchaseOrderList() {
             </select>
           )}
           <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Tìm</button>
-          <button className="btn btn-secondary" onClick={() => fetchOrders()} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Làm mới</button>
+          <button className="btn btn-secondary" onClick={() => fetchOrders(selectedDepartment, 0)} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Làm mới</button>
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}
@@ -397,11 +398,11 @@ function PurchaseOrderList() {
           ))
         )}
         <Pagination
-          currentPage={currentPage}
+          currentPage={currentPage + 1}
           totalPages={totalPages}
-          totalItems={orders.length}
+          totalItems={totalItems}
           pageSize={pageSize}
-          onPageChange={setCurrentPage}
+          onPageChange={(p) => fetchOrders(selectedDepartment, p - 1)}
           label="đơn hàng"
         />
       </div>

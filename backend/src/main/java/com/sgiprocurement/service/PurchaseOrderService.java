@@ -18,6 +18,9 @@ import com.sgiprocurement.repository.CostCommentRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.sgiprocurement.dto.PurchaseOrderImportResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -69,13 +72,49 @@ public class PurchaseOrderService {
             list = purchaseOrderRepository.findAllWithItems();
         }
 
-        Map<String, Product> productCache = productRepository.findAll().stream()
-                .filter(p -> p.getPosCode() != null)
-                .collect(Collectors.toMap(Product::getPosCode, p -> p, (a, b) -> a));
-
+        Map<String, Product> productCache = buildProductCache(list);
         return list.stream()
                 .map(po -> convertToDTO(po, productCache))
                 .collect(Collectors.toList());
+    }
+
+    public Map<String, Object> getAllPurchaseOrdersPaged(String department, int page, int size) {
+        String role = getCurrentUserRole();
+        String userDept = getCurrentUserDepartment();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PurchaseOrder> poPage;
+        if (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty()) {
+            poPage = purchaseOrderRepository.findByInitiatorDepartmentWithItemsPaged(userDept, pageable);
+        } else if (department != null && !department.isEmpty()) {
+            poPage = purchaseOrderRepository.findByInitiatorDepartmentWithItemsPaged(department, pageable);
+        } else {
+            poPage = purchaseOrderRepository.findAllWithItemsPaged(pageable);
+        }
+
+        Map<String, Product> productCache = buildProductCache(poPage.getContent());
+        List<PurchaseOrderDTO> orders = poPage.getContent().stream()
+                .map(po -> convertToDTO(po, productCache))
+                .collect(Collectors.toList());
+
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("orders", orders);
+        result.put("total", poPage.getTotalElements());
+        result.put("page", page);
+        result.put("size", size);
+        return result;
+    }
+
+    private Map<String, Product> buildProductCache(List<PurchaseOrder> pos) {
+        Set<String> posCodes = pos.stream()
+                .filter(po -> po.getItems() != null)
+                .flatMap(po -> po.getItems().stream())
+                .map(item -> item.getPosCode())
+                .filter(code -> code != null && !code.isEmpty())
+                .collect(Collectors.toSet());
+        if (posCodes.isEmpty()) return Collections.emptyMap();
+        return productRepository.findByPosCodeIn(new ArrayList<>(posCodes)).stream()
+                .filter(p -> p.getPosCode() != null)
+                .collect(Collectors.toMap(Product::getPosCode, p -> p, (a, b) -> a));
     }
 
     public PurchaseOrderDTO getPurchaseOrderById(Long id) {
@@ -843,10 +882,7 @@ public class PurchaseOrderService {
             results = purchaseOrderRepository.searchByKeyword(keyword);
         }
 
-        Map<String, Product> productCache = productRepository.findAll().stream()
-                .filter(p -> p.getPosCode() != null)
-                .collect(Collectors.toMap(Product::getPosCode, p -> p, (a, b) -> a));
-
+        Map<String, Product> productCache = buildProductCache(results);
         return results.stream()
                 .map(po -> convertToDTO(po, productCache))
                 .collect(Collectors.toList());
