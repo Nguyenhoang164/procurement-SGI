@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { paymentRequestAPI, purchaseOrderAPI, resolveFileUrl } from '../services/api';
+import Pagination from '../components/Pagination';
 import {
   canCreatePayment,
   formatDnttCode,
@@ -25,6 +26,8 @@ function PaymentList() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [uploadFiles, setUploadFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +41,7 @@ function PaymentList() {
 
   const fetchPayments = async () => {
     setLoading(true);
+    setCurrentPage(1);
     try {
       const data = await paymentRequestAPI.getAll();
       setPayments(data);
@@ -101,6 +105,10 @@ function PaymentList() {
       setError(err.message);
     }
   };
+
+  const totalPages = Math.ceil(payments.length / pageSize);
+  const startIdx = (currentPage - 1) * pageSize;
+  const pagePayments = payments.slice(startIdx, startIdx + pageSize);
 
   const pendingCount = payments.filter((item) => item.status?.startsWith('PENDING')).length;
   const pendingL1 = payments.filter((item) => item.status === 'PENDING_L1').length;
@@ -167,7 +175,7 @@ function PaymentList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.map((payment) => (
+                  {pagePayments.map((payment) => (
                     <tr key={payment.id} className="clickable" onClick={() => navigate(`/payments/${payment.id}`)}>
                       <td>{formatDnttCode(payment.id)}</td>
                       <td>{formatPoCode(payment.poId)}</td>
@@ -213,6 +221,14 @@ function PaymentList() {
             </div>
           </div>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={payments.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          label="đề nghị thanh toán"
+        />
       </div>
 
       {detailModal && (
