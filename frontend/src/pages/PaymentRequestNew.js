@@ -58,7 +58,7 @@ function PaymentRequestNew() {
   }, []);
 
   const loadOrders = useCallback(async () => {
-    setLoadingOrders(true);
+    setLoading(true);
     try {
       const data = await purchaseOrderAPI.getAll();
       setOrders(data);
@@ -68,7 +68,7 @@ function PaymentRequestNew() {
     } finally { setLoading(false); }
   }, [id]);
 
-  useEffect(() => { loadOrders(); loadPayment(); }, [loadOrders, loadPayment]);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
 
   useEffect(() => {
     productAPI.getAll().then(products => {
@@ -499,7 +499,7 @@ function PaymentRequestNew() {
                   </div>
                 ))}
 
-                {loadingOrders ? (
+                {loading ? (
                   <p className="muted-copy">Đang tải danh sách PO...</p>
                 ) : orderOptions.length === 0 ? (
                   <p className="muted-copy">Không có đơn hàng đã phê duyệt hoặc đủ điều kiện.</p>
