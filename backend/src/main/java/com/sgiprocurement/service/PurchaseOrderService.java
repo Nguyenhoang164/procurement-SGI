@@ -78,15 +78,27 @@ public class PurchaseOrderService {
                 .collect(Collectors.toList());
     }
 
-    public Map<String, Object> getAllPurchaseOrdersPaged(String department, int page, int size) {
+    public Map<String, Object> getAllPurchaseOrdersPaged(String department, int page, int size,
+            LocalDateTime startDate, LocalDateTime endDate) {
         String role = getCurrentUserRole();
         String userDept = getCurrentUserDepartment();
         Pageable pageable = PageRequest.of(page, size);
         Page<PurchaseOrder> poPage;
+
+        boolean hasDateRange = startDate != null && endDate != null;
+        String effectiveDept = null;
         if (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty()) {
-            poPage = purchaseOrderRepository.findByInitiatorDepartmentWithItemsPaged(userDept, pageable);
+            effectiveDept = userDept;
         } else if (department != null && !department.isEmpty()) {
-            poPage = purchaseOrderRepository.findByInitiatorDepartmentWithItemsPaged(department, pageable);
+            effectiveDept = department;
+        }
+
+        if (hasDateRange && effectiveDept != null) {
+            poPage = purchaseOrderRepository.findByInitiatorDepartmentAndCreatedAtBetweenPaged(effectiveDept, startDate, endDate, pageable);
+        } else if (hasDateRange) {
+            poPage = purchaseOrderRepository.findAllByCreatedAtBetweenPaged(startDate, endDate, pageable);
+        } else if (effectiveDept != null) {
+            poPage = purchaseOrderRepository.findByInitiatorDepartmentWithItemsPaged(effectiveDept, pageable);
         } else {
             poPage = purchaseOrderRepository.findAllWithItemsPaged(pageable);
         }

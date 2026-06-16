@@ -94,9 +94,11 @@ export const weeklyPlanAPI = {
 };
 
 export const purchaseOrderAPI = {
-  getAll: async (department, page = 0, size = 10) => {
+  getAll: async (department, page = 0, size = 10, startDate = '', endDate = '') => {
     const params = new URLSearchParams();
     if (department) params.set('department', department);
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
     params.set('page', page);
     params.set('size', size);
     return requestJson(`${API_BASE_URL}/purchase-orders?${params.toString()}`, { headers: getHeaders() });

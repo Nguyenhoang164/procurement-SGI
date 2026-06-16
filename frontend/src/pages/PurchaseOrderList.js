@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import '../styles/ProductList.css';
@@ -34,6 +34,34 @@ function PurchaseOrderList() {
   const [selectedDepartment, setSelectedDepartment] = useState(
     isDeptRestricted && userDept ? userDept : ''
   );
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const [dateMode, setDateMode] = useState('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
+  const getDateRange = (mode) => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    const d = now.getDate();
+    switch (mode) {
+      case 'today':
+        return { start: today, end: today };
+      case 'week': {
+        const start = new Date(now);
+        start.setDate(d - now.getDay());
+        return { start: start.toISOString().slice(0, 10), end: today };
+      }
+      case 'month':
+        return { start: `${y}-${String(m + 1).padStart(2, '0')}-01`, end: today };
+      case 'year':
+        return { start: `${y}-01-01`, end: today };
+      case 'custom':
+        return { start: customStartDate, end: customEndDate };
+      default:
+        return { start: '', end: '' };
+    }
+  };
 
   useEffect(() => {
     fetchOrders(selectedDepartment, 0);
@@ -47,7 +75,8 @@ function PurchaseOrderList() {
     setCurrentPage(page);
     try {
       const department = dept || (isDeptRestricted ? userDept : selectedDepartment);
-      const data = await purchaseOrderAPI.getAll(department, page, pageSize);
+      const { start, end } = getDateRange(dateMode);
+      const data = await purchaseOrderAPI.getAll(department, page, pageSize, start, end);
       setOrders(data.orders || data);
       setTotalItems(data.total || data.length || 0);
       setError('');
@@ -200,30 +229,58 @@ function PurchaseOrderList() {
 
       <div className="page-content">
         <div className="search-bar-container" style={{ 
-          display: 'flex', gap: '12px', marginBottom: '24px',
+          display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px',
           backgroundColor: '#ffffff', padding: '20px', borderRadius: '12px',
           boxShadow: '0 2px 12px rgba(0,0,0,0.04)', width: '100%'
         }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13 }}>🔍</span>
-            <input type="text" placeholder="Tìm kiếm theo mã PO..." value={searchKeyword}
-              onChange={(e) => setSearchKeyword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="search-input"
-              style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, position: 'relative', minWidth: 200 }}>
+              <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', fontSize: 13 }}>🔍</span>
+              <input type="text" placeholder="Tìm kiếm theo mã PO..." value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="search-input"
+                style={{ width: '100%', padding: '12px 16px 12px 48px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+            </div>
+            {departments.length > 0 && (
+              <select value={selectedDepartment} onChange={handleDepartmentChange}
+                disabled={isDeptRestricted}
+                style={{ padding: '5px 8px', borderRadius: '5px', border: '1px solid #e2e8f0', fontSize: '11px', background: '#fff', cursor: isDeptRestricted ? 'not-allowed' : 'pointer', opacity: isDeptRestricted ? 0.7 : 1, maxWidth: 80 }}>
+                <option value="">{isDeptRestricted ? userDept || 'PB' : 'PB'}</option>
+                {departments.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            )}
+            <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Tìm</button>
+            <button className="btn btn-secondary" onClick={() => fetchOrders(selectedDepartment, 0)} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Làm mới</button>
           </div>
-          {departments.length > 0 && (
-            <select value={selectedDepartment} onChange={handleDepartmentChange}
-              disabled={isDeptRestricted}
-              style={{ padding: '5px 8px', borderRadius: '5px', border: '1px solid #e2e8f0', fontSize: '11px', background: '#fff', cursor: isDeptRestricted ? 'not-allowed' : 'pointer', opacity: isDeptRestricted ? 0.7 : 1, maxWidth: 80 }}>
-              <option value="">{isDeptRestricted ? userDept || 'PB' : 'PB'}</option>
-              {departments.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
-          )}
-          <button className="btn btn-secondary" onClick={handleSearch} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Tìm</button>
-          <button className="btn btn-secondary" onClick={() => fetchOrders(selectedDepartment, 0)} style={{ padding: '5px 10px', borderRadius: '5px', fontSize: 11, whiteSpace: 'nowrap' }}>Làm mới</button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600, marginRight: 4 }}>Lọc ngày:</span>
+            {['all', 'today', 'week', 'month', 'year', 'custom'].map((mode) => (
+              <button key={mode}
+                onClick={() => { setDateMode(mode); if (mode !== 'custom') fetchOrders(selectedDepartment, 0); }}
+                style={{
+                  padding: '4px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: 12,
+                  background: dateMode === mode ? '#1e3a5f' : '#fff',
+                  color: dateMode === mode ? '#fff' : '#334155',
+                  cursor: 'pointer', fontWeight: dateMode === mode ? 600 : 400
+                }}>
+                {mode === 'all' ? 'Tất cả' : mode === 'today' ? 'Hôm nay' : mode === 'week' ? 'Tuần này' : mode === 'month' ? 'Tháng này' : mode === 'year' ? 'Năm nay' : 'Tùy chọn'}
+              </button>
+            ))}
+            {dateMode === 'custom' && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <input type="date" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)}
+                  style={{ padding: '4px 8px', borderRadius: '5px', border: '1px solid #e2e8f0', fontSize: 12 }} />
+                <span style={{ color: '#94a3b8' }}>→</span>
+                <input type="date" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)}
+                  style={{ padding: '4px 8px', borderRadius: '5px', border: '1px solid #e2e8f0', fontSize: 12 }} />
+                <button className="btn btn-sm btn-primary" onClick={() => fetchOrders(selectedDepartment, 0)}
+                  style={{ padding: '4px 10px', fontSize: 11 }}>Áp dụng</button>
+              </div>
+            )}
+          </div>
         </div>
 
         {error ? <div className="error-message">{error}</div> : null}

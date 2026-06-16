@@ -27,8 +27,18 @@ public class PurchaseOrderController {
     public ResponseEntity<Map<String, Object>> getAllPurchaseOrders(
             @RequestParam(required = false) String department,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Map<String, Object> result = purchaseOrderService.getAllPurchaseOrdersPaged(department, page, size);
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        java.time.LocalDateTime start = null;
+        java.time.LocalDateTime end = null;
+        if (startDate != null && !startDate.isEmpty()) {
+            start = java.time.LocalDate.parse(startDate).atStartOfDay();
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            end = java.time.LocalDate.parse(endDate).plusDays(1).atStartOfDay();
+        }
+        Map<String, Object> result = purchaseOrderService.getAllPurchaseOrdersPaged(department, page, size, start, end);
         return ResponseEntity.ok(result);
     }
 

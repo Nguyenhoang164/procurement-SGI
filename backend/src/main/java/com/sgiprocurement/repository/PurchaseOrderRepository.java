@@ -51,6 +51,14 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
            countQuery = "SELECT COUNT(DISTINCT po) FROM PurchaseOrder po WHERE po.initiatorDepartment = :dept")
     Page<PurchaseOrder> findByInitiatorDepartmentWithItemsPaged(@Param("dept") String dept, Pageable pageable);
 
+    @Query(value = "SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE po.createdAt BETWEEN :start AND :end",
+           countQuery = "SELECT COUNT(DISTINCT po) FROM PurchaseOrder po WHERE po.createdAt BETWEEN :start AND :end")
+    Page<PurchaseOrder> findAllByCreatedAtBetweenPaged(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
+
+    @Query(value = "SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE po.initiatorDepartment = :dept AND po.createdAt BETWEEN :start AND :end",
+           countQuery = "SELECT COUNT(DISTINCT po) FROM PurchaseOrder po WHERE po.initiatorDepartment = :dept AND po.createdAt BETWEEN :start AND :end")
+    Page<PurchaseOrder> findByInitiatorDepartmentAndCreatedAtBetweenPaged(@Param("dept") String dept, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end, Pageable pageable);
+
     @Query("SELECT DISTINCT po.initiatorDepartment FROM PurchaseOrder po WHERE po.initiatorDepartment IS NOT NULL AND po.initiatorDepartment <> '' ORDER BY po.initiatorDepartment")
     List<String> findDistinctDepartments();
 
