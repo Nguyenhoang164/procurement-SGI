@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +35,7 @@ class ProductCostServiceTest {
     private PurchaseOrder po;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         product1 = new Product();
         product1.setId(1L);
         product1.setPosCode("ABC-VN-0001");
@@ -64,6 +65,16 @@ class ProductCostServiceTest {
         po.setPosCode("ABC-VN-0001");
         po.setUnitCostFullVnd(new BigDecimal("55000.00"));
         po.setOrderedQty(100);
+
+        setField(productCostService, "varianceThresholdPercentage", new BigDecimal("20"));
+        setField(productCostService, "minOldCostForPercentage", new BigDecimal("50000"));
+        setField(productCostService, "minVarianceAmount", new BigDecimal("500000"));
+    }
+
+    private void setField(Object target, String fieldName, Object value) throws Exception {
+        Field field = target.getClass().getDeclaredField(fieldName);
+        field.setAccessible(true);
+        field.set(target, value);
     }
 
     @Test

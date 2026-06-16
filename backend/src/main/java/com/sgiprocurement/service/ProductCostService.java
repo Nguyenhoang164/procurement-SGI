@@ -34,6 +34,12 @@ public class ProductCostService {
     @Value("${cost.variance.alert.threshold.percentage:20}")
     private BigDecimal varianceThresholdPercentage;
 
+    @Value("${cost.variance.alert.min.old.cost:50000}")
+    private BigDecimal minOldCostForPercentage;
+
+    @Value("${cost.variance.alert.min.variance.amount:500000}")
+    private BigDecimal minVarianceAmount;
+
     public List<ProductCostDTO> getAllProductCosts() {
         return productRepository.findAll().stream()
                 .filter(p -> p.getLotCount() != null && p.getLotCount() > 0)
@@ -149,25 +155,33 @@ public class ProductCostService {
      * @param newCost Giá vốn mới (lot unit cost)
      */
     private void checkAndCreateCostAlert(Product product, BigDecimal oldAvgCost, BigDecimal newCost) {
-        // Skip if either value is zero or null to avoid division by zero
-        if (oldAvgCost == null || oldAvgCost.compareTo(BigDecimal.ZERO) == 0 || 
-            newCost == null || newCost.compareTo(BigDecimal.ZERO) == 0) {
+        if (oldAvgCost == null || newCost == null ||
+            oldAvgCost.compareTo(BigDecimal.ZERO) == 0 ||
+            newCost.compareTo(BigDecimal.ZERO) == 0) {
             return;
         }
 
-        // Calculate variance percentage
+        // Skip if old cost is too small for meaningful percentage calculation
+        if (oldAvgCost.compareTo(minOldCostForPercentage) < 0) {
+            return;
+        }
+
         BigDecimal variance = newCost.subtract(oldAvgCost);
+        BigDecimal absVariance = variance.abs();
+
+        // Skip if absolute variance is too small to be meaningful
+        if (absVariance.compareTo(minVarianceAmount) < 0) {
+            return;
+        }
+
         BigDecimal variancePercentage = variance.divide(oldAvgCost, 4, RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("100"));
 
-        // Check if variance exceeds threshold (both positive and negative)
         BigDecimal absVariancePercentage = variancePercentage.abs();
         if (absVariancePercentage.compareTo(varianceThresholdPercentage) >= 0) {
-            // Determine alert type
-            String alertType = variancePercentage.compareTo(BigDecimal.ZERO) >= 0 
+            String alertType = variancePercentage.compareTo(BigDecimal.ZERO) >= 0
                     ? "HIGH_VARIANCE" : "LOW_VARIANCE";
 
-            // Create and save the alert
             CostAlert alert = new CostAlert();
             alert.setPosCode(product.getPosCode());
             alert.setProductName(product.getProductName());
@@ -176,7 +190,7 @@ public class ProductCostService {
             alert.setVarianceAmountVnd(variance);
             alert.setVariancePercentage(variancePercentage.setScale(2, RoundingMode.HALF_UP));
             alert.setAlertType(alertType);
-            
+
             costAlertRepository.save(alert);
         }
     }

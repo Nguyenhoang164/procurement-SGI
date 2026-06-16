@@ -35,3 +35,113 @@
   padding: 4px 8px;
   font-size: 12px;
 }
+
+/* Toolbar with search */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.toolbar .search-input {
+  flex: 1;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.toolbar .search-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24,144,255,0.1);
+}
+
+.toolbar-count {
+  font-size: 13px;
+  color: #888;
+  white-space: nowrap;
+}
+
+/* Trend arrows */
+.trend-up { color: #ff4d4d; }
+.trend-down { color: #52c41a; }
+
+/* Percentage bar */
+.pct-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pct-bar-track {
+  width: 60px;
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pct-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.pct-bar-fill.cost-alert-up { background: #ff4d4d; }
+.pct-bar-fill.cost-alert-down { background: #52c41a; }
+
+.pct-value {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Severity badges */
+.severity-critical {
+  background: #fff1f0;
+  color: #cf1322;
+  border: 1px solid #ffa39e;
+}
+
+.severity-high {
+  background: #fff7e6;
+  color: #d46b08;
+  border: 1px solid #ffd591;
+}
+
+.severity-medium {
+  background: #fffbe6;
+  color: #d48806;
+  border: 1px solid #ffe58f;
+}
+
+.severity-low {
+  background: #f6ffed;
+  color: #389e0d;
+  border: 1px solid #b7eb8f;
+}
+
+/* Cell sizing */
+.poscode-cell {
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.name-cell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time-cell {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+}

@@ -7,6 +7,7 @@ function CostAlertsList() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   const loadAlerts = useCallback(async () => {
@@ -30,6 +31,23 @@ function CostAlertsList() {
     navigate('/products', { state: { search: posCode } });
   };
 
+  const formatVnd = (value) => {
+    if (!value) return '—';
+    return Number(value).toLocaleString('vi-VN') + ' ₫';
+  };
+
+  const formatPercent = (value) => {
+    if (!value) return '—';
+    return Number(value).toFixed(2) + '%';
+  };
+
+  const filteredAlerts = alerts.filter((a) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (a.posCode && a.posCode.toLowerCase().includes(q)) ||
+           (a.productName && a.productName.toLowerCase().includes(q));
+  });
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
@@ -39,7 +57,7 @@ function CostAlertsList() {
         </div>
         <div className="page-actions">
           <button type="button" className="btn btn-secondary" onClick={loadAlerts}>
-            Làm mới
+            ⟳ Làm mới
           </button>
         </div>
       </div>
@@ -54,72 +72,104 @@ function CostAlertsList() {
             Chưa có cảnh báo biến động giá nào.
           </div>
         ) : (
-          <div className="table-card">
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>Mã POS</th>
-                    <th>Tên sản phẩm</th>
-                    <th>Giá vốn kỳ trước</th>
-                    <th>Giá vốn kỳ hiện tại</th>
-                    <th>Chênh lệch (VND)</th>
-                    <th>Chênh lệch (%)</th>
-                    <th>Loại cảnh báo</th>
-                    <th>Thời gian</th>
-                    <th>Hành động</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {alerts.map((alert) => {
-                    const varianceType = alert.alertType === 'HIGH_VARIANCE' ? 'Tăng' : 'Giảm';
-                    const varianceClass = alert.alertType === 'HIGH_VARIANCE' ? 'cost-alert-up' : 'cost-alert-down';
-                    const sign = alert.varianceAmountVnd && alert.varianceAmountVnd.compareTo ? 
-                      (alert.varianceAmountVnd.compareTo(0) >= 0 ? '+' : '-') : '';
-                    
-                    return (
-                      <tr key={alert.id}>
-                        <td>{alert.posCode}</td>
-                        <td>{alert.productName}</td>
-                        <td className="money">
-                          {alert.expectedCostVnd ? 
-                            Number(alert.expectedCostVnd).toLocaleString('vi-VN') + '₫' : '—'}
-                        </td>
-                        <td className="money">
-                          {alert.actualCostVnd ? 
-                            Number(alert.actualCostVnd).toLocaleString('vi-VN') + '₫' : '—'}
-                        </td>
-                        <td className={`money ${varianceClass}`}>
-                          {sign}{alert.varianceAmountVnd ? 
-                            Number(alert.varianceAmountVnd).toLocaleString('vi-VN') : '0'}₫
-                        </td>
-                        <td className={`money ${varianceClass}`}>
-                          {sign}{alert.variancePercentage ? 
-                            Number(alert.variancePercentage).toFixed(2) : '0.00'}%
-                        </td>
-                        <td>
-                          <span className={`badge badge-${alert.alertType.toLowerCase()}`}>
-                            {varianceType} ({alert.alertType})
-                          </span>
-                        </td>
-                        <td>
-                          {alert.createdAt ? 
-                            new Date(alert.createdAt).toLocaleString('vi-VN') : '—'}
-                        </td>
-                        <td>
-                          <button 
-                            className="btn btn-sm btn-view" 
-                            onClick={() => handleViewProduct(alert.posCode)}>
-                            Xem sản phẩm
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+          <>
+            <div className="toolbar">
+              <input
+                type="text"
+                className="form-control search-input"
+                placeholder="Tìm theo mã POS hoặc tên sản phẩm..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <span className="toolbar-count">{filteredAlerts.length}/{alerts.length} cảnh báo</span>
             </div>
-          </div>
+
+            <div className="table-card">
+              <div className="table-wrapper">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Mã POS</th>
+                      <th>Tên sản phẩm</th>
+                      <th className="money">Giá vốn kỳ trước</th>
+                      <th className="money">Giá vốn hiện tại</th>
+                      <th className="money">Chênh lệch (VND)</th>
+                      <th className="money">Chênh lệch (%)</th>
+                      <th>Mức độ</th>
+                      <th>Thời gian</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredAlerts.map((alert) => {
+                      const isUp = alert.alertType === 'HIGH_VARIANCE';
+                      const cls = isUp ? 'cost-alert-up' : 'cost-alert-down';
+                      const absPct = alert.variancePercentage
+                        ? Math.abs(Number(alert.variancePercentage))
+                        : 0;
+                      const severity =
+                        absPct >= 200 ? 'Nghiêm trọng' :
+                        absPct >= 100 ? 'Cao' :
+                        absPct >= 50  ? 'Trung bình' : 'Thấp';
+                      const severityClass =
+                        absPct >= 200 ? 'severity-critical' :
+                        absPct >= 100 ? 'severity-high' :
+                        absPct >= 50  ? 'severity-medium' : 'severity-low';
+                      const barWidth = Math.min(absPct, 100);
+
+                      return (
+                        <tr key={alert.id}>
+                          <td className="poscode-cell">{alert.posCode}</td>
+                          <td className="name-cell">{alert.productName}</td>
+                          <td className="money">{formatVnd(alert.expectedCostVnd)}</td>
+                          <td className="money">{formatVnd(alert.actualCostVnd)}</td>
+                          <td className={`money ${cls}`}>
+                            <span className={isUp ? 'trend-up' : 'trend-down'}>
+                              {isUp ? '▲' : '▼'}
+                            </span>
+                            {' '}{formatVnd(alert.varianceAmountVnd)}
+                          </td>
+                          <td className={`money ${cls}`}>
+                            <div className="pct-bar-wrapper">
+                              <div className="pct-bar-track">
+                                <div
+                                  className={`pct-bar-fill ${cls}`}
+                                  style={{ width: barWidth + '%' }}
+                                />
+                              </div>
+                              <span className="pct-value">
+                                {isUp ? '+' : ''}{formatPercent(alert.variancePercentage)}
+                              </span>
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`badge ${severityClass}`}>
+                              {severity}
+                            </span>
+                          </td>
+                          <td className="time-cell">
+                            {alert.createdAt
+                              ? new Date(alert.createdAt).toLocaleDateString('vi-VN', {
+                                  day: '2-digit', month: '2-digit', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                })
+                              : '—'}
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-view"
+                              onClick={() => handleViewProduct(alert.posCode)}>
+                              Xem
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
