@@ -34,12 +34,6 @@ public class ProductCostService {
     @Value("${cost.variance.alert.threshold.percentage:20}")
     private BigDecimal varianceThresholdPercentage;
 
-    @Value("${cost.variance.alert.min.old.cost:50000}")
-    private BigDecimal minOldCostForPercentage;
-
-    @Value("${cost.variance.alert.min.variance.amount:500000}")
-    private BigDecimal minVarianceAmount;
-
     public List<ProductCostDTO> getAllProductCosts() {
         return productRepository.findAll().stream()
                 .filter(p -> p.getLotCount() != null && p.getLotCount() > 0)
@@ -161,20 +155,11 @@ public class ProductCostService {
             return;
         }
 
-        // Skip if old cost is too small for meaningful percentage calculation
-        if (oldAvgCost.compareTo(minOldCostForPercentage) < 0) {
-            return;
-        }
-
         BigDecimal variance = newCost.subtract(oldAvgCost);
-        BigDecimal absVariance = variance.abs();
 
-        // Skip if absolute variance is too small to be meaningful
-        if (absVariance.compareTo(minVarianceAmount) < 0) {
-            return;
-        }
-
-        BigDecimal variancePercentage = variance.divide(oldAvgCost, 4, RoundingMode.HALF_UP)
+        // Dùng max(old, new) làm mẫu số để % luôn trong [-100%, 100%]
+        BigDecimal denominator = oldAvgCost.abs().max(newCost.abs());
+        BigDecimal variancePercentage = variance.divide(denominator, 4, RoundingMode.HALF_UP)
                 .multiply(new BigDecimal("100"));
 
         BigDecimal absVariancePercentage = variancePercentage.abs();
@@ -280,14 +265,6 @@ public class ProductCostService {
                 .map(this::convertToDTO)
                 .sorted((a1, a2) -> a2.getCreatedAt().compareTo(a1.getCreatedAt())) // Newest first
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Xóa các cảnh báo cũ không đáp ứng ngưỡng mới (giá cũ quá nhỏ hoặc chênh lệch quá nhỏ)
-     */
-    @org.springframework.transaction.annotation.Transactional
-    public int cleanupInvalidAlerts() {
-        return costAlertRepository.deleteInvalidAlerts(minOldCostForPercentage, minVarianceAmount);
     }
 
     private CostAlertDTO convertToDTO(CostAlert alert) {

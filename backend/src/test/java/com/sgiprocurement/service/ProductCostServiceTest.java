@@ -67,8 +67,6 @@ class ProductCostServiceTest {
         po.setOrderedQty(100);
 
         setField(productCostService, "varianceThresholdPercentage", new BigDecimal("20"));
-        setField(productCostService, "minOldCostForPercentage", new BigDecimal("50000"));
-        setField(productCostService, "minVarianceAmount", new BigDecimal("500000"));
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {
