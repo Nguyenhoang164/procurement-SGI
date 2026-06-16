@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import '../styles/ProductList.css';
-import { purchaseOrderAPI, productAPI, productCostAPI } from '../services/api';
+import { purchaseOrderAPI } from '../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
 import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
@@ -18,8 +18,6 @@ function PurchaseOrderList() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [productMap, setProductMap] = useState({});
-  const [costMap, setCostMap] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [departments, setDepartments] = useState([]);
   const pageSize = 10;
@@ -38,16 +36,6 @@ function PurchaseOrderList() {
 
   useEffect(() => {
     fetchOrders(selectedDepartment);
-    productAPI.getAll().then(products => {
-      const map = {};
-      products.forEach(p => { if (p.posCode) map[p.posCode] = p.productName; });
-      setProductMap(map);
-    }).catch(() => {});
-    productCostAPI.getAll().then(costs => {
-      const map = {};
-      costs.forEach(c => { if (c.posCode) map[c.posCode] = c; });
-      setCostMap(map);
-    }).catch(() => {});
     purchaseOrderAPI.getDepartments().then(list => {
       setDepartments(list);
     }).catch(() => {});
@@ -148,7 +136,7 @@ function PurchaseOrderList() {
     input.click();
   };
 
-  const getName = (item) => item.productName || productMap[item.posCode] || '-';
+  const getName = (item) => item.productName || '-';
 
   const handleExportExcel = () => {
     const rows = orders.flatMap(order => {
@@ -349,22 +337,22 @@ function PurchaseOrderList() {
                             <td style={{ textAlign: 'right' }}>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
                             <td style={{ textAlign: 'right' }}>{sub.toLocaleString()} {item.currency || 'CNY'}</td>
                             <td style={{ textAlign: 'right' }}>
-                              {item.posCode && costMap[item.posCode]?.weightedAvgCostVnd
-                                ? Number(costMap[item.posCode].weightedAvgCostVnd).toLocaleString('vi-VN')
+                              {item.weightedAvgCostVnd
+                                ? Number(item.weightedAvgCostVnd).toLocaleString('vi-VN')
                                 : '—'}
                             </td>
                             <td style={{ textAlign: 'right' }}>
-                              {item.posCode && costMap[item.posCode]?.latestUnitCostVnd ? (
+                              {item.latestUnitCostVnd ? (
                                 <span style={{ fontSize: 12 }}>
-                                  {Number(costMap[item.posCode].latestUnitCostVnd).toLocaleString('vi-VN')} {costMap[item.posCode].latestCurrency || '₫'}
-                                  {costMap[item.posCode].latestOrderCode && (
+                                  {Number(item.latestUnitCostVnd).toLocaleString('vi-VN')} {item.latestCurrency || '₫'}
+                                  {item.latestOrderCode && (
                                     <><br/><span style={{ color: '#64748b', fontSize: 11 }}>
-                                      {costMap[item.posCode].latestOrderCode}
+                                      {item.latestOrderCode}
                                     </span></>
                                   )}
-                                  {costMap[item.posCode].latestCostDate && (
+                                  {item.latestCostDate && (
                                     <><br/><span style={{ color: '#94a3b8', fontSize: 10 }}>
-                                      {new Date(costMap[item.posCode].latestCostDate).toLocaleDateString('vi-VN')}
+                                      {new Date(item.latestCostDate).toLocaleDateString('vi-VN')}
                                     </span></>
                                   )}
                                 </span>

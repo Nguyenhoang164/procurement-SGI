@@ -35,8 +35,20 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
 
     List<PurchaseOrder> findByInitiatorDepartment(String initiatorDepartment);
 
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE po.initiatorDepartment = :dept")
+    List<PurchaseOrder> findByInitiatorDepartmentWithItems(@Param("dept") String dept);
+
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items")
+    List<PurchaseOrder> findAllWithItems();
+
     @Query("SELECT DISTINCT po.initiatorDepartment FROM PurchaseOrder po WHERE po.initiatorDepartment IS NOT NULL AND po.initiatorDepartment <> '' ORDER BY po.initiatorDepartment")
     List<String> findDistinctDepartments();
+
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword%)")
+    List<PurchaseOrder> searchByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword%) AND po.initiatorDepartment = :dept")
+    List<PurchaseOrder> searchByKeywordAndDepartment(@Param("keyword") String keyword, @Param("dept") String dept);
 
     @Query("SELECT MAX(po.poCode) FROM PurchaseOrder po WHERE po.poCode LIKE :prefix ORDER BY po.poCode DESC")
     Optional<String> findMaxPoCodeByPrefix(@Param("prefix") String prefix);

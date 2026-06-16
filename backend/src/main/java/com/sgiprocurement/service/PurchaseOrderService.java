@@ -62,13 +62,20 @@ public class PurchaseOrderService {
         String userDept = getCurrentUserDepartment();
         List<PurchaseOrder> list;
         if (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty()) {
-            list = purchaseOrderRepository.findByInitiatorDepartment(userDept);
+            list = purchaseOrderRepository.findByInitiatorDepartmentWithItems(userDept);
         } else if (department != null && !department.isEmpty()) {
-            list = purchaseOrderRepository.findByInitiatorDepartment(department);
+            list = purchaseOrderRepository.findByInitiatorDepartmentWithItems(department);
         } else {
-            list = purchaseOrderRepository.findAll();
+            list = purchaseOrderRepository.findAllWithItems();
         }
-        return list.stream().map(this::convertToDTO).collect(Collectors.toList());
+
+        Map<String, Product> productCache = productRepository.findAll().stream()
+                .filter(p -> p.getPosCode() != null)
+                .collect(Collectors.toMap(Product::getPosCode, p -> p, (a, b) -> a));
+
+        return list.stream()
+                .map(po -> convertToDTO(po, productCache))
+                .collect(Collectors.toList());
     }
 
     public PurchaseOrderDTO getPurchaseOrderById(Long id) {
@@ -829,12 +836,19 @@ public class PurchaseOrderService {
         String userDept = getCurrentUserDepartment();
         String effectiveDept = (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty())
                 ? userDept : department;
-        return purchaseOrderRepository.findAll().stream()
-                .filter(po -> (po.getPoCode() != null && po.getPoCode().contains(keyword))
-                        || (po.getPosCode() != null && po.getPosCode().contains(keyword)))
-                .filter(po -> effectiveDept == null || effectiveDept.isEmpty()
-                        || (po.getInitiatorDepartment() != null && po.getInitiatorDepartment().equals(effectiveDept)))
-                .map(this::convertToDTO)
+        List<PurchaseOrder> results;
+        if (effectiveDept != null && !effectiveDept.isEmpty()) {
+            results = purchaseOrderRepository.searchByKeywordAndDepartment(keyword, effectiveDept);
+        } else {
+            results = purchaseOrderRepository.searchByKeyword(keyword);
+        }
+
+        Map<String, Product> productCache = productRepository.findAll().stream()
+                .filter(p -> p.getPosCode() != null)
+                .collect(Collectors.toMap(Product::getPosCode, p -> p, (a, b) -> a));
+
+        return results.stream()
+                .map(po -> convertToDTO(po, productCache))
                 .collect(Collectors.toList());
     }
 
@@ -865,6 +879,16 @@ public class PurchaseOrderService {
 
     private boolean isDepartmentRestricted(String role) {
         return "SALES".equals(role) || "SALES_MANAGER".equals(role);
+    }
+
+    private PurchaseOrderDTO convertToDTO(PurchaseOrder po, Map<String, Product> productCache) {
+        PurchaseOrderDTO dto = convertToDTO(po);
+        if (po.getItems() != null) {
+            dto.setItems(po.getItems().stream()
+                    .map(item -> convertItemToDTO(item, productCache))
+                    .collect(Collectors.toList()));
+        }
+        return dto;
     }
 
     private PurchaseOrderDTO convertToDTO(PurchaseOrder po) {
@@ -976,6 +1000,21 @@ public class PurchaseOrderService {
             }).collect(Collectors.toList()));
         }
         return po;
+    }
+
+    private PurchaseOrderItemDTO convertItemToDTO(PurchaseOrderItem item, Map<String, Product> productCache) {
+        PurchaseOrderItemDTO dto = convertItemToDTO(item);
+        String posCode = item.getPosCode();
+        if (posCode != null) {
+            Product product = productCache.get(posCode);
+            if (product != null) {
+                if (dto.getWeightedAvgCostVnd() == null) dto.setWeightedAvgCostVnd(product.getWeightedAvgCostVnd());
+                if (dto.getLatestUnitCostVnd() == null) dto.setLatestUnitCostVnd(product.getLatestUnitCostVnd());
+                if (dto.getLatestOrderCode() == null) dto.setLatestOrderCode(product.getLatestOrderCode());
+                if (dto.getLatestCostDate() == null) dto.setLatestCostDate(product.getLatestCostDate());
+            }
+        }
+        return dto;
     }
 
     private PurchaseOrderItemDTO convertItemToDTO(PurchaseOrderItem item) {
