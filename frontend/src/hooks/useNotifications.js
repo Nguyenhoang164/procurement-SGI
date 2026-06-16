@@ -138,11 +138,12 @@ export function useNotifications({ autoRefreshMs = 15000 } = {}) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [weeklyPlans, orders, payments] = await Promise.all([
+      const [weeklyPlans, ordersResp, payments] = await Promise.all([
         weeklyPlanAPI.getAll(),
-        purchaseOrderAPI.getAll(),
+        purchaseOrderAPI.getAll('', 0, 10000),
         paymentRequestAPI.getAll()
       ]);
+      const orders = ordersResp.orders || [];
       let users = [];
       try { users = await userAPI.getAll(); } catch {}
       setNotifications(buildNotifications(weeklyPlans, orders, payments, users));
