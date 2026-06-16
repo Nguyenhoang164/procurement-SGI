@@ -60,8 +60,8 @@ function PaymentRequestNew() {
   const loadOrders = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await purchaseOrderAPI.getAll();
-      setOrders(data);
+      const data = await purchaseOrderAPI.getAll('', 0, 10000);
+      setOrders(data.orders || []);
       setError('');
     } catch (err) {
       toast.error(err.message);
