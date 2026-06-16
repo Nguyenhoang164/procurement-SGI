@@ -282,6 +282,14 @@ public class ProductCostService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Xóa các cảnh báo cũ không đáp ứng ngưỡng mới (giá cũ quá nhỏ hoặc chênh lệch quá nhỏ)
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public int cleanupInvalidAlerts() {
+        return costAlertRepository.deleteInvalidAlerts(minOldCostForPercentage, minVarianceAmount);
+    }
+
     private CostAlertDTO convertToDTO(CostAlert alert) {
         CostAlertDTO dto = new CostAlertDTO();
         dto.setId(alert.getId());

@@ -55,4 +55,11 @@ public class ProductCostController {
         productCostService.resetAllProductCosts();
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/alerts/cleanup")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<java.util.Map<String, Integer>> cleanupAlerts() {
+        int deleted = productCostService.cleanupInvalidAlerts();
+        return ResponseEntity.ok(java.util.Map.of("deleted", deleted));
+    }
 }
