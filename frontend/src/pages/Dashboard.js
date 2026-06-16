@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardAPI, globalSearchAPI } from '../services/api';
 import {
@@ -32,8 +32,9 @@ function Dashboard() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const handleSearch = async (kw) => {
-    setSearchKeyword(kw);
+  const debounceRef = useRef(null);
+
+  const doSearch = useCallback(async (kw) => {
     if (!kw.trim()) { setSearchResults(null); setShowSearch(false); return; }
     setSearching(true); setShowSearch(true);
     try {
@@ -41,6 +42,12 @@ function Dashboard() {
       setSearchResults(res);
     } catch { setSearchResults(null); }
     finally { setSearching(false); }
+  }, []);
+
+  const handleSearch = (kw) => {
+    setSearchKeyword(kw);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(kw), 300);
   };
 
   if (loading) {
@@ -116,6 +123,17 @@ function Dashboard() {
                 <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>Đang tìm kiếm...</div>
               ) : searchResults ? (
                 <>
+                  {searchResults.weeklyPlans?.length > 0 && (
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
+                      <div style={{ fontWeight: 600, fontSize: 12, color: '#6b7280', marginBottom: 4 }}>KẾ HOẠCH TUẦN ({searchResults.weeklyPlans.length})</div>
+                      {searchResults.weeklyPlans.slice(0, 5).map(wp => (
+                        <div key={wp.id} style={{ padding: '4px 0', cursor: 'pointer', fontSize: 13, color: '#2563eb' }}
+                          onClick={() => { navigate(`/weekly-plans/edit/${wp.id}`); setShowSearch(false); setSearchKeyword(''); }}>
+                          {wp.posCode || 'KH-' + wp.id}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {searchResults.purchaseOrders?.length > 0 && (
                     <div style={{ padding: '8px 12px', borderBottom: '1px solid #f3f4f6' }}>
                       <div style={{ fontWeight: 600, fontSize: 12, color: '#6b7280', marginBottom: 4 }}>ĐƠN HÀNG ({searchResults.purchaseOrders.length})</div>
@@ -149,7 +167,7 @@ function Dashboard() {
                       ))}
                     </div>
                   )}
-                  {(!searchResults.purchaseOrders?.length && !searchResults.paymentRequests?.length && !searchResults.waybills?.length) && (
+                  {(!searchResults.weeklyPlans?.length && !searchResults.purchaseOrders?.length && !searchResults.paymentRequests?.length && !searchResults.waybills?.length) && (
                     <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8' }}>Không tìm thấy kết quả phù hợp.</div>
                   )}
                 </>

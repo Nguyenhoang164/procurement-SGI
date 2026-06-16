@@ -125,11 +125,7 @@ public class WaybillService {
     }
 
     public List<WaybillDTO> searchByCode(String keyword) {
-        return waybillRepository.findAll().stream()
-                .filter(wb -> 
-                    (wb.getWaybillCode() != null && wb.getWaybillCode().contains(keyword))
-                    || (wb.getProducts() != null && wb.getProducts().toLowerCase().contains(keyword.toLowerCase()))
-                )
+        return waybillRepository.searchByKeyword(keyword).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

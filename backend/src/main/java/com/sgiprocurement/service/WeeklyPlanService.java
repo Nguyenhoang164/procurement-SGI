@@ -119,6 +119,12 @@ public class WeeklyPlanService {
         return convertToDTO(updated);
     }
 
+    public List<WeeklyPlanDTO> searchByKeyword(String keyword) {
+        return weeklyPlanRepository.searchByKeyword(keyword).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public void deleteWeeklyPlan(Long id) {
         WeeklyPlan plan = weeklyPlanRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Weekly plan not found with id: " + id));

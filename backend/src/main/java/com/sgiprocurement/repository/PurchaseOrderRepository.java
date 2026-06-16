@@ -62,10 +62,10 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     @Query("SELECT DISTINCT po.initiatorDepartment FROM PurchaseOrder po WHERE po.initiatorDepartment IS NOT NULL AND po.initiatorDepartment <> '' ORDER BY po.initiatorDepartment")
     List<String> findDistinctDepartments();
 
-    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword%) AND (:start IS NULL OR po.createdAt >= :start) AND (:end IS NULL OR po.createdAt <= :end)")
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword% OR po.productName LIKE %:keyword% OR po.supplierName LIKE %:keyword% OR po.note LIKE %:keyword%) AND (:start IS NULL OR po.createdAt >= :start) AND (:end IS NULL OR po.createdAt <= :end)")
     List<PurchaseOrder> searchByKeyword(@Param("keyword") String keyword, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword%) AND po.initiatorDepartment = :dept AND (:start IS NULL OR po.createdAt >= :start) AND (:end IS NULL OR po.createdAt <= :end)")
+    @Query("SELECT DISTINCT po FROM PurchaseOrder po LEFT JOIN FETCH po.items WHERE (po.poCode LIKE %:keyword% OR po.posCode LIKE %:keyword% OR po.productName LIKE %:keyword% OR po.supplierName LIKE %:keyword% OR po.note LIKE %:keyword%) AND po.initiatorDepartment = :dept AND (:start IS NULL OR po.createdAt >= :start) AND (:end IS NULL OR po.createdAt <= :end)")
     List<PurchaseOrder> searchByKeywordAndDepartment(@Param("keyword") String keyword, @Param("dept") String dept, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT MAX(po.poCode) FROM PurchaseOrder po WHERE po.poCode LIKE :prefix ORDER BY po.poCode DESC")
