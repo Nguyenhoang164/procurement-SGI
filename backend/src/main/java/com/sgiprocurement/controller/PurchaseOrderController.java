@@ -126,8 +126,18 @@ public class PurchaseOrderController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<PurchaseOrderDTO>> search(
             @RequestParam String keyword,
-            @RequestParam(required = false) String department) {
-        return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword, department));
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        java.time.LocalDateTime start = null;
+        java.time.LocalDateTime end = null;
+        if (startDate != null && !startDate.isEmpty()) {
+            start = java.time.LocalDate.parse(startDate).atStartOfDay();
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            end = java.time.LocalDate.parse(endDate).plusDays(1).atStartOfDay();
+        }
+        return ResponseEntity.ok(purchaseOrderService.searchByKeyword(keyword, department, start, end));
     }
 
     @PostMapping("/import")

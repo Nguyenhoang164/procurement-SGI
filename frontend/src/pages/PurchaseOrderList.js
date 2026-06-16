@@ -113,8 +113,10 @@ function PurchaseOrderList() {
     const dept = isDeptRestricted ? userDept : selectedDepartment;
     if (!searchKeyword.trim()) { fetchOrders(dept, 0); return; }
     try {
-      const data = await purchaseOrderAPI.search(searchKeyword, dept);
+      const { start, end } = getDateRange(dateMode);
+      const data = await purchaseOrderAPI.search(searchKeyword, dept, start, end);
       setOrders(data);
+      setTotalItems(data.length || 0);
     } catch (err) {
       setError(err.message);
     }

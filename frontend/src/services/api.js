@@ -148,9 +148,11 @@ export const purchaseOrderAPI = {
       method: 'POST', headers: getHeaders()
     });
   },
-  search: async (keyword, department) => {
+  search: async (keyword, department, startDate = '', endDate = '') => {
     let url = `${API_BASE_URL}/purchase-orders/search?keyword=${encodeURIComponent(keyword)}`;
     if (department) url += `&department=${encodeURIComponent(department)}`;
+    if (startDate) url += `&startDate=${encodeURIComponent(startDate)}`;
+    if (endDate) url += `&endDate=${encodeURIComponent(endDate)}`;
     return requestJson(url, { headers: getHeaders() });
   },
   importOrders: async (orders) => requestJson(`${API_BASE_URL}/purchase-orders/import`, {

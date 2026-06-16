@@ -882,16 +882,17 @@ public class PurchaseOrderService {
         }
     }
 
-    public List<PurchaseOrderDTO> searchByKeyword(String keyword, String department) {
+    public List<PurchaseOrderDTO> searchByKeyword(String keyword, String department,
+            LocalDateTime startDate, LocalDateTime endDate) {
         String role = getCurrentUserRole();
         String userDept = getCurrentUserDepartment();
         String effectiveDept = (isDepartmentRestricted(role) && userDept != null && !userDept.isEmpty())
                 ? userDept : department;
         List<PurchaseOrder> results;
         if (effectiveDept != null && !effectiveDept.isEmpty()) {
-            results = purchaseOrderRepository.searchByKeywordAndDepartment(keyword, effectiveDept);
+            results = purchaseOrderRepository.searchByKeywordAndDepartment(keyword, effectiveDept, startDate, endDate);
         } else {
-            results = purchaseOrderRepository.searchByKeyword(keyword);
+            results = purchaseOrderRepository.searchByKeyword(keyword, startDate, endDate);
         }
 
         Map<String, Product> productCache = buildProductCache(results);
