@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -36,7 +37,7 @@ public class ProductService {
     private ProductNamingService productNamingService;
 
     public List<ProductDTO> getAllProducts() {
-        return productRepository.findAll()
+        return productRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -61,7 +62,7 @@ public class PaymentRequestService {
     private BankAccountRepository bankAccountRepository;
 
     public List<PaymentRequestDTO> getAllPaymentRequests() {
-        return paymentRequestRepository.findAll()
+        return paymentRequestRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

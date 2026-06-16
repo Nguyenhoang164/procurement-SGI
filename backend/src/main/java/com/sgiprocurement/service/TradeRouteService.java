@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class TradeRouteService {
@@ -17,7 +18,7 @@ public class TradeRouteService {
     private TradeRouteRepository repository;
 
     public List<TradeRouteDTO> getAll() {
-        return repository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return repository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public List<TradeRouteDTO> getActive() {

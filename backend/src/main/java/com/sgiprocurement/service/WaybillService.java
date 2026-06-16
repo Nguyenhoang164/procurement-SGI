@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -35,7 +36,7 @@ public class WaybillService {
     private WarehouseReceiptService warehouseReceiptService;
 
     public List<WaybillDTO> getAllWaybills() {
-        return waybillRepository.findAll().stream()
+        return waybillRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

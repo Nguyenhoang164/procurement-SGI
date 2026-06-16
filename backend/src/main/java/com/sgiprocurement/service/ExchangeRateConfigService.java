@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ExchangeRateConfigService {
@@ -16,7 +17,7 @@ public class ExchangeRateConfigService {
     private ExchangeRateConfigRepository repository;
 
     public List<ExchangeRateConfigDTO> getAll() {
-        return repository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
+        return repository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt")).stream().map(this::convertToDTO).collect(Collectors.toList());
     }
 
     public ExchangeRateConfigDTO getByCurrency(String currency) {

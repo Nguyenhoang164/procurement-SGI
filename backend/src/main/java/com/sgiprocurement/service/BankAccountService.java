@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -30,7 +31,7 @@ public class BankAccountService {
     private FileStorageService fileStorageService;
 
     public List<BankAccountDTO> getAll() {
-        return bankAccountRepository.findAll()
+        return bankAccountRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

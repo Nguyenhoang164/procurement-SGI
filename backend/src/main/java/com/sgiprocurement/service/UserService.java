@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -25,7 +26,7 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     public List<UserResponse> getAllUsers() {
-        return userRepository.findAll()
+        return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());

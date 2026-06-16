@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -352,7 +353,7 @@ public class WarehouseReceiptService {
     }
 
     public List<WarehouseReceiptDTO> getAllWarehouseReceipts() {
-        return warehouseReceiptRepository.findAll()
+        return warehouseReceiptRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToDTO)
                 .peek(this::enrichReceiptDTO)

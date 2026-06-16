@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -26,7 +27,7 @@ public class WeeklyPlanService {
     private ProductRepository productRepository;
 
     public List<WeeklyPlanDTO> getAllWeeklyPlans() {
-        return weeklyPlanRepository.findAll()
+        return weeklyPlanRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());

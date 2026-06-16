@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -74,6 +75,12 @@ public class PurchaseOrderService {
 
         Map<String, Product> productCache = buildProductCache(list);
         return list.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
                 .map(po -> convertToDTO(po, productCache))
                 .collect(Collectors.toList());
     }
@@ -82,7 +89,7 @@ public class PurchaseOrderService {
             LocalDateTime startDate, LocalDateTime endDate) {
         String role = getCurrentUserRole();
         String userDept = getCurrentUserDepartment();
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<PurchaseOrder> poPage;
 
         boolean hasDateRange = startDate != null && endDate != null;
@@ -897,6 +904,12 @@ public class PurchaseOrderService {
 
         Map<String, Product> productCache = buildProductCache(results);
         return results.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null && b.getCreatedAt() == null) return 0;
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
                 .map(po -> convertToDTO(po, productCache))
                 .collect(Collectors.toList());
     }
