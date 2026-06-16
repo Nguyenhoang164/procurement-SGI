@@ -30,6 +30,7 @@ public class PurchaseOrderItemDTO {
     private BigDecimal latestUnitCostVnd;
     private String latestOrderCode;
     private LocalDateTime latestCostDate;
+    private String latestCurrency;
 
 }
 

@@ -1048,6 +1048,7 @@ public class PurchaseOrderService {
                 if (dto.getLatestUnitCostVnd() == null) dto.setLatestUnitCostVnd(product.getLatestUnitCostVnd());
                 if (dto.getLatestOrderCode() == null) dto.setLatestOrderCode(product.getLatestOrderCode());
                 if (dto.getLatestCostDate() == null) dto.setLatestCostDate(product.getLatestCostDate());
+                if (dto.getLatestCurrency() == null) dto.setLatestCurrency(product.getLatestCurrency());
             }
         }
         return dto;
@@ -1107,6 +1108,7 @@ public class PurchaseOrderService {
                 if (dto.getLatestUnitCostVnd() == null) dto.setLatestUnitCostVnd(product.getLatestUnitCostVnd());
                 if (dto.getLatestOrderCode() == null) dto.setLatestOrderCode(product.getLatestOrderCode());
                 if (dto.getLatestCostDate() == null) dto.setLatestCostDate(product.getLatestCostDate());
+                if (dto.getLatestCurrency() == null) dto.setLatestCurrency(product.getLatestCurrency());
             }
         } catch (Exception e) {
             // silently ignore â€” cost fields are optional reference data

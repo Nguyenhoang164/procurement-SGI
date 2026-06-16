@@ -304,6 +304,7 @@ function PurchaseOrderList() {
                         <th style={{ width: 100, textAlign: 'right' }}>Thành tiền</th>
                         <th style={{ width: 90, textAlign: 'right' }}>GV TB</th>
                         <th style={{ width: 90, textAlign: 'right' }}>GV gần nhất</th>
+                        <th style={{ width: 80, textAlign: 'right' }}>Ngày TH</th>
                         <th style={{ width: 90, textAlign: 'right' }}>Quy đổi VNĐ</th>
                       </tr>
                     </thead>
@@ -343,21 +344,14 @@ function PurchaseOrderList() {
                                 : '—'}
                             </td>
                             <td style={{ textAlign: 'right' }}>
-                              {item.latestUnitCostVnd ? (
-                                <span style={{ fontSize: 12 }}>
-                                  {Number(item.latestUnitCostVnd).toLocaleString('vi-VN')} {item.latestCurrency || '₫'}
-                                  {item.latestOrderCode && (
-                                    <><br/><span style={{ color: '#64748b', fontSize: 11 }}>
-                                      {item.latestOrderCode}
-                                    </span></>
-                                  )}
-                                  {item.latestCostDate && (
-                                    <><br/><span style={{ color: '#94a3b8', fontSize: 10 }}>
-                                      {new Date(item.latestCostDate).toLocaleDateString('vi-VN')}
-                                    </span></>
-                                  )}
-                                </span>
-                              ) : '—'}
+                              {item.latestUnitCostVnd != null
+                                ? `${Number(item.latestUnitCostVnd).toLocaleString('vi-VN', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} ${item.latestCurrency || '₫'}`
+                                : '—'}
+                            </td>
+                            <td style={{ textAlign: 'right', fontSize: 12, color: '#94a3b8' }}>
+                              {item.latestCostDate
+                                ? new Date(item.latestCostDate).toLocaleDateString('vi-VN')
+                                : '—'}
                             </td>
                             <td style={{ textAlign: 'right', color: order.paymentStatus === 'REJECTED' ? 'var(--muted)' : 'var(--blue)', fontWeight: 600 }}>{vnd.toLocaleString()} đ</td>
                           </tr>
@@ -375,6 +369,7 @@ function PurchaseOrderList() {
                                   <td style={{ fontSize: 12, color: '#64748b' }}>{item.posCode} - {v.name}</td>
                                   <td style={{ fontSize: 12, color: '#475569' }}>{v.name}</td>
                                   <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
+                                  <td></td>
                                   <td></td>
                                   <td></td>
                                   <td></td>
