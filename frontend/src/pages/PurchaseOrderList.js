@@ -425,7 +425,7 @@ function PurchaseOrderList() {
                                     <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                   </td>
                                   <td></td>
-                                  <td style={{ fontSize: 12, color: '#64748b' }}>{item.posCode} - {v.name}</td>
+                                  <td style={{ fontSize: 12, color: '#64748b' }}>{item.posCode}-{v.name}</td>
                                   <td style={{ fontSize: 12, color: '#475569' }}>{v.name}</td>
                                   <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
                                   <td></td>

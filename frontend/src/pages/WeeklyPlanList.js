@@ -269,7 +269,7 @@ function WeeklyPlanList() {
                                   <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                 </td>
                                 <td></td>
-                                <td style={{ fontSize: 13, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{item.posCode} - {v.name}</td>
+                                <td style={{ fontSize: 13, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{item.posCode}-{v.name}</td>
                                 <td></td>
                                 <td></td>
                                 <td style={{ fontSize: 13 }}>{v.qty || 0}</td>
