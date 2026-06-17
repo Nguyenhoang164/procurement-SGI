@@ -34,9 +34,15 @@ public class ProductCostService {
     @Value("${cost.variance.alert.threshold.percentage:20}")
     private BigDecimal varianceThresholdPercentage;
 
-    public List<ProductCostDTO> getAllProductCosts() {
+    public List<ProductCostDTO> getAllProductCosts(String keyword, String currency) {
         return productRepository.findAll().stream()
                 .filter(p -> p.getLotCount() != null && p.getLotCount() > 0)
+                .filter(p -> keyword == null || keyword.isBlank()
+                        || (p.getPosCode() != null && p.getPosCode().toLowerCase().contains(keyword.toLowerCase()))
+                        || (p.getProductName() != null && p.getProductName().toLowerCase().contains(keyword.toLowerCase())))
+                .filter(p -> currency == null || currency.isBlank()
+                        || currency.equalsIgnoreCase("ALL")
+                        || (p.getLatestCurrency() != null && p.getLatestCurrency().equalsIgnoreCase(currency)))
                 .map(this::toDTO)
                 .sorted(Comparator.comparing(ProductCostDTO::getPosCode))
                 .collect(Collectors.toList());

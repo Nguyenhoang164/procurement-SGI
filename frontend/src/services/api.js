@@ -284,7 +284,14 @@ export const exchangeRateAPI = {
 };
 
 export const productCostAPI = {
-  getAll: async () => requestJson(`${API_BASE_URL}/product-costs`, { headers: getHeaders() }),
+  getAll: async (keyword, currency) => {
+    const params = new URLSearchParams();
+    if (keyword) params.set('keyword', keyword);
+    if (currency && currency !== 'ALL') params.set('currency', currency);
+    const query = params.toString();
+    const url = query ? `${API_BASE_URL}/product-costs?${query}` : `${API_BASE_URL}/product-costs`;
+    return requestJson(url, { headers: getHeaders() });
+  },
   getAllAlerts: async () => requestJson(`${API_BASE_URL}/product-costs/alerts`, { headers: getHeaders() }),
   getAlertsByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/product-costs/alerts/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
   delete: async (posCode) => {

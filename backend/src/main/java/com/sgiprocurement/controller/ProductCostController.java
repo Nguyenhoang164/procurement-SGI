@@ -26,8 +26,10 @@ public class ProductCostController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
-    public ResponseEntity<List<ProductCostDTO>> getAllProductCosts() {
-        return ResponseEntity.ok(productCostService.getAllProductCosts());
+    public ResponseEntity<List<ProductCostDTO>> getAllProductCosts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String currency) {
+        return ResponseEntity.ok(productCostService.getAllProductCosts(keyword, currency));
     }
 
     @GetMapping("/alerts")

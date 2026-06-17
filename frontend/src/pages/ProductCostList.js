@@ -10,15 +10,19 @@ function ProductCostList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterCurrency, setFilterCurrency] = useState('');
   const pageSize = 10;
   const userData = getUser();
   const canDelete = canDeleteProductCost(userData);
 
-  const loadCosts = useCallback(async () => {
+  const currencies = [...new Set(items.map(i => i.latestCurrency).filter(Boolean))];
+
+  const loadCosts = useCallback(async (keyword, currency) => {
     setLoading(true);
     setCurrentPage(1);
     try {
-      const data = await productCostAPI.getAll();
+      const data = await productCostAPI.getAll(keyword, currency);
       setItems(data);
       setError('');
     } catch (err) {
@@ -29,8 +33,18 @@ function ProductCostList() {
   }, []);
 
   useEffect(() => {
-    loadCosts();
-  }, [loadCosts]);
+    loadCosts(searchKeyword, filterCurrency);
+  }, []);
+
+  const handleSearch = () => {
+    loadCosts(searchKeyword, filterCurrency);
+  };
+
+  const handleRefresh = () => {
+    setSearchKeyword('');
+    setFilterCurrency('');
+    loadCosts('', '');
+  };
 
   const handleExport = () => {
     if (items.length === 0) return;
@@ -88,14 +102,11 @@ function ProductCostList() {
           <p className="page-subtitle">GV bình quân gia quyền — cập nhật sau khi nhận hàng (đơn đã thanh toán)</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-secondary" onClick={loadCosts}>
-            Làm mới
-          </button>
           <button type="button" className="btn btn-primary" onClick={handleExport} disabled={items.length === 0}>
             Export
           </button>
           {canDelete && (
-            <button type="button" className="btn btn-danger" onClick={handleDeleteAll} style={{ marginLeft: 8 }}>
+            <button type="button" className="btn btn-danger" onClick={handleDeleteAll}>
               Xóa tất cả
             </button>
           )}
@@ -105,11 +116,30 @@ function ProductCostList() {
       <div className="page-content">
         {error ? <div className="error-message">{error}</div> : null}
 
+        <div className="search-bar" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+          <input type="text" placeholder="Tìm kiếm mã POS, tên sản phẩm..." value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            style={{ flex: 1, minWidth: 200, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} />
+          <select value={filterCurrency} onChange={(e) => setFilterCurrency(e.target.value)}
+            style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, background: '#fff' }}>
+            <option value="">Tất cả tiền tệ</option>
+            {currencies.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <button className="btn btn-primary" onClick={handleSearch}>Tìm</button>
+          <button className="btn btn-secondary" onClick={handleRefresh}>Xóa lọc</button>
+          <button type="button" className="btn btn-secondary" onClick={() => loadCosts(searchKeyword, filterCurrency)}>
+            Làm mới
+          </button>
+        </div>
+
         {loading ? (
           <div className="loading">Đang tải...</div>
         ) : items.length === 0 ? (
           <div className="empty-state">
-            Chưa có dữ liệu giá vốn. Nhận hàng các đơn đã thanh toán để hệ thống tính GV bình quân.
+            {searchKeyword || filterCurrency
+              ? 'Không tìm thấy kết quả phù hợp.'
+              : 'Chưa có dữ liệu giá vốn. Nhận hàng các đơn đã thanh toán để hệ thống tính GV bình quân.'}
           </div>
         ) : (
           <div className="table-card">
