@@ -39,7 +39,7 @@ function CostAlertsList() {
 
   const formatVnd = (value) => {
     if (!value) return '—';
-    return Number(value).toLocaleString('vi-VN') + ' ₫';
+    return Number(value).toLocaleString('vi-VN');
   };
 
   const formatPercent = (value) => {
