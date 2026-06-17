@@ -7,10 +7,7 @@ import PosCodeSelector from '../components/PosCodeSelector';
 const CURRENCIES = ['CNY', 'USD', 'VND', 'JPY', 'KRW', 'PHP', 'EUR', 'GBP', 'AUD', 'SGD', 'THB', 'MYR'];
 
 const HelpIcon = ({ text }) => (
-  <span title={text}
-    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', background: '#e2e8f0', color: '#64748b', fontSize: 10, fontWeight: 700, cursor: 'help', marginLeft: 4, verticalAlign: 'middle', lineHeight: '16px' }}>
-    ?
-  </span>
+  <span className="help-icon" data-tip={text}>?</span>
 );
 
 const parseVariants = (spec) => {
