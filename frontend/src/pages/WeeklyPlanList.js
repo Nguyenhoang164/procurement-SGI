@@ -241,14 +241,20 @@ function WeeklyPlanList() {
                             <td style={{ whiteSpace: 'nowrap' }}>{item.referencePrice ? Number(item.referencePrice).toLocaleString() : '-'}</td>
                             <td>{item.priorityLevel || '-'}</td>
                             <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
-                            <td style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
+                            <td>
                               {item.sourceLink ? (
-                                <a href={item.sourceLink} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>{item.sourceLink}</a>
+                                <a href={item.sourceLink} target="_blank" rel="noopener noreferrer" title={item.sourceLink}
+                                  style={{ color: '#2563eb', textDecoration: 'underline', fontSize: 13 }}>
+                                  {item.sourceLink.length > 40 ? item.sourceLink.substring(0, 40) + '...' : item.sourceLink}
+                                </a>
                               ) : '-'}
                             </td>
-                            <td style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
+                            <td>
                               {item.landing ? (
-                                <a href={item.landing} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', wordBreak: 'break-all' }}>{item.landing}</a>
+                                <a href={item.landing} target="_blank" rel="noopener noreferrer" title={item.landing}
+                                  style={{ color: '#2563eb', textDecoration: 'underline', fontSize: 13 }}>
+                                  {item.landing.length > 40 ? item.landing.substring(0, 40) + '...' : item.landing}
+                                </a>
                               ) : '-'}
                             </td>
                           </tr>
