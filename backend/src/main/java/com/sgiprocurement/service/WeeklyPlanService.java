@@ -10,6 +10,7 @@ import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -27,8 +28,14 @@ public class WeeklyPlanService {
     private ProductRepository productRepository;
 
     public List<WeeklyPlanDTO> getAllWeeklyPlans() {
+        return getAllWeeklyPlans(null, null);
+    }
+
+    public List<WeeklyPlanDTO> getAllWeeklyPlans(LocalDate startDate, LocalDate endDate) {
         return weeklyPlanRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
+                .filter(p -> startDate == null || !p.getProposedDate().toLocalDate().isBefore(startDate))
+                .filter(p -> endDate == null || !p.getProposedDate().toLocalDate().isAfter(endDate))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

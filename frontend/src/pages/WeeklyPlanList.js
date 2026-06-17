@@ -23,6 +23,8 @@ function WeeklyPlanList() {
   const [searchKeyword, setSearchKeyword] = useState(() => (
     location.state?.search || new URLSearchParams(location.search).get('search') || ''
   ));
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [expandedRows, setExpandedRows] = useState(new Set());
 
   const toggleRow = (key) => {
@@ -34,7 +36,7 @@ function WeeklyPlanList() {
   };
 
   useEffect(() => {
-    fetchPlans();
+    fetchPlans(startDate, endDate);
     productAPI.getAll().then(products => {
       const map = {};
       products.forEach(p => { if (p.posCode) map[p.posCode] = p.productName; });
@@ -52,10 +54,10 @@ function WeeklyPlanList() {
   const canDelete = canDeleteWeeklyPlan(userData);
   const getName = (item) => item.productName || productMap[item.posCode] || '-';
 
-  const fetchPlans = async () => {
+  const fetchPlans = async (sd, ed) => {
     setLoading(true);
     try {
-      const data = await weeklyPlanAPI.getAll();
+      const data = await weeklyPlanAPI.getAll(sd || startDate, ed || endDate);
       setPlans(data);
       setError('');
     } catch (err) {
@@ -91,7 +93,9 @@ function WeeklyPlanList() {
 
   const handleRefresh = () => {
     setSearchKeyword('');
-    fetchPlans();
+    setStartDate('');
+    setEndDate('');
+    fetchPlans('', '');
   };
 
   const totalItems = filteredPlans.reduce((sum, p) => sum + (p.items ? p.items.length : 0), 0);
@@ -114,10 +118,16 @@ function WeeklyPlanList() {
       </div>
 
       <div className="page-content">
-        <div className="search-bar" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <div className="search-bar" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
           <input type="text" placeholder="Tìm kiếm theo mã kế hoạch, VD: KH-0010..." value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
-            style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} />
+            style={{ flex: 1, minWidth: 180, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6 }} />
+          <input type="date" value={startDate}
+            onChange={(e) => { setStartDate(e.target.value); fetchPlans(e.target.value, endDate); }}
+            style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }} />
+          <input type="date" value={endDate}
+            onChange={(e) => { setEndDate(e.target.value); fetchPlans(startDate, e.target.value); }}
+            style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }} />
           <button className="btn btn-secondary" onClick={() => setSearchKeyword('')}>Xóa lọc</button>
           <button className="btn btn-secondary" onClick={handleRefresh}>Làm mới</button>
         </div>

@@ -8,7 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/v1/weekly-plans")
@@ -20,8 +22,10 @@ public class WeeklyPlanController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
-    public ResponseEntity<List<WeeklyPlanDTO>> getAllWeeklyPlans() {
-        List<WeeklyPlanDTO> plans = weeklyPlanService.getAllWeeklyPlans();
+    public ResponseEntity<List<WeeklyPlanDTO>> getAllWeeklyPlans(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        List<WeeklyPlanDTO> plans = weeklyPlanService.getAllWeeklyPlans(startDate, endDate);
         return ResponseEntity.ok(plans);
     }
 

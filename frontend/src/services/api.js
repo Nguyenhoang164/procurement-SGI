@@ -67,7 +67,13 @@ export const authAPI = {
 };
 
 export const weeklyPlanAPI = {
-  getAll: async () => requestJson(`${API_BASE_URL}/weekly-plans`, { headers: getHeaders() }),
+  getAll: async (startDate, endDate) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const qs = params.toString();
+    return requestJson(`${API_BASE_URL}/weekly-plans${qs ? '?' + qs : ''}`, { headers: getHeaders() });
+  },
   getById: async (id) => requestJson(`${API_BASE_URL}/weekly-plans/${id}`, { headers: getHeaders() }),
   create: async (data) => requestJson(`${API_BASE_URL}/weekly-plans`, {
     method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
