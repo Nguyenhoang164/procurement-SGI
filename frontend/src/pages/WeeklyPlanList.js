@@ -239,7 +239,9 @@ function WeeklyPlanList() {
                             <td>{item.tradeRoute || '-'}</td>
                             <td>{item.shippingMethod || '-'}</td>
                             <td style={{ whiteSpace: 'nowrap' }}>{item.referencePrice ? Number(item.referencePrice).toLocaleString() : '-'}</td>
-                            <td>{item.priorityLevel || '-'}</td>
+                            <td style={{ fontWeight: 600, color: item.priorityLevel === 'Cao' ? '#dc2626' : item.priorityLevel === 'Trung bình' ? '#d97706' : item.priorityLevel === 'Thấp' ? '#16a34a' : 'inherit' }}>
+                              {item.priorityLevel || '-'}
+                            </td>
                             <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td>
                               {item.sourceLink ? (
