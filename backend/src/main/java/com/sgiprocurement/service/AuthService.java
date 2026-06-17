@@ -8,6 +8,7 @@ import com.sgiprocurement.model.User;
 import com.sgiprocurement.repository.UserRepository;
 import com.sgiprocurement.config.JwtTokenProvider;
 import com.sgiprocurement.exception.ResourceNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.LocalDateTime;
 
 @Service
@@ -33,6 +36,20 @@ public class AuthService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired
+    private AuditLogService auditLogService;
+
+    private String getClientIp() {
+        try {
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            String ip = request.getHeader("X-Forwarded-For");
+            if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
+            return ip;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public AuthResponse login(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
                 .orElseThrow(() -> new BadCredentialsException("Invalid username or password"));
@@ -46,6 +63,9 @@ public class AuthService {
         }
 
         String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), user.getRole());
+
+        auditLogService.record(user.getUsername(), user.getRole(), "LOGIN",
+                null, null, null, getClientIp());
 
         return new AuthResponse(
                 token,
@@ -100,6 +120,9 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         User saved = userRepository.save(user);
+
+        auditLogService.record(request.getUsername(), saved.getRole(), "REGISTER",
+                null, null, null, getClientIp());
 
         String token = jwtTokenProvider.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         return new AuthResponse(

@@ -36,6 +36,7 @@ import UserList from './pages/UserList';
 import UserForm from './pages/UserForm';
 import UserDetail from './pages/UserDetail';
 import ProcessGuide from './pages/ProcessGuide';
+import AuditLogPage from './pages/AuditLogPage';
 import { authAPI } from './services/api';
 
 function App() {
@@ -174,6 +175,7 @@ function App() {
             <Route path="/users/new" element={<UserForm />} />
             <Route path="/users/edit/:id" element={<UserForm />} />
             <Route path="/users/:id" element={<UserDetail />} />
+            <Route path="/admin/audit-logs" element={<AuditLogPage />} />
             <Route
               path="/admin"
               element={

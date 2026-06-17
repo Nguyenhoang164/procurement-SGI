@@ -6,6 +6,7 @@ import com.sgiprocurement.model.User;
 import com.sgiprocurement.repository.UserRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,17 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private AuditLogService auditLogService;
+
+    private String getCurrentUsername() {
+        try {
+            return SecurityContextHolder.getContext().getAuthentication().getName();
+        } catch (Exception e) {
+            return "system";
+        }
+    }
 
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
@@ -52,6 +64,8 @@ public class UserService {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
         User saved = userRepository.save(user);
+        auditLogService.record(getCurrentUsername(), null, "CREATE_USER",
+                "User", String.valueOf(saved.getId()), saved.getUsername(), null);
         return convertToResponse(saved);
     }
 
@@ -81,12 +95,16 @@ public class UserService {
         }
         user.setUpdatedAt(LocalDateTime.now());
         User saved = userRepository.save(user);
+        auditLogService.record(getCurrentUsername(), null, "UPDATE_USER",
+                "User", String.valueOf(id), saved.getUsername(), null);
         return convertToResponse(saved);
     }
 
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        auditLogService.record(getCurrentUsername(), null, "DELETE_USER",
+                "User", String.valueOf(id), user.getUsername(), null);
         userRepository.delete(user);
     }
 
@@ -96,6 +114,8 @@ public class UserService {
         user.setActive(false);
         user.setUpdatedAt(LocalDateTime.now());
         userRepository.save(user);
+        auditLogService.record(getCurrentUsername(), null, "DEACTIVATE_USER",
+                "User", String.valueOf(id), user.getUsername(), null);
     }
 
     private UserResponse convertToResponse(User user) {

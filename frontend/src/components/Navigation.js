@@ -16,7 +16,7 @@ const ROLE_LABELS = {
 };
 
 const ROLE_MENU = {
-  ADMIN: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'admin'],
+  ADMIN: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users', 'audit-logs', 'admin'],
   CEO: ['dashboard', 'notifications', 'process-guide', 'weekly-plans', 'purchase-orders', 'payments', 'warehouse', 'waybills', 'costs', 'cost-alerts', 'products', 'exchange-rates', 'bank-accounts', 'trade-routes', 'users'],
   WAREHOUSE: ['dashboard', 'notifications', 'process-guide', 'waybills', 'warehouse', 'purchase-orders', 'payments', 'weekly-plans', 'products'],
   ACCOUNTANT: ['dashboard', 'notifications', 'process-guide', 'payments', 'exchange-rates', 'bank-accounts', 'costs', 'cost-alerts', 'purchase-orders', 'waybills', 'warehouse', 'weekly-plans', 'products', 'trade-routes'],
@@ -100,6 +100,7 @@ function Navigation({ user, onLogout }) {
       key: 'system',
       items: [
         { to: '/users', label: 'Tài khoản', key: 'users', short: 'TK' },
+        { to: '/admin/audit-logs', label: 'Nhật ký', key: 'audit-logs', short: 'NK' },
         { to: '/admin', label: 'Cấu hình', key: 'admin', short: 'AD' }
       ]
     }

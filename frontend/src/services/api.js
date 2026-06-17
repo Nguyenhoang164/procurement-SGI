@@ -450,6 +450,17 @@ export const globalSearchAPI = {
   search: async (keyword) => requestJson(`${API_BASE_URL}/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() })
 };
 
+export const auditLogAPI = {
+  getAll: async (username, action, page = 0, size = 20) => {
+    const params = new URLSearchParams();
+    if (username) params.set('username', username);
+    if (action) params.set('action', action);
+    params.set('page', page);
+    params.set('size', size);
+    return requestJson(`${API_BASE_URL}/audit-logs?${params.toString()}`, { headers: getHeaders() });
+  }
+};
+
 export const dashboardAPI = {
   getKpi: async () => requestJson(`${API_BASE_URL}/dashboard`, { headers: getHeaders() })
 };
