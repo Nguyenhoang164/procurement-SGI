@@ -187,21 +187,21 @@ function WeeklyPlanList() {
               </div>
 
               {plan.items && plan.items.length > 0 ? (
-                <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', whiteSpace: 'nowrap' }}>
-                  <table className="table" style={{ minWidth: 960 }}>
+                <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                  <table className="table" style={{ tableLayout: 'auto', width: '100%' }}>
                     <thead>
                       <tr>
                         <th style={{ width: 40 }}>#</th>
-                        <th style={{ width: 180 }}>Tên sản phẩm</th>
-                        <th style={{ width: 110 }}>Mã POS</th>
-                        <th style={{ width: 150 }}>MÃ BIẾN THỂ (SKU)</th>
-                        <th style={{ width: 100 }}>Loại SP</th>
-                        <th style={{ width: 120 }}>PHÒNG KINH DOANH</th>
-                        <th style={{ width: 60 }}>SL</th>
-                        <th style={{ width: 110 }}>Tuyến hàng</th>
-                        <th style={{ width: 90 }}>VC</th>
-                        <th style={{ width: 100 }}>Giá nhập TK</th>
-                        <th style={{ width: 70 }}>Ưu tiên</th>
+                        <th>Tên sản phẩm</th>
+                        <th style={{ width: 100 }}>Mã POS</th>
+                        <th>SKU</th>
+                        <th style={{ width: 80 }}>Loại SP</th>
+                        <th>Phòng KD</th>
+                        <th style={{ width: 50 }}>SL</th>
+                        <th>Tuyến hàng</th>
+                        <th style={{ width: 70 }}>VC</th>
+                        <th>Giá nhập TK</th>
+                        <th style={{ width: 80 }}>Ưu tiên</th>
                         <th>Chi tiết</th>
                         <th>Link nguồn</th>
                         <th>Landing</th>
@@ -222,7 +222,7 @@ function WeeklyPlanList() {
                         rows.push(
                           <tr key={item.id || idx}>
                             <td>{idx + 1}</td>
-                            <td>{getName(item)}</td>
+                            <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{getName(item)}</td>
                             <td>
                               {item.posCode ? (
                                 <a href="#"
@@ -232,23 +232,23 @@ function WeeklyPlanList() {
                                 </a>
                               ) : '-'}
                             </td>
-                            <td style={{ fontSize: 13, color: '#94a3b8' }}>{item.posCode}</td>
+                            <td style={{ fontSize: 13, color: '#94a3b8', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{!hasVariants ? '-' : item.posCode}</td>
                             <td>{item.productType === 'NEW' ? 'Hàng mới' : item.productType === 'USED' ? 'Hàng cũ' : item.productType || '-'}</td>
-                            <td>{item.department || '-'}</td>
+                            <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{item.department || '-'}</td>
                             <td>{item.suggestedQty}</td>
                             <td>{item.tradeRoute || '-'}</td>
                             <td>{item.shippingMethod || '-'}</td>
-                            <td>{item.referencePrice ? Number(item.referencePrice).toLocaleString() : '-'}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{item.referencePrice ? Number(item.referencePrice).toLocaleString() : '-'}</td>
                             <td>{item.priorityLevel || '-'}</td>
-                            <td>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
-                            <td style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
+                            <td style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
                               {item.sourceLink ? (
-                                <a href={item.sourceLink} target="_blank" rel="noopener noreferrer">{item.sourceLink}</a>
+                                <a href={item.sourceLink} target="_blank" rel="noopener noreferrer" style={{ wordBreak: 'break-all' }}>{item.sourceLink}</a>
                               ) : '-'}
                             </td>
-                            <td style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <td style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }}>
                               {item.landing ? (
-                                <a href={item.landing} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>{item.landing}</a>
+                                <a href={item.landing} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline', wordBreak: 'break-all' }}>{item.landing}</a>
                               ) : '-'}
                             </td>
                           </tr>
@@ -259,11 +259,11 @@ function WeeklyPlanList() {
                             rows.push(
                               <tr key={`${item.id || idx}-v${vi}`} style={{ background: '#f8fafc' }}>
                                 <td></td>
-                                <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
+                                <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                   <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                 </td>
                                 <td></td>
-                                <td style={{ fontSize: 13 }}>{item.posCode} - {v.name}</td>
+                                <td style={{ fontSize: 13, wordBreak: 'break-word', overflowWrap: 'break-word' }}>{item.posCode} - {v.name}</td>
                                 <td></td>
                                 <td></td>
                                 <td style={{ fontSize: 13 }}>{v.qty || 0}</td>
@@ -271,7 +271,7 @@ function WeeklyPlanList() {
                                 <td></td>
                                 <td></td>
                                 <td></td>
-                                <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
+                                <td style={{ fontSize: 12, color: '#64748b', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{v.name}</td>
                                 <td></td>
                                 <td></td>
                               </tr>
