@@ -292,7 +292,10 @@ export const productCostAPI = {
     const url = query ? `${API_BASE_URL}/product-costs?${query}` : `${API_BASE_URL}/product-costs`;
     return requestJson(url, { headers: getHeaders() });
   },
-  getAllAlerts: async () => requestJson(`${API_BASE_URL}/product-costs/alerts`, { headers: getHeaders() }),
+  getAllAlerts: async (page = 0, size = 20) => {
+    const params = new URLSearchParams({ page, size });
+    return requestJson(`${API_BASE_URL}/product-costs/alerts?${params.toString()}`, { headers: getHeaders() });
+  },
   getAlertsByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/product-costs/alerts/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
   delete: async (posCode) => {
     const response = await fetch(`${API_BASE_URL}/product-costs/${encodeURIComponent(posCode)}`, { method: 'DELETE', headers: getHeaders() });

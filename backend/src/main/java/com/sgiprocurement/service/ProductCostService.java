@@ -18,8 +18,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 @Transactional
@@ -252,6 +257,21 @@ public class ProductCostService {
         product.setLatestCurrency(null);
         product.setUpdatedAt(LocalDateTime.now());
         productRepository.save(product);
+    }
+
+    public Map<String, Object> getAllCostAlertsPaged(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size,
+                Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<CostAlert> alertPage = costAlertRepository.findAll(pageable);
+        List<CostAlertDTO> alerts = alertPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+        Map<String, Object> result = new HashMap<>();
+        result.put("alerts", alerts);
+        result.put("total", alertPage.getTotalElements());
+        result.put("page", page);
+        result.put("size", size);
+        return result;
     }
 
     public List<CostAlertDTO> getAllCostAlerts() {

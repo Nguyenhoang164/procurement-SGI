@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/product-costs")
@@ -34,8 +35,10 @@ public class ProductCostController {
 
     @GetMapping("/alerts")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
-    public ResponseEntity<List<CostAlertDTO>> getAllCostAlerts() {
-        return ResponseEntity.ok(productCostService.getAllCostAlerts());
+    public ResponseEntity<Map<String, Object>> getAllCostAlerts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(productCostService.getAllCostAlertsPaged(page, size));
     }
 
     @GetMapping("/alerts/{posCode}")

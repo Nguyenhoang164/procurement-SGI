@@ -2,19 +2,25 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { productCostAPI } from '../services/api';
+import Pagination from '../components/Pagination';
 
 function CostAlertsList() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
   const navigate = useNavigate();
 
-  const loadAlerts = useCallback(async () => {
+  const loadAlerts = useCallback(async (p = 0) => {
     setLoading(true);
     try {
-      const data = await productCostAPI.getAllAlerts();
-      setAlerts(data);
+      const data = await productCostAPI.getAllAlerts(p, pageSize);
+      setAlerts(data.alerts || []);
+      setTotal(data.total || 0);
+      setPage(data.page || 0);
       setError('');
     } catch (err) {
       setError(err.message);
@@ -24,7 +30,7 @@ function CostAlertsList() {
   }, []);
 
   useEffect(() => {
-    loadAlerts();
+    loadAlerts(0);
   }, [loadAlerts]);
 
   const handleViewProduct = (posCode) => {
@@ -48,6 +54,8 @@ function CostAlertsList() {
            (a.productName && a.productName.toLowerCase().includes(q));
   });
 
+  const totalPages = Math.ceil(total / pageSize);
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
@@ -56,7 +64,7 @@ function CostAlertsList() {
           <p className="page-subtitle">Thông báo khi giá vốn sản phẩm thay đổi vượt ngưỡng cho phép</p>
         </div>
         <div className="page-actions">
-          <button type="button" className="btn btn-secondary" onClick={loadAlerts}>
+          <button type="button" className="btn btn-secondary" onClick={() => loadAlerts(page)}>
             ⟳ Làm mới
           </button>
         </div>
@@ -81,7 +89,7 @@ function CostAlertsList() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <span className="toolbar-count">{filteredAlerts.length}/{alerts.length} cảnh báo</span>
+              <span className="toolbar-count">{filteredAlerts.length}/{total} cảnh báo</span>
             </div>
 
             <div className="table-card">
@@ -169,6 +177,15 @@ function CostAlertsList() {
                 </table>
               </div>
             </div>
+
+            <Pagination
+              currentPage={page + 1}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={(p) => loadAlerts(p - 1)}
+              label="cảnh báo"
+            />
           </>
         )}
       </div>
