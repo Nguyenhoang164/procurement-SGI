@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import '../styles/ProductList.css';
-import { purchaseOrderAPI } from '../services/api';
+import { purchaseOrderAPI, productCostAPI } from '../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
 import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
@@ -21,6 +21,7 @@ function PurchaseOrderList() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalItems, setTotalItems] = useState(0);
   const [departments, setDepartments] = useState([]);
+  const [costMap, setCostMap] = useState({});
   const pageSize = 10;
   const navigate = useNavigate();
 
@@ -67,6 +68,11 @@ function PurchaseOrderList() {
     fetchOrders(selectedDepartment, 0);
     purchaseOrderAPI.getDepartments().then(list => {
       setDepartments(list);
+    }).catch(() => {});
+    productCostAPI.getAll().then(costs => {
+      const map = {};
+      costs.forEach(c => { if (c.posCode) map[c.posCode] = c; });
+      setCostMap(map);
     }).catch(() => {});
   }, []);
 
@@ -402,10 +408,12 @@ function PurchaseOrderList() {
                             </td>
                             <td style={{ textAlign: 'right', fontWeight: 600 }}>
                               {(() => {
-                                const prevCost = item.weightedAvgCostVnd;
+                                if (!item.posCode) return <span style={{ color: '#94a3b8' }}>—</span>;
+                                const prevCost = costMap[item.posCode]?.weightedAvgCostVnd;
                                 if (prevCost == null || Number(prevCost) === 0) return <span style={{ color: '#94a3b8' }}>Mới</span>;
                                 const qty = Number(item.orderedQty) || 1;
-                                const perUnitVnd = vnd / qty;
+                                const totalVnd = item.totalAmountVnd != null ? Number(item.totalAmountVnd) : vnd;
+                                const perUnitVnd = totalVnd / qty;
                                 const diff = perUnitVnd - Number(prevCost);
                                 const pct = (diff / Number(prevCost)) * 100;
                                 const color = Math.abs(pct) < 5 ? '#16a34a' : pct > 0 ? '#dc2626' : '#2563eb';
