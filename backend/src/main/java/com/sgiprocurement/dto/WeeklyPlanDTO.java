@@ -31,6 +31,8 @@ public class WeeklyPlanDTO {
 
     private String note;
 
+    private String initiatorDepartment;
+
     private String status;
 
     private String createdBy;

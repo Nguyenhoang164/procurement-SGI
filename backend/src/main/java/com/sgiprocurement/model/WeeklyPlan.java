@@ -49,6 +49,9 @@ public class WeeklyPlan {
     @Column(nullable = false, length = 50)
     private String status = "DRAFT";
 
+    @Column(name = "initiator_department", length = 100)
+    private String initiatorDepartment;
+
     @Column(name = "created_by")
     private String createdBy;
 

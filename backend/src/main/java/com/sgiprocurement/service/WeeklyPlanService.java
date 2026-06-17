@@ -6,8 +6,10 @@ import com.sgiprocurement.dto.WeeklyPlanDTO;
 import com.sgiprocurement.dto.WeeklyPlanItemDTO;
 import com.sgiprocurement.repository.WeeklyPlanRepository;
 import com.sgiprocurement.repository.ProductRepository;
+import com.sgiprocurement.repository.UserRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -26,6 +28,9 @@ public class WeeklyPlanService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public List<WeeklyPlanDTO> getAllWeeklyPlans() {
         return getAllWeeklyPlans(null, null);
@@ -57,9 +62,18 @@ public class WeeklyPlanService {
         WeeklyPlan plan = convertToEntity(dto);
         plan.setProposedDate(LocalDateTime.now());
         plan.setStatus("DRAFT");
+        // Auto-set initiatorDepartment from current user
+        if (plan.getInitiatorDepartment() == null || plan.getInitiatorDepartment().isEmpty()) {
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            plan.setInitiatorDepartment(userRepository.findByUsername(username)
+                    .map(u -> u.getDepartment()).orElse(null));
+        }
         if (plan.getItems() != null) {
             for (WeeklyPlanItem item : plan.getItems()) {
                 item.setPlan(plan);
+                if (item.getDepartment() == null || item.getDepartment().isEmpty()) {
+                    item.setDepartment(plan.getInitiatorDepartment());
+                }
             }
         }
         WeeklyPlan saved = weeklyPlanRepository.save(plan);
@@ -151,6 +165,7 @@ public class WeeklyPlanService {
         dto.setShippingMethod(plan.getShippingMethod());
         dto.setRecentUnitPrice(plan.getRecentUnitPrice());
         dto.setNote(plan.getNote());
+        dto.setInitiatorDepartment(plan.getInitiatorDepartment());
         dto.setStatus(plan.getStatus());
         dto.setCreatedBy(plan.getCreatedBy());
         dto.setCreatedAt(plan.getCreatedAt());
@@ -175,6 +190,7 @@ public class WeeklyPlanService {
         plan.setShippingMethod(dto.getShippingMethod());
         plan.setRecentUnitPrice(dto.getRecentUnitPrice());
         plan.setNote(dto.getNote());
+        plan.setInitiatorDepartment(dto.getInitiatorDepartment());
         plan.setStatus(dto.getStatus());
         plan.setCreatedBy(dto.getCreatedBy());
         plan.setCreatedAt(dto.getCreatedAt());

@@ -222,6 +222,9 @@ function WeeklyPlanList() {
                       ? new Date(plan.proposedDate).toLocaleDateString('vi-VN')
                       : '—'}
                   </span>
+                  {plan.initiatorDepartment && (
+                    <span style={{ background: '#e8f0fe', color: '#1e3a5f', padding: '2px 10px', borderRadius: 12, fontSize: 12, fontWeight: 600 }}>{plan.initiatorDepartment}</span>
+                  )}
                   <span style={{ color: '#64748b', fontSize: 13 }}>
                     {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString('vi-VN') : '—'}
                   </span>
