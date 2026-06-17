@@ -238,7 +238,7 @@ function WeeklyPlanNew() {
                   placeholder="https://taobao.com/..." />
               </div>
               <div className="form-group">
-                <label>SL đề xuất</label>
+                <label>SL đề xuất <span className="required">*</span></label>
                 <input type="number" value={calcTotalQty(formVariants) || ''} readOnly
                   style={{ background: '#f1f5f9', cursor: 'not-allowed' }} />
               </div>
@@ -246,7 +246,7 @@ function WeeklyPlanNew() {
 
             <div className="form-row" style={{ flexWrap: 'wrap' }}>
               <div className="form-group" style={{ flex: 1, minWidth: 300 }}>
-                <label>Biến thể & Số lượng</label>
+                <label>Biến thể & Số lượng <span className="required">*</span></label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {formVariants.map((v, i) => (
                     <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>

@@ -23,6 +23,15 @@ function WeeklyPlanList() {
   const [searchKeyword, setSearchKeyword] = useState(() => (
     location.state?.search || new URLSearchParams(location.search).get('search') || ''
   ));
+  const [expandedRows, setExpandedRows] = useState(new Set());
+
+  const toggleRow = (key) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     fetchPlans();
@@ -219,9 +228,18 @@ function WeeklyPlanList() {
                           }
                         } catch { }
                         const rows = [];
+                        const rowKey = `${plan.id}-${idx}`;
+                        const isExpanded = expandedRows.has(rowKey);
                         rows.push(
                           <tr key={item.id || idx}>
-                            <td>{idx + 1}</td>
+                            <td>
+                              {hasVariants ? (
+                                <span onClick={() => toggleRow(rowKey)}
+                                  style={{ cursor: 'pointer', userSelect: 'none', fontWeight: 700, color: '#64748b' }}>
+                                  {isExpanded ? '▾' : '▸'} {idx + 1}
+                                </span>
+                              ) : idx + 1}
+                            </td>
                             <td style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{getName(item)}</td>
                             <td>
                               {item.posCode ? (
@@ -261,7 +279,7 @@ function WeeklyPlanList() {
                             </td>
                           </tr>
                         );
-                        if (hasVariants) {
+                        if (hasVariants && isExpanded) {
                           itemVariants.forEach((v, vi) => {
                             if (!v.name && !v.qty) return;
                             rows.push(
