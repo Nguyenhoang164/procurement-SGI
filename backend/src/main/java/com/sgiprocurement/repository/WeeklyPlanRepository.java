@@ -13,6 +13,8 @@ public interface WeeklyPlanRepository extends JpaRepository<WeeklyPlan, Long> {
 
     List<WeeklyPlan> findByStatus(String status);
 
+    List<WeeklyPlan> findByStatusIn(List<String> statuses);
+
     List<WeeklyPlan> findByPosCode(String posCode);
 
     long countByStatus(String status);

@@ -29,6 +29,12 @@ public class WeeklyPlanController {
         return ResponseEntity.ok(plans);
     }
 
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    public ResponseEntity<List<WeeklyPlanDTO>> getPendingWeeklyPlans() {
+        return ResponseEntity.ok(weeklyPlanService.getPendingWeeklyPlans());
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<WeeklyPlanDTO> getWeeklyPlanById(@PathVariable Long id) {

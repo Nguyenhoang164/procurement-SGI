@@ -30,6 +30,12 @@ public class PaymentRequestController {
         return ResponseEntity.ok(requests);
     }
 
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    public ResponseEntity<List<PaymentRequestDTO>> getPendingPaymentRequests() {
+        return ResponseEntity.ok(paymentRequestService.getPendingPaymentRequests());
+    }
+
     @GetMapping("/search")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<PaymentRequestDTO>> searchPaymentRequests(@RequestParam String keyword) {

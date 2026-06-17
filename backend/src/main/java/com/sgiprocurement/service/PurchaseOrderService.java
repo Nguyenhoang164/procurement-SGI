@@ -149,6 +149,13 @@ public class PurchaseOrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<PurchaseOrderDTO> getPendingPurchaseOrders() {
+        return purchaseOrderRepository.findByStatusIn(List.of("PENDING_L1", "PENDING_L2"))
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public PurchaseOrderDTO createPurchaseOrder(PurchaseOrderDTO dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(username).orElse(null);

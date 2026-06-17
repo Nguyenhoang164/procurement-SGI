@@ -95,6 +95,13 @@ public class PaymentRequestService {
                 .collect(Collectors.toList());
     }
 
+    public List<PaymentRequestDTO> getPendingPaymentRequests() {
+        return paymentRequestRepository.findByStatusIn(List.of("PENDING_L1", "PENDING_L2", "ACCOUNTING_CHECK"))
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public PaymentRequestDTO createPaymentRequest(PaymentRequestDTO dto) {
         if (dto.getPoId() != null && !"VAN_CHUYEN".equals(dto.getType())) {
             PurchaseOrder po = purchaseOrderRepository.findById(dto.getPoId())

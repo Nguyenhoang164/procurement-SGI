@@ -16,6 +16,8 @@ public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, 
 
     List<PaymentRequest> findByStatus(String status);
 
+    List<PaymentRequest> findByStatusIn(List<String> statuses);
+
     @Query("SELECT pr FROM PaymentRequest pr WHERE CAST(pr.id AS string) LIKE %:keyword% OR pr.note LIKE %:keyword%")
     List<PaymentRequest> searchByKeyword(@Param("keyword") String keyword);
 

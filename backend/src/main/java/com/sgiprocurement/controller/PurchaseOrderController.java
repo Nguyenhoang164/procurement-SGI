@@ -42,6 +42,12 @@ public class PurchaseOrderController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
+    public ResponseEntity<List<PurchaseOrderDTO>> getPendingPurchaseOrders() {
+        return ResponseEntity.ok(purchaseOrderService.getPendingPurchaseOrders());
+    }
+
     @GetMapping("/departments")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<String>> getAllDepartments() {

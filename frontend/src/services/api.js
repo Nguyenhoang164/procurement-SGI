@@ -67,6 +67,7 @@ export const authAPI = {
 };
 
 export const weeklyPlanAPI = {
+  getPending: async () => requestJson(`${API_BASE_URL}/weekly-plans/pending`, { headers: getHeaders() }),
   getAll: async (startDate, endDate) => {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
@@ -100,6 +101,7 @@ export const weeklyPlanAPI = {
 };
 
 export const purchaseOrderAPI = {
+  getPending: async () => requestJson(`${API_BASE_URL}/purchase-orders/pending`, { headers: getHeaders() }),
   getAll: async (department, page = 0, size = 10, startDate = '', endDate = '') => {
     const params = new URLSearchParams();
     if (department) params.set('department', department);
@@ -168,6 +170,7 @@ export const purchaseOrderAPI = {
 };
 
 export const paymentRequestAPI = {
+  getPending: async () => requestJson(`${API_BASE_URL}/payment-requests/pending`, { headers: getHeaders() }),
   getAll: async () => requestJson(`${API_BASE_URL}/payment-requests`, { headers: getHeaders() }),
   getById: async (id) => requestJson(`${API_BASE_URL}/payment-requests/${id}`, { headers: getHeaders() }),
   search: async (keyword) => requestJson(`${API_BASE_URL}/payment-requests/search?keyword=${encodeURIComponent(keyword)}`, { headers: getHeaders() }),

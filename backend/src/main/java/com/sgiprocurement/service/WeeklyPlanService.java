@@ -58,6 +58,13 @@ public class WeeklyPlanService {
                 .collect(Collectors.toList());
     }
 
+    public List<WeeklyPlanDTO> getPendingWeeklyPlans() {
+        return weeklyPlanRepository.findByStatusIn(List.of("PENDING_L1", "PENDING_L2"))
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public WeeklyPlanDTO createWeeklyPlan(WeeklyPlanDTO dto) {
         WeeklyPlan plan = convertToEntity(dto);
         plan.setProposedDate(LocalDateTime.now());

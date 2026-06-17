@@ -2,13 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { paymentRequestAPI, purchaseOrderAPI, weeklyPlanAPI } from '../services/api';
 import { userAPI } from '../services/userApi';
 
-const PENDING_STATUSES = ['PENDING', 'PENDING_L1', 'PENDING_L2'];
+const PENDING_STATUSES = ['PENDING', 'PENDING_L1', 'PENDING_L2', 'ACCOUNTING_CHECK'];
 const READ_KEY = 'sgi_notification_read';
 
 const STATUS_LABELS = {
   PENDING: 'Chờ xử lý',
   PENDING_L1: 'Chờ duyệt L1',
-  PENDING_L2: 'Chờ duyệt L2'
+  PENDING_L2: 'Chờ duyệt L2',
+  ACCOUNTING_CHECK: 'KT kiểm tra'
 };
 
 const TYPE_META = {
@@ -129,7 +130,7 @@ export function formatNotificationTime(value) {
   return date.toLocaleDateString('vi-VN');
 }
 
-export function useNotifications({ autoRefreshMs = 15000 } = {}) {
+export function useNotifications({ autoRefreshMs = 5000 } = {}) {
   const [notifications, setNotifications] = useState([]);
   const [readIds, setReadIds] = useState(loadReadIds);
   const [loading, setLoading] = useState(true);
@@ -138,12 +139,11 @@ export function useNotifications({ autoRefreshMs = 15000 } = {}) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [weeklyPlans, ordersResp, payments] = await Promise.all([
-        weeklyPlanAPI.getAll(),
-        purchaseOrderAPI.getAll('', 0, 10000),
-        paymentRequestAPI.getAll()
+      const [weeklyPlans, orders, payments] = await Promise.all([
+        weeklyPlanAPI.getPending(),
+        purchaseOrderAPI.getPending(),
+        paymentRequestAPI.getPending()
       ]);
-      const orders = ordersResp.orders || [];
       let users = [];
       try { users = await userAPI.getAll(); } catch {}
       setNotifications(buildNotifications(weeklyPlans, orders, payments, users));
