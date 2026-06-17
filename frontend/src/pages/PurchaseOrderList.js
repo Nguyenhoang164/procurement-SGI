@@ -357,12 +357,11 @@ function PurchaseOrderList() {
                         <th style={{ width: 180 }}>Tên sản phẩm</th>
                         <th style={{ width: 110 }}>Mã POS</th>
                         <th style={{ width: 150 }}>MÃ BIẾN THỂ (SKU)</th>
-                        <th style={{ width: 100 }}>Chi tiết</th>
                         <th style={{ width: 60, textAlign: 'right' }}>SL</th>
                         <th style={{ width: 110, textAlign: 'right' }}>Đơn giá</th>
                         <th style={{ width: 100, textAlign: 'right' }}>Thành tiền</th>
-                        <th style={{ width: 90, textAlign: 'right' }}>GV TB</th>
                         <th style={{ width: 90, textAlign: 'right' }}>GV gần nhất</th>
+                        <th style={{ width: 90, textAlign: 'right', color: '#2563eb' }}>Tỉ lệ ch/lệch</th>
                         <th style={{ width: 80, textAlign: 'right' }}>Ngày TH</th>
                         <th style={{ width: 90, textAlign: 'right' }}>Quy đổi VNĐ</th>
                       </tr>
@@ -393,19 +392,25 @@ function PurchaseOrderList() {
                               </a>
                             ) : '-'}</td>
                             <td style={{ fontSize: 12, color: '#94a3b8' }}>{item.posCode && item.posCode !== 'N/A' ? item.posCode : '-'}</td>
-                            <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td style={{ textAlign: 'right' }}>{item.orderedQty}</td>
                             <td style={{ textAlign: 'right' }}>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
                             <td style={{ textAlign: 'right' }}>{sub.toLocaleString()} {item.currency || 'CNY'}</td>
                             <td style={{ textAlign: 'right' }}>
-                              {item.weightedAvgCostVnd
-                                ? Number(item.weightedAvgCostVnd).toLocaleString('vi-VN')
-                                : '—'}
-                            </td>
-                            <td style={{ textAlign: 'right' }}>
                               {item.latestUnitCostVnd != null
                                 ? `${Number(item.latestUnitCostVnd).toLocaleString('vi-VN', { maximumFractionDigits: 1, minimumFractionDigits: 1 })} ${item.latestCurrency || '₫'}`
                                 : '—'}
+                            </td>
+                            <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                              {(() => {
+                                const refCost = item.latestUnitCostVnd ?? item.weightedAvgCostVnd;
+                                if (refCost != null && refCost > 0) {
+                                  const unitPriceVnd = (parseFloat(item.unitPrice) || 0) * (parseFloat(item.exchangeRate) || 1);
+                                  const diff = ((unitPriceVnd - refCost) / refCost) * 100;
+                                  const color = diff > 5 ? '#dc2626' : diff < -5 ? '#16a34a' : '#d97706';
+                                  return <span style={{ color }}>{diff > 0 ? '+' : ''}{diff.toFixed(1)}%</span>;
+                                }
+                                return '—';
+                              })()}
                             </td>
                             <td style={{ textAlign: 'right', fontSize: 12, color: '#94a3b8' }}>
                               {item.latestCostDate
@@ -426,7 +431,6 @@ function PurchaseOrderList() {
                                   </td>
                                   <td></td>
                                   <td style={{ fontSize: 12, color: '#64748b' }}>{item.posCode}-{v.name}</td>
-                                  <td style={{ fontSize: 12, color: '#475569' }}>{v.name}</td>
                                   <td style={{ textAlign: 'right', fontSize: 13 }}>{v.qty || 0}</td>
                                   <td></td>
                                   <td></td>
