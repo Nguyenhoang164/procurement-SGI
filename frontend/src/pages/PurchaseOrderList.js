@@ -408,7 +408,7 @@ function PurchaseOrderList() {
                                   const diff = Math.round(unitPriceVnd - refCost);
                                   const color = diff > 0 ? '#dc2626' : diff < 0 ? '#16a34a' : '#64748b';
                                   const sign = diff > 0 ? '+' : '';
-                                  return <span style={{ color }}>{sign}{diff.toLocaleString('vi-VN')} ₫</span>;
+                                  return <span style={{ color }}>{sign}{diff.toLocaleString('vi-VN')}</span>;
                                 }
                                 return '—';
                               })()}
