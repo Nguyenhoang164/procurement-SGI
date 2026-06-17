@@ -361,7 +361,7 @@ function PurchaseOrderList() {
                         <th style={{ width: 110, textAlign: 'right' }}>Đơn giá</th>
                         <th style={{ width: 100, textAlign: 'right' }}>Thành tiền</th>
                         <th style={{ width: 90, textAlign: 'right' }}>GV gần nhất</th>
-                        <th style={{ width: 100, textAlign: 'right', color: '#2563eb' }}>Chênh lệch GV</th>
+                        <th style={{ width: 120, textAlign: 'right' }}>Chênh lệch GV</th>
                         <th style={{ width: 80, textAlign: 'right' }}>Ngày TH</th>
                         <th style={{ width: 90, textAlign: 'right' }}>Quy đổi VNĐ</th>
                       </tr>
@@ -402,15 +402,14 @@ function PurchaseOrderList() {
                             </td>
                             <td style={{ textAlign: 'right', fontWeight: 600 }}>
                               {(() => {
-                                const refCost = item.latestUnitCostVnd ?? item.weightedAvgCostVnd;
-                                if (refCost != null && refCost > 0) {
-                                  const unitPriceVnd = (parseFloat(item.unitPrice) || 0) * (parseFloat(item.exchangeRate) || 1);
-                                  const diff = Math.round(unitPriceVnd - refCost);
-                                  const color = diff > 0 ? '#dc2626' : diff < 0 ? '#16a34a' : '#64748b';
-                                  const sign = diff > 0 ? '+' : '';
-                                  return <span style={{ color }}>{sign}{diff.toLocaleString('vi-VN')}</span>;
-                                }
-                                return '—';
+                                const prevCost = item.weightedAvgCostVnd;
+                                if (prevCost == null || Number(prevCost) === 0) return <span style={{ color: '#94a3b8' }}>Mới</span>;
+                                const qty = Number(item.orderedQty) || 1;
+                                const perUnitVnd = vnd / qty;
+                                const diff = perUnitVnd - Number(prevCost);
+                                const pct = (diff / Number(prevCost)) * 100;
+                                const color = Math.abs(pct) < 5 ? '#16a34a' : pct > 0 ? '#dc2626' : '#2563eb';
+                                return <span style={{ color }}>{pct > 0 ? '+' : ''}{pct.toFixed(1)}%</span>;
                               })()}
                             </td>
                             <td style={{ textAlign: 'right', fontSize: 12, color: '#94a3b8' }}>
