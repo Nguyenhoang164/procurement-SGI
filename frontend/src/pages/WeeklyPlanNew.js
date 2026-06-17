@@ -6,6 +6,13 @@ import PosCodeSelector from '../components/PosCodeSelector';
 
 const CURRENCIES = ['CNY', 'USD', 'VND', 'JPY', 'KRW', 'PHP', 'EUR', 'GBP', 'AUD', 'SGD', 'THB', 'MYR'];
 
+const HelpIcon = ({ text }) => (
+  <span title={text}
+    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 16, height: 16, borderRadius: '50%', background: '#e2e8f0', color: '#64748b', fontSize: 10, fontWeight: 700, cursor: 'help', marginLeft: 4, verticalAlign: 'middle', lineHeight: '16px' }}>
+    ?
+  </span>
+);
+
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
   try {
@@ -152,7 +159,7 @@ function WeeklyPlanNew() {
             <legend>Nhập thông tin sản phẩm</legend>
             <div className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
-                <label>Chọn sản phẩm (tra cứu hoặc tạo mới) <span className="required">*</span></label>
+                <label>Chọn sản phẩm (tra cứu hoặc tạo mới) <span className="required">*</span><HelpIcon text="Chọn sản phẩm có sẵn hoặc tạo mới từ danh sách" /></label>
                 <PosCodeSelector value={form.posCode}
                   onChange={(v) => setForm(f => ({ ...f, posCode: v }))}
                   onProductSelect={(p) => {
@@ -164,12 +171,12 @@ function WeeklyPlanNew() {
                   }} />
               </div>
               <div className="form-group">
-                <label>Tên sản phẩm <span className="required">*</span></label>
+                <label>Tên sản phẩm <span className="required">*</span><HelpIcon text="Tên sản phẩm nhập khẩu (VD: Máy lọc nước XH-01)" /></label>
 <input value={form.productName}
   onChange={(e) => setForm(f => ({ ...f, productName: e.target.value }))} />
               </div>
               <div className="form-group">
-                <label>Loại SP</label>
+                <label>Loại SP<HelpIcon text="Hàng mới (NEW) chưa từng nhập hoặc hàng cũ (USED) đã nhập trước đó" /></label>
                 <select value={form.productType}
                   onChange={(e) => setForm(f => ({ ...f, productType: e.target.value }))}>
                   <option value="USED">Hàng cũ</option>
@@ -180,13 +187,13 @@ function WeeklyPlanNew() {
 
             <div className="form-row cols-4">
               <div className="form-group">
-                <label>Landing page</label>
+                <label>Landing page<HelpIcon text="Link sản phẩm trên website bán hàng (VD: shopee.vn/...) để đối chiếu thông tin" /></label>
                 <input value={form.landing}
                   onChange={(e) => setForm(f => ({ ...f, landing: e.target.value }))}
                   placeholder="https://..." />
               </div>
               <div className="form-group">
-                <label>Tuyến hàng</label>
+                <label>Tuyến hàng<HelpIcon text="Tuyến vận chuyển từ nước ngoài về kho Việt Nam" /></label>
                 <select value={form.tradeRoute}
                   onChange={(e) => setForm(f => ({ ...f, tradeRoute: e.target.value }))}>
                   <option value="">Chọn tuyến...</option>
@@ -196,7 +203,7 @@ function WeeklyPlanNew() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Hình thức VC</label>
+                <label>Hình thức VC<HelpIcon text="Phương thức vận chuyển: AIR (hàng không), SEA (đường biển), LAND (đường bộ)" /></label>
                 <select value={form.shippingMethod}
                   onChange={(e) => setForm(f => ({ ...f, shippingMethod: e.target.value }))}>
                   <option value="">Chọn...</option>
@@ -207,7 +214,7 @@ function WeeklyPlanNew() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Giá nhập tham khảo</label>
+                <label>Giá nhập tham khảo<HelpIcon text="Giá nhập từ nhà cung cấp (có thể tham khảo từ đơn hàng cũ hoặc báo giá)" /></label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <input type="number" value={form.referencePrice}
                     onChange={(e) => setForm(f => ({ ...f, referencePrice: e.target.value.replace(/[^0-9.,-]/g, '') }))}
@@ -223,7 +230,7 @@ function WeeklyPlanNew() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Mức độ ưu tiên</label>
+                <label>Mức độ ưu tiên<HelpIcon text="Cao: nhập gấp, Trung bình: nhập trong tháng, Thấp: có thể chờ" /></label>
                 <select value={form.priorityLevel}
                   onChange={(e) => setForm(f => ({ ...f, priorityLevel: e.target.value }))}>
                   <option value="Cao">Cao</option>
@@ -232,13 +239,13 @@ function WeeklyPlanNew() {
                 </select>
               </div>
               <div className="form-group">
-                <label>Link nguồn</label>
+                <label>Link nguồn<HelpIcon text="Link sản phẩm trên trang TMĐT (Taobao, 1688, Alibaba,...)" /></label>
                 <input type="url" value={form.sourceLink}
                   onChange={(e) => setForm(f => ({ ...f, sourceLink: e.target.value }))}
                   placeholder="https://taobao.com/..." />
               </div>
               <div className="form-group">
-                <label>SL đề xuất <span className="required">*</span></label>
+                <label>SL đề xuất <span className="required">*</span><HelpIcon text="Tổng số lượng tự động tính từ các biến thể phía dưới" /></label>
                 <input type="number" value={calcTotalQty(formVariants) || ''} readOnly
                   style={{ background: '#f1f5f9', cursor: 'not-allowed' }} />
               </div>
@@ -246,7 +253,7 @@ function WeeklyPlanNew() {
 
             <div className="form-row" style={{ flexWrap: 'wrap' }}>
               <div className="form-group" style={{ flex: 1, minWidth: 300 }}>
-                <label>Biến thể & Số lượng <span className="required">*</span></label>
+                <label>Biến thể & Số lượng <span className="required">*</span><HelpIcon text="Khai báo biến thể (size/màu sắc/phiên bản) và số lượng tương ứng của từng biến thể" /></label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {formVariants.map((v, i) => (
                     <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -382,7 +389,7 @@ function WeeklyPlanNew() {
           </fieldset>
 
           <div className="form-group">
-            <label>Ghi chú phiếu kế hoạch</label>
+            <label>Ghi chú phiếu kế hoạch<HelpIcon text="Ghi chú chung cho toàn bộ phiếu kế hoạch (VD: ưu tiên, yêu cầu đặc biệt,...)" /></label>
             <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} />
           </div>
 
