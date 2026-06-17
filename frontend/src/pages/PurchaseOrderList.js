@@ -339,6 +339,11 @@ function PurchaseOrderList() {
                   <span style={{ fontSize: 14, fontWeight: 600, color: order.paymentStatus === 'REJECTED' ? 'var(--muted)' : 'var(--blue)' }}>
                     {order.totalLotCostVnd?.toLocaleString()} đ
                   </span>
+                  {order.note && (
+                    <span style={{ color: '#94a3b8', fontSize: 12, fontStyle: 'italic', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+Ghi chú: {order.note}
+                    </span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {order.status === 'PENDING_L1' && canApprove && (
