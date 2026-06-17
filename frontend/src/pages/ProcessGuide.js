@@ -14,9 +14,9 @@ const STEPS = [
   { id: 'weekly-plan', label: 'Kế hoạch tuần', icon: '📋', color: '#2563eb',
     desc: `${R.SALES} lập kế hoạch nhập hàng theo tuần, trình duyệt. ${R.SALES_MANAGER} phê duyệt. ${R.PURCHASING} xem kế hoạch.` },
   { id: 'purchase-order', label: 'Đơn mua hàng', icon: '📄', color: '#059669',
-    desc: `${R.SALES} tạo đơn hàng (PO) từ kế hoạch. ${R.SALES_MANAGER} phê duyệt L1. ${R.ADMIN} gửi kế toán. ${R.PURCHASING} xem đơn hàng.` },
+    desc: `${R.SALES} tạo đơn hàng (PO) từ kế hoạch. ${R.SALES_MANAGER} phê duyệt L1. ${R.CEO} gửi kế toán. ${R.PURCHASING} xem đơn hàng.` },
   { id: 'payment-request', label: 'Đề nghị thanh toán', icon: '💰', color: '#d97706',
-    desc: `${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT}/${R.SALES}/${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.ADMIN} duyệt L2.` },
+    desc: `${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT}/${R.SALES}/${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.CEO} duyệt L2.` },
   { id: 'waybill', label: 'Vận đơn', icon: '🚢', color: '#7c3aed',
     desc: `${R.WAREHOUSE}/${R.SALES}/${R.PURCHASING} tạo vận đơn theo lô hàng. ${R.WAREHOUSE} xác nhận khi hàng về.` },
   { id: 'warehouse-receipt', label: 'Nhập kho', icon: '📦', color: '#dc2626',
@@ -24,8 +24,8 @@ const STEPS = [
 ];
 
 const ROLE_TASKS = {
-  ADMIN: 'Toàn quyền: xem, tạo, sửa, xóa, phê duyệt tất cả các bước.',
-  CEO: 'Xem toàn bộ quy trình. Quản lý người dùng (thêm/sửa/vô hiệu).',
+  ADMIN: 'Quản trị hệ thống: quản lý người dùng, cấu hình, bảo trì.',
+  CEO: 'Xem toàn bộ quy trình. Phê duyệt cấp cao (L2). Quản lý người dùng (thêm/sửa/vô hiệu).',
   WAREHOUSE: 'Tạo vận đơn → Xác nhận vận đơn → Tạo phiếu nhập kho → Nhập hàng.',
   ACCOUNTANT: 'Tạo đề nghị thanh toán → Phê duyệt L1 → Chi trả → Xác nhận TT.',
   CHIEF_ACCOUNTANT: `Giống ${R.ACCOUNTANT} + Kiểm tra kế toán.`,
