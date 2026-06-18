@@ -35,8 +35,8 @@ export function canCrudProducts(user) { return isAdmin(user); }
 export function canImportProducts(user) { return true; }
 
 // Purchase Orders
-export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
-export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
+export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 export function canDeletePO(user) { return isAdmin(user); }
 export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }
 export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES, ROLES.SALES_MANAGER); }

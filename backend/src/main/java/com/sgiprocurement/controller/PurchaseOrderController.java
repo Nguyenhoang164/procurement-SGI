@@ -62,14 +62,14 @@ public class PurchaseOrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PurchaseOrderDTO> createPurchaseOrder(@Valid @RequestBody PurchaseOrderDTO dto) {
         PurchaseOrderDTO created = purchaseOrderService.createPurchaseOrder(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<PurchaseOrderDTO> updatePurchaseOrder(
             @PathVariable Long id,
             @Valid @RequestBody PurchaseOrderDTO dto) {
