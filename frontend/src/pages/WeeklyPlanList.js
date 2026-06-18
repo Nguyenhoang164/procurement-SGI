@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { weeklyPlanAPI, productAPI } from '../services/api';
-import { canCrudWeeklyPlan, canDeleteWeeklyPlan, getUser } from '../utils/permissions';
+import { canCrudWeeklyPlan, canDeleteWeeklyPlan, canCreatePO, getUser } from '../utils/permissions';
 
 const statusLabels = {
   'DRAFT': 'Bản nháp',
@@ -74,7 +74,54 @@ function WeeklyPlanList() {
   const userData = getUser();
   const canCrud = canCrudWeeklyPlan(userData);
   const canDelete = canDeleteWeeklyPlan(userData);
+  const canCreatePOFromPlan = canCreatePO(userData);
   const getName = (item) => item.productName || productMap[item.posCode] || '-';
+  const [selectedItems, setSelectedItems] = useState(new Set());
+
+  const toggleSelectItem = (rowKey) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      if (next.has(rowKey)) next.delete(rowKey); else next.add(rowKey);
+      return next;
+    });
+  };
+
+  const toggleSelectAllInPlan = (planId, items, checked) => {
+    setSelectedItems(prev => {
+      const next = new Set(prev);
+      items.forEach((_, idx) => {
+        const key = `${planId}-${idx}`;
+        if (checked) next.add(key); else next.delete(key);
+      });
+      return next;
+    });
+  };
+
+  const getSelectedItemList = () => {
+    const result = [];
+    filteredPlans.forEach(plan => {
+      (plan.items || []).forEach((item, idx) => {
+        const key = `${plan.id}-${idx}`;
+        if (selectedItems.has(key)) {
+          result.push({ ...item, _sourcePlanId: plan.id });
+        }
+      });
+    });
+    return result;
+  };
+
+  const handleCreatePOFromSelected = () => {
+    const items = getSelectedItemList();
+    if (items.length === 0) return;
+    const sourcePlanIds = [...new Set(items.map(i => i._sourcePlanId))];
+    const planRef = sourcePlanIds.length === 1 ? sourcePlanIds[0] : null;
+    const syntheticPlan = {
+      id: planRef,
+      items: items.map(({ _sourcePlanId, ...rest }) => rest)
+    };
+    setSelectedItems(new Set());
+    navigate('/purchase-orders/new', { state: { fromPlan: syntheticPlan } });
+  };
 
   const fetchPlans = async (mode) => {
     setLoading(true);
@@ -120,6 +167,7 @@ function WeeklyPlanList() {
     setDateMode('all');
     setCustomStartDate('');
     setCustomEndDate('');
+    setSelectedItems(new Set());
     fetchPlans('all');
   };
 
@@ -200,6 +248,29 @@ function WeeklyPlanList() {
 
         {error ? <div className="error-message">{error}</div> : null}
 
+        {canCreatePOFromPlan && selectedItems.size > 0 && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '12px 20px', marginBottom: 16,
+            background: 'linear-gradient(135deg, #1e3a5f, #2d5a8e)', color: '#fff',
+            borderRadius: 12, boxShadow: '0 4px 16px rgba(30, 58, 95, 0.25)'
+          }}>
+            <span style={{ fontWeight: 600, fontSize: 15 }}>
+              Đã chọn <strong>{selectedItems.size}</strong> sản phẩm
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}
+                onClick={() => setSelectedItems(new Set())}>
+                Bỏ chọn
+              </button>
+              <button className="btn btn-sm" style={{ background: '#16a34a', color: '#fff', fontWeight: 700, border: 'none' }}
+                onClick={handleCreatePOFromSelected}>
+                Tạo đơn hàng từ mục đã chọn
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="loading">Đang tải dữ liệu...</div>
         ) : filteredPlans.length === 0 ? (
@@ -246,7 +317,7 @@ function WeeklyPlanList() {
                       Sửa
                     </button>
                   )}
-                  {canCrud && (
+                  {canCreatePOFromPlan && (
                     <button className="btn btn-sm btn-primary" onClick={() => navigate('/purchase-orders/new', { state: { fromPlan: plan } })}>
                       Tạo đơn
                     </button>
@@ -262,24 +333,31 @@ function WeeklyPlanList() {
               {plan.items && plan.items.length > 0 ? (
                 <div className="table-wrapper" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   <table className="table" style={{ tableLayout: 'auto', width: '100%' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ width: 40 }}>#</th>
-                        <th>Tên sản phẩm</th>
-                        <th style={{ width: 100 }}>Mã POS</th>
-                        <th>SKU</th>
-                        <th style={{ width: 80 }}>Loại SP</th>
-                        <th>Phòng KD</th>
-                        <th style={{ width: 50 }}>SL</th>
-                        <th>Tuyến hàng</th>
-                        <th style={{ width: 70 }}>VC</th>
-                        <th>Giá nhập TK</th>
-                        <th style={{ width: 80 }}>Ưu tiên</th>
-                        <th>Chi tiết</th>
-                        <th>Link nguồn</th>
-                        <th>Landing</th>
-                      </tr>
-                    </thead>
+                      <thead>
+                        <tr>
+                          {canCreatePOFromPlan && (
+                            <th style={{ width: 36 }}>
+                              <input type="checkbox"
+                                checked={plan.items.length > 0 && plan.items.every((_, idx) => selectedItems.has(`${plan.id}-${idx}`))}
+                                onChange={(e) => toggleSelectAllInPlan(plan.id, plan.items, e.target.checked)} />
+                            </th>
+                          )}
+                          <th style={{ width: 40 }}>#</th>
+                          <th>Tên sản phẩm</th>
+                          <th style={{ width: 100 }}>Mã POS</th>
+                          <th>SKU</th>
+                          <th style={{ width: 80 }}>Loại SP</th>
+                          <th>Phòng KD</th>
+                          <th style={{ width: 50 }}>SL</th>
+                          <th>Tuyến hàng</th>
+                          <th style={{ width: 70 }}>VC</th>
+                          <th>Giá nhập TK</th>
+                          <th style={{ width: 80 }}>Ưu tiên</th>
+                          <th>Chi tiết</th>
+                          <th>Link nguồn</th>
+                          <th>Landing</th>
+                        </tr>
+                      </thead>
                     <tbody>
                       {plan.items.flatMap((item, idx) => {
                         let itemVariants = [];
@@ -294,8 +372,15 @@ function WeeklyPlanList() {
                         const rows = [];
                         const rowKey = `${plan.id}-${idx}`;
                         const isExpanded = expandedRows.has(rowKey);
+                        const isSelected = selectedItems.has(rowKey);
                         rows.push(
-                          <tr key={item.id || idx}>
+                          <tr key={item.id || idx} style={isSelected ? { background: '#eff6ff' } : {}}>
+                            {canCreatePOFromPlan && (
+                              <td>
+                                <input type="checkbox" checked={isSelected}
+                                  onChange={() => toggleSelectItem(rowKey)} />
+                              </td>
+                            )}
                             <td>
                               {hasVariants ? (
                                 <span onClick={() => toggleRow(rowKey)}
@@ -348,6 +433,7 @@ function WeeklyPlanList() {
                             if (!v.name && !v.qty) return;
                             rows.push(
                               <tr key={`${item.id || idx}-v${vi}`} style={{ background: '#f8fafc' }}>
+                                {canCreatePOFromPlan && <td></td>}
                                 <td></td>
                                 <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                                   <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
