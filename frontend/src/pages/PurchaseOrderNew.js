@@ -147,9 +147,10 @@ function PurchaseOrderNew() {
   useEffect(() => {
     if (id) return;
     const plan = location.state?.fromPlan;
-       if (plan) {
-         setSourcePlanId(plan.id);
-         if (plan.items && plan.items.length > 0) {
+        if (plan) {
+          setSourcePlanId(plan.id);
+          setHeader(prev => ({ ...prev, note: plan.note || '' }));
+          if (plan.items && plan.items.length > 0) {
            const mapped = plan.items.map(item => ({
              productName: item.productName || '',
              posCode: item.posCode || '',
