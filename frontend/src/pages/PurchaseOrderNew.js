@@ -299,7 +299,7 @@ function PurchaseOrderNew() {
     <div className="page-screen">
       <div className="page-topbar">
         <div className="page-title-group">
-          <h1 className="page-title">{id ? 'Cập nhật đơn hàng' : 'Tạo đơn hàng mới (PKD2)'}</h1>
+          <h1 className="page-title">{id ? 'Cập nhật đơn hàng' : 'Tạo đơn hàng mới'}</h1>
           <p className="page-subtitle">Nhập sản phẩm → Thêm vào danh sách → Nhập thông tin chung → Lưu đơn</p>
         </div>
         <div className="page-actions">
