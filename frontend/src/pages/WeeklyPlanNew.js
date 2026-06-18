@@ -208,6 +208,7 @@ function WeeklyPlanNew() {
                   <option value="SEA">SEA</option>
                   <option value="AIR PHI">AIR PHI</option>
                   <option value="LAND">LAND</option>
+                  <option value="Đi hàng">Đi hàng</option>
                 </select>
               </div>
               <div className="form-group">
