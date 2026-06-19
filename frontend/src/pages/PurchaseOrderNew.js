@@ -334,7 +334,12 @@ function PurchaseOrderNew() {
                     }));
                     if (p.spec) {
                       const parsed = parseVariants(p.spec);
-                      if (parsed.some(v => v.name)) setFormVariants(parsed);
+                      if (parsed.some(v => v.name)) {
+                        const filled = parsed.map(v => ({ ...v, qty: v.qty || '1' }));
+                        setFormVariants(filled);
+                      }
+                    } else {
+                      setFormVariants([{ name: '', qty: '1' }]);
                     }
                   }} />
               </div>
