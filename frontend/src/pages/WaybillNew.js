@@ -43,8 +43,12 @@ function WaybillNew() {
   });
 
   const computedExpectedQty = useMemo(() => {
-    return products.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
+    return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
   }, [products]);
+
+  const updateProductField = (idx, field, value) => {
+    setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+  };
 
   useEffect(() => {
     const fromPOItems = location.state?.fromPOItems;
@@ -60,6 +64,9 @@ function WaybillNew() {
         unitPrice: String(item.unitPrice || ''),
         currency: item.currency || 'CNY',
         exchangeRate: String(item.exchangeRate || '3520'),
+        volume: item.volume || '',
+        unitPriceVC: item.unitPriceVC || '',
+        packageCount: item.packageCount || String(item.orderedQty || ''),
       }));
       setProducts(mapped);
     }
@@ -161,6 +168,9 @@ function WaybillNew() {
           unitPrice: item.unitPrice,
           currency: item.currency,
           exchangeRate: item.exchangeRate,
+          volume: '',
+          unitPriceVC: '',
+          packageCount: item.orderedQty,
         });
       }
     });
@@ -197,6 +207,9 @@ function WaybillNew() {
       unitPrice: p.unitPrice,
       currency: p.currency,
       exchangeRate: p.exchangeRate,
+      volume: p.volume || '',
+      unitPriceVC: p.unitPriceVC || '',
+      packageCount: p.packageCount || '',
     }));
     const payload = {
       ...form,
@@ -233,7 +246,7 @@ function WaybillNew() {
       <div className="page-content">
         {error ? <div className="error-message">{error}</div> : null}
 
-        <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 900, margin: '0 auto' }}>
+        <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div className="form-row">
             <div className="form-group">
               <label>Mã vận đơn <span className="required">*</span></label>
@@ -267,7 +280,7 @@ function WaybillNew() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>SL dự kiến <span className="required">*</span></label>
+              <label>SL dự kiến (tổng số kiện) <span className="required">*</span></label>
               <input type="number" value={computedExpectedQty || ''} readOnly
                 style={{ background: '#f1f5f9', cursor: 'not-allowed' }} required />
             </div>
@@ -348,47 +361,64 @@ function WaybillNew() {
               </div>
             ) : (
               <div className="table-wrapper">
-                <table className="table" style={{ fontSize: 13 }}>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 30 }}>#</th>
-                      <th>PO</th>
-                      <th>Sản phẩm</th>
-                      <th>Chi tiết</th>
-                      <th style={{ width: 50 }}>SL</th>
-                      <th style={{ width: 100 }}>Đơn giá (NT)</th>
-                      <th style={{ width: 60 }}>TG</th>
-                      <th style={{ width: 80 }}>Thành tiền</th>
-                      <th style={{ width: 40 }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {products.map((p, idx) => {
-                      const pVariants = parseVariants(p.spec);
-                      const hasVariants = pVariants.some(v => v.name || v.qty);
-                      const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
-                      const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
-                      return (
-                        <tr key={idx}>
-                          <td>{idx + 1}</td>
-                          <td style={{ fontSize: 12 }}>{p.poCode}</td>
-                          <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
-                          <td style={{ fontSize: 12, color: '#475569' }}>
-                            {!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}
-                          </td>
-                          <td>{p.orderedQty}</td>
-                          <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                          <td>{p.exchangeRate || '3520'}</td>
-                          <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
-                          <td>
-                            <button type="button" onClick={() => removeProduct(idx)}
-                              style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table" style={{ fontSize: 12, minWidth: 900 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 28 }}>#</th>
+                        <th>PO</th>
+                        <th style={{ minWidth: 120 }}>Sản phẩm</th>
+                        <th>SL</th>
+                        <th style={{ width: 70 }}>KL/T.tích</th>
+                        <th style={{ width: 85 }}>Đơn giá VC</th>
+                        <th style={{ width: 90 }}>Tổng cước (tệ)</th>
+                        <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
+                        <th style={{ width: 55 }}>Số kiện</th>
+                        <th style={{ width: 35 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {products.map((p, idx) => {
+                        const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+                        const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 1));
+                        return (
+                          <tr key={idx}>
+                            <td>{idx + 1}</td>
+                            <td style={{ fontSize: 11 }}>{p.poCode}</td>
+                            <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
+                            <td>{p.orderedQty}</td>
+                            <td>
+                              <input type="number" step="0.01" value={p.volume || ''}
+                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
+                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                            </td>
+                            <td>
+                              <input type="number" step="0.01" value={p.unitPriceVC || ''}
+                                onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
+                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')}</td>
+                            <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                            <td>
+                              <input type="number" value={p.packageCount || ''}
+                                onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
+                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                            </td>
+                            <td>
+                              <button type="button" onClick={() => removeProduct(idx)}
+                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {products.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
+                    Tổng cước VC: {products.reduce((s, p) => s + (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * (Number(p.exchangeRate) || 1), 0).toLocaleString('vi-VN')} ₫
+                  </div>
+                )}
               </div>
             )}
           </fieldset>
