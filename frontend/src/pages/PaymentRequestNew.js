@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import '../styles/Form.css';
-import { paymentRequestAPI, productAPI, purchaseOrderAPI, bankAccountAPI, resolveFileUrl } from '../services/api';
+import { paymentRequestAPI, productAPI, purchaseOrderAPI, bankAccountAPI, waybillAPI, resolveFileUrl } from '../services/api';
 import { useToast } from '../components/Toast';
 import {
   PAYMENT_TYPES, PAPER_TYPES, canCreatePayment,
@@ -52,6 +52,12 @@ function PaymentRequestNew() {
   const [quickViewDnttLoading, setQuickViewDnttLoading] = useState(false);
   const [quickViewDnttOrders, setQuickViewDnttOrders] = useState([]);
 
+  const [waybills, setWaybills] = useState([]);
+  const [selectedWaybillId, setSelectedWaybillId] = useState('');
+  const [selectedWaybill, setSelectedWaybill] = useState(null);
+  const [waybillProducts, setWaybillProducts] = useState([]);
+  const [selectedWbProductIds, setSelectedWbProductIds] = useState(new Set());
+
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) setUser(JSON.parse(userData));
@@ -81,6 +87,7 @@ function PaymentRequestNew() {
     paymentRequestAPI.getAll().then(list => {
       setPaidDntts(list.filter(p => p.type === 'MUA_HANG' && p.status === 'PAID'));
     }).catch(() => {});
+    waybillAPI.getAll().then(setWaybills).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -387,6 +394,7 @@ function PaymentRequestNew() {
     const sourceDnttIds = formData.type === 'VAN_CHUYEN' ? JSON.stringify(selectedSourceDntts) : null;
     const shipmentItemsJson = formData.type === 'VAN_CHUYEN' ? JSON.stringify(shipmentItems) : null;
     const effectivePoIds = poIds;
+    const waybillIdArr = formData.type === 'VAN_CHUYEN' && selectedWaybillId ? [Number(selectedWaybillId)] : [];
     const payload = {
       poId: effectivePoIds[0] || 0,
       type: formData.type, amountVnd: amount,
@@ -398,7 +406,7 @@ function PaymentRequestNew() {
       customFees: customFees.filter(f => f.feeName && Number(f.feeAmount) > 0),
       referencePaymentRequestId: referenceId,
       poIds: effectivePoIds,
-      waybillIds: [],
+      waybillIds: waybillIdArr,
       sourceDnttIds,
       shipmentItems: shipmentItemsJson,
     };
@@ -545,10 +553,132 @@ function PaymentRequestNew() {
           ) : (
             <>
               <fieldset>
-                <legend>Chọn DNTT Mua hàng đã thanh toán</legend>
-                {paidDntts.length === 0 ? (
-                  <p className="muted-copy">Không có DNTT Mua hàng nào đã thanh toán.</p>
-                ) : (
+                <legend>Chọn Vận đơn (Waybill)</legend>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                  <select value={selectedWaybillId} onChange={async (e) => {
+                    const wbId = e.target.value;
+                    setSelectedWaybillId(wbId);
+                    setSelectedWbProductIds(new Set());
+                    if (!wbId) {
+                      setSelectedWaybill(null);
+                      setWaybillProducts([]);
+                      return;
+                    }
+                    try {
+                      const wb = await waybillAPI.getById(wbId);
+                      setSelectedWaybill(wb);
+                      const prods = wb.products ? (typeof wb.products === 'string' ? JSON.parse(wb.products) : wb.products) : [];
+                      if (Array.isArray(prods)) {
+                        setWaybillProducts(prods.map((p, i) => ({
+                          id: `wb-${wbId}-${i}`,
+                          waybillCode: wb.waybillCode,
+                          poId: p.poId,
+                          poCode: p.poCode || '',
+                          posCode: p.posCode || '',
+                          productName: p.productName || '',
+                          orderedQty: p.orderedQty || 0,
+                        })));
+                      }
+                    } catch (err) {
+                      toast.error('Lỗi tải vận đơn: ' + err.message);
+                    }
+                  }}
+                    style={{ flex: 1, padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }}>
+                    <option value="">-- Chọn Vận đơn --</option>
+                    {waybills.filter(wb => wb.status !== 'CANCELLED').map(wb => (
+                      <option key={wb.id} value={wb.id}>
+                        {wb.waybillCode} - {wb.carrier || ''} - {wb.status || ''}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedWaybill && (
+                    <button type="button" title="Xem chi tiết vận đơn"
+                      onClick={() => window.open(`/waybills/${selectedWaybill.id}`, '_blank')}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '4px 8px', borderRadius: 6 }}>
+                      👁️
+                    </button>
+                  )}
+                </div>
+                {selectedWaybill && (
+                  <div style={{ padding: '8px 12px', background: '#f0fdf4', borderRadius: 6, marginBottom: 12, fontSize: 13, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                    <span><strong>Mã VB:</strong> {selectedWaybill.waybillCode}</span>
+                    <span><strong>Đơn vị VC:</strong> {selectedWaybill.carrier || '-'}</span>
+                    <span><strong>SL dự kiến:</strong> {selectedWaybill.expectedQty ?? '-'}</span>
+                  </div>
+                )}
+              </fieldset>
+
+              {waybillProducts.length > 0 && (
+                <fieldset>
+                  <legend>Sản phẩm từ Vận đơn</legend>
+                  <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 8 }}>
+                    <table className="table" style={{ fontSize: 13 }}>
+                      <thead>
+                        <tr>
+                          <th style={{ width: 30 }}><input type="checkbox" checked={selectedWbProductIds.size === waybillProducts.length}
+                            onChange={() => {
+                              if (selectedWbProductIds.size === waybillProducts.length) setSelectedWbProductIds(new Set());
+                              else setSelectedWbProductIds(new Set(waybillProducts.map((_, i) => i)));
+                            }} /></th>
+                          <th>PO</th>
+                          <th>Mã POS</th>
+                          <th>Sản phẩm</th>
+                          <th style={{ width: 40 }}>Số lượng</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {waybillProducts.map((prod, idx) => (
+                          <tr key={prod.id}>
+                            <td><input type="checkbox" checked={selectedWbProductIds.has(idx)} onChange={() => {
+                              setSelectedWbProductIds(prev => {
+                                const next = new Set(prev);
+                                if (next.has(idx)) next.delete(idx);
+                                else next.add(idx);
+                                return next;
+                              });
+                            }} /></td>
+                            <td style={{ fontSize: 12 }}>{prod.poCode}</td>
+                            <td style={{ fontSize: 12 }}>{prod.posCode}</td>
+                            <td style={{ fontSize: 12 }}>{prod.productName}</td>
+                            <td style={{ fontSize: 12 }}>{prod.orderedQty}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button type="button" className="btn btn-primary" onClick={() => {
+                    const newItems = [];
+                    selectedWbProductIds.forEach(idx => {
+                      const prod = waybillProducts[idx];
+                      if (prod) {
+                        newItems.push({
+                          key: `ship-${Date.now()}-${idx}`,
+                          waybillCode: prod.waybillCode,
+                          waybillId: selectedWaybillId,
+                          poCode: prod.poCode,
+                          posCode: prod.posCode,
+                          productName: prod.productName,
+                          orderedQty: prod.orderedQty,
+                          volume: '',
+                          unitPrice: '',
+                          total: 0,
+                        });
+                      }
+                    });
+                    setShipmentItems(prev => [...prev, ...newItems]);
+                    setSelectedWbProductIds(new Set());
+                  }}
+                    disabled={selectedWbProductIds.size === 0}>
+                    ADD ({selectedWbProductIds.size}) sản phẩm vào danh sách
+                  </button>
+                </fieldset>
+              )}
+
+              <details style={{ marginBottom: 16 }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 600, fontSize: 13, color: '#64748b', padding: '4px 0' }}>
+                  Hoặc chọn từ DNTT Mua hàng đã thanh toán (mở rộng)
+                </summary>
+                <div style={{ marginTop: 8 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <select value={selectedSourceDntts[0] || ''} onChange={e => selectSourceDntt(e.target.value)}
                       style={{ flex: 1, padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }}>
@@ -559,74 +689,63 @@ function PaymentRequestNew() {
                         </option>
                       ))}
                     </select>
-                    {selectedSourceDntts.length > 0 && (
-                      <button type="button" title="Xem chi tiết DNTT"
-                        onClick={() => openQuickViewDntt(selectedSourceDntts[0])}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, padding: '4px 8px', borderRadius: 6, transition: 'background 0.15s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                        👁️
-                      </button>
-                    )}
                   </div>
-                )}
-              </fieldset>
-
-              {sourceDnttDetails.length > 0 && (
-                <fieldset>
-                  <legend>Sản phẩm từ DNTT đã chọn</legend>
-                  {availableProducts.length > 0 ? (
-                    <>
-                      <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 8 }}>
-                        <table className="table" style={{ fontSize: 13 }}>
-                          <thead>
-                            <tr>
-                              <th style={{ width: 30 }}><input type="checkbox" checked={selectedProductIds.size === availableProducts.length}
-                                onChange={() => {
-                                  if (selectedProductIds.size === availableProducts.length) setSelectedProductIds(new Set());
-                                  else setSelectedProductIds(new Set(availableProducts.map((_, i) => i)));
-                                }} /></th>
-                              <th>DNTT</th>
-                              <th>PO</th>
-                              <th>Mã POS</th>
-                              <th>Sản phẩm</th>
-                              <th style={{ width: 40 }}>Số lượng</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {availableProducts.map((prod, idx) => (
-                              <tr key={idx}>
-                                <td><input type="checkbox" checked={selectedProductIds.has(idx)} onChange={() => toggleProduct(idx)} /></td>
-                                <td style={{ fontSize: 12 }}>{prod.sourceDnttCode}</td>
-                                <td style={{ fontSize: 12 }}>{prod.poCode}</td>
-                                <td style={{ fontSize: 12 }}>{prod.posCode}</td>
-                                <td style={{ fontSize: 12 }}>{prod.productName}</td>
-                                <td style={{ fontSize: 12 }}>{prod.orderedQty}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <button type="button" className="btn btn-primary" onClick={addSelectedProducts}
-                        disabled={selectedProductIds.size === 0}>
-                        ADD ({selectedProductIds.size}) sản phẩm vào danh sách
-                      </button>
-                    </>
-                  ) : <p className="muted-copy">Đang tải sản phẩm...</p>}
-                </fieldset>
-              )}
+                  {sourceDnttDetails.length > 0 && (
+                    <div style={{ marginTop: 8 }}>
+                      {availableProducts.length > 0 ? (
+                        <>
+                          <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 8 }}>
+                            <table className="table" style={{ fontSize: 13 }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ width: 30 }}><input type="checkbox" checked={selectedProductIds.size === availableProducts.length}
+                                    onChange={() => {
+                                      if (selectedProductIds.size === availableProducts.length) setSelectedProductIds(new Set());
+                                      else setSelectedProductIds(new Set(availableProducts.map((_, i) => i)));
+                                    }} /></th>
+                                  <th>DNTT</th>
+                                  <th>PO</th>
+                                  <th>Mã POS</th>
+                                  <th>Sản phẩm</th>
+                                  <th style={{ width: 40 }}>Số lượng</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {availableProducts.map((prod, idx) => (
+                                  <tr key={idx}>
+                                    <td><input type="checkbox" checked={selectedProductIds.has(idx)} onChange={() => toggleProduct(idx)} /></td>
+                                    <td style={{ fontSize: 12 }}>{prod.sourceDnttCode}</td>
+                                    <td style={{ fontSize: 12 }}>{prod.poCode}</td>
+                                    <td style={{ fontSize: 12 }}>{prod.posCode}</td>
+                                    <td style={{ fontSize: 12 }}>{prod.productName}</td>
+                                    <td style={{ fontSize: 12 }}>{prod.orderedQty}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          <button type="button" className="btn btn-primary" onClick={addSelectedProducts}
+                            disabled={selectedProductIds.size === 0}>
+                            ADD ({selectedProductIds.size}) sản phẩm vào danh sách
+                          </button>
+                        </>
+                      ) : <p className="muted-copy">Đang tải sản phẩm...</p>}
+                    </div>
+                  )}
+                </div>
+              </details>
 
               <fieldset>
-                <legend>Danh sách sản phẩm</legend>
+                <legend>Danh sách sản phẩm vận chuyển ({shipmentItems.length})</legend>
                 {shipmentItems.length === 0 ? (
-                  <p className="muted-copy">Chưa có sản phẩm nào. Chọn DNTT Mua hàng và ADD sản phẩm vào danh sách.</p>
+                  <p className="muted-copy">Chưa có sản phẩm nào. Chọn Vận đơn và ADD sản phẩm vào danh sách.</p>
                 ) : (
                   <div className="table-wrapper">
                     <table className="table" style={{ fontSize: 13 }}>
                       <thead>
                         <tr>
                           <th style={{ width: 30 }}>#</th>
-                          <th>DNTT</th>
+                          <th>Vận đơn</th>
                           <th>PO</th>
                           <th>Mã POS</th>
                           <th>Sản phẩm</th>
@@ -641,7 +760,7 @@ function PaymentRequestNew() {
                         {shipmentItems.map((item, idx) => (
                           <tr key={item.key}>
                             <td>{idx + 1}</td>
-                            <td style={{ fontSize: 12 }}>{item.sourceDnttCode}</td>
+                            <td style={{ fontSize: 12 }}>{item.waybillCode || item.sourceDnttCode || '-'}</td>
                             <td style={{ fontSize: 12 }}>{item.poCode}</td>
                             <td style={{ fontSize: 12 }}>{item.posCode}</td>
                             <td style={{ fontSize: 12 }}>{item.productName}</td>

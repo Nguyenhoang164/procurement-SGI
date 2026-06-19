@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
-import { waybillAPI, paymentRequestAPI } from '../services/api';
+import { waybillAPI, paymentRequestAPI, shipmentTrackingAPI } from '../services/api';
 import { formatDnttCode } from '../utils/paymentUtils';
 import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
 
@@ -23,6 +23,7 @@ function WaybillDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [linkedPayments, setLinkedPayments] = useState([]);
+  const [trackings, setTrackings] = useState([]);
 
   const fetchWaybill = useCallback(async () => {
     try {
@@ -34,6 +35,7 @@ function WaybillDetail() {
         const linked = allPayments.filter(p => prIds.includes(p.id));
         setLinkedPayments(linked);
       }
+      shipmentTrackingAPI.getByWaybillId(id).then(setTrackings).catch(() => {});
     } catch (err) {
       setError(err.message);
     } finally {
@@ -68,6 +70,12 @@ function WaybillDetail() {
   if (!waybill) return <div className="page-content"><div className="error-message">Không tìm thấy vận đơn.</div></div>;
 
   const products = waybill.products ? (typeof waybill.products === 'string' ? JSON.parse(waybill.products) : waybill.products) : [];
+  const groupedByPO = {};
+  products.forEach(p => {
+    const key = p.poCode || 'PO-' + (p.poId || '');
+    if (!groupedByPO[key]) groupedByPO[key] = [];
+    groupedByPO[key].push(p);
+  });
 
   return (
     <div className="page-screen">
@@ -124,22 +132,6 @@ function WaybillDetail() {
                     <span className="label">Số tiền</span>
                     <span className="value money">{Number(pr.amountVnd || 0).toLocaleString('vi-VN')} ₫</span>
                   </div>
-                  {pr.type === 'VAN_CHUYEN' && pr.sourceDnttIds && (() => {
-                    let sourceIds = [];
-                    try { sourceIds = JSON.parse(pr.sourceDnttIds); } catch {}
-                    return sourceIds.length > 0 ? (
-                      <div className="info-row" style={{ padding: '2px 0' }}>
-                        <span className="label">DNTT Mua hàng nguồn</span>
-                        <span className="value">{sourceIds.map(sid => <a key={sid} href={`/payments/${sid}`} className="link" style={{ marginRight: 4 }}>{formatDnttCode(sid)}</a>)}</span>
-                      </div>
-                    ) : null;
-                  })()}
-                  {pr.type === 'VAN_CHUYEN' && pr.poIds && pr.poIds.length > 0 && (
-                    <div className="info-row" style={{ padding: '2px 0' }}>
-                      <span className="label">Mã đơn (PO)</span>
-                      <span className="value">{pr.poIds.map(poId => `PO-${poId}`).join(', ')}</span>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -149,65 +141,91 @@ function WaybillDetail() {
         {products.length > 0 && (
           <section className="detail-section" style={{ marginTop: 20 }}>
             <h3>Danh sách sản phẩm ({products.length})</h3>
-            <div className="table-wrapper">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th style={{ width: 40 }}>#</th>
-                    <th>Tên SP</th>
-                    <th style={{ width: 110 }}>Mã POS</th>
-                    <th style={{ width: 80 }}>Chi tiết</th>
-                    <th style={{ width: 70 }}>SL</th>
-                    <th style={{ width: 110 }}>Đơn giá (NT)</th>
-                    <th style={{ width: 60 }}>TG</th>
-                    <th style={{ width: 110 }}>Thành tiền (NT)</th>
-                    <th style={{ width: 100 }}>Quy đổi VNĐ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.flatMap((p, idx) => {
-                    const pVariants = parseVariants(p.spec);
-                    const hasVariants = pVariants.some(v => v.name || v.qty);
-                    const rows = [];
-                    const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
-                    const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
-                    rows.push(
-                      <tr key={idx}>
-                        <td>{idx + 1}</td>
-                        <td>{p.productName}</td>
-                        <td>{p.posCode || '-'}</td>
-                        <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
-                        <td>{p.orderedQty}</td>
-                        <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                        <td>{p.exchangeRate || '3520'}</td>
-                        <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
-                        <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
+            {Object.entries(groupedByPO).map(([poCode, items]) => (
+              <div key={poCode} style={{ marginBottom: 16 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#2563eb', marginBottom: 8, padding: '6px 10px', background: '#f0f7ff', borderRadius: 6 }}>
+                  {poCode} ({items.length} sản phẩm)
+                </div>
+                <div className="table-wrapper">
+                  <table className="table" style={{ fontSize: 13 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40 }}>#</th>
+                        <th>Tên SP</th>
+                        <th style={{ width: 110 }}>Mã POS</th>
+                        <th style={{ width: 80 }}>Chi tiết</th>
+                        <th style={{ width: 60 }}>SL</th>
+                        <th style={{ width: 100 }}>Đơn giá (NT)</th>
+                        <th style={{ width: 50 }}>TG</th>
+                        <th style={{ width: 100 }}>Thành tiền (NT)</th>
+                        <th style={{ width: 100 }}>Quy đổi VNĐ</th>
                       </tr>
-                    );
-                    if (hasVariants) {
-                      pVariants.forEach((v, vi) => {
-                        if (!v.name && !v.qty) return;
+                    </thead>
+                    <tbody>
+                      {items.flatMap((p, idx) => {
+                        const pVariants = parseVariants(p.spec);
+                        const hasVariants = pVariants.some(v => v.name || v.qty);
+                        const rows = [];
+                        const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
+                        const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
                         rows.push(
-                          <tr key={`${idx}-v${vi}`} style={{ background: '#f8fafc' }}>
-                            <td></td>
-                            <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
-                              <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
-                            </td>
-                            <td></td>
-                            <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
-                            <td>{v.qty || 0}</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                          <tr key={idx}>
+                            <td>{idx + 1}</td>
+                            <td>{p.productName}</td>
+                            <td>{p.posCode || '-'}</td>
+                            <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
+                            <td>{p.orderedQty}</td>
+                            <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
+                            <td>{p.exchangeRate || '3520'}</td>
+                            <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
+                            <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                           </tr>
                         );
-                      });
-                    }
-                    return rows;
-                  })}
-                </tbody>
-              </table>
+                        if (hasVariants) {
+                          pVariants.forEach((v, vi) => {
+                            if (!v.name && !v.qty) return;
+                            rows.push(
+                              <tr key={`${idx}-v${vi}`} style={{ background: '#f8fafc' }}>
+                                <td></td>
+                                <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
+                                  <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
+                                </td>
+                                <td></td>
+                                <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
+                                <td>{v.qty || 0}</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                              </tr>
+                            );
+                          });
+                        }
+                        return rows;
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {trackings.length > 0 && (
+          <section className="detail-section" style={{ marginTop: 20 }}>
+            <h3>Lịch sử vận chuyển ({trackings.length})</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {trackings.map(t => (
+                <div key={t.id} style={{ padding: '10px 14px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span className={`badge badge-${(t.status || '').toLowerCase()}`}>{t.status || '-'}</span>
+                    <span className="muted-copy">{t.eventDate ? new Date(t.eventDate).toLocaleString('vi-VN') : '-'}</span>
+                  </div>
+                  <div style={{ marginTop: 4 }}>{t.eventDescription || '-'}</div>
+                  {t.location && <div className="muted-copy" style={{ marginTop: 2 }}>📍 {t.location}</div>}
+                  {t.updatedBy && <div className="muted-copy" style={{ marginTop: 2 }}>Người cập nhật: {t.updatedBy}</div>}
+                </div>
+              ))}
             </div>
           </section>
         )}

@@ -25,5 +25,6 @@ public class WaybillDTO {
     private Long paymentRequestId;
     private String products;
     private List<Long> paymentRequestIds;
+    private String purchaseOrderIds;
 
 }

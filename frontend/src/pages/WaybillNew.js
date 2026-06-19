@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
-import { waybillAPI, purchaseOrderAPI, paymentRequestAPI } from '../services/api';
-import { formatDnttCode } from '../utils/paymentUtils';
+import { waybillAPI, purchaseOrderAPI } from '../services/api';
 import { useToast } from '../components/Toast';
-import PosCodeSelector from '../components/PosCodeSelector';
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -21,24 +19,22 @@ const calcTotalQty = (variants) => {
   return variants.reduce((sum, v) => sum + (Number(v.qty) || 0), 0);
 };
 
-const emptyProduct = {
-  posCode: '', productName: '', spec: '', orderedQty: '', unitPrice: '', currency: 'CNY', exchangeRate: '3520'
-};
-
 function WaybillNew() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEdit = Boolean(id);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const toast = useToast();
-  const [paymentRequests, setPaymentRequests] = useState([]);
+
+  const [orders, setOrders] = useState([]);
+  const [selectedPOs, setSelectedPOs] = useState([]);
+  const [availableItems, setAvailableItems] = useState([]);
+  const [selectedItemIds, setSelectedItemIds] = useState(new Set());
   const [products, setProducts] = useState([]);
-  const [linkedWaybills, setLinkedWaybills] = useState([]);
-  const [sourceDntts, setSourceDntts] = useState([]);
-  const [productForm, setProductForm] = useState({ ...emptyProduct });
-  const [formVariants, setFormVariants] = useState([{ name: '', qty: '' }]);
-  const [editingIdx, setEditingIdx] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const [form, setForm] = useState({
     waybillCode: '', carrier: '', status: 'IN_TRANSIT',
     origin: '', destination: '',
@@ -47,50 +43,20 @@ function WaybillNew() {
   });
 
   useEffect(() => {
-    paymentRequestAPI.getAll().then(setPaymentRequests).catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!form.paymentRequestId) { setSourceDntts([]); return; }
-    const loadProductsFromPR = async () => {
+    const loadOrders = async () => {
       try {
-        const pr = await paymentRequestAPI.getById(form.paymentRequestId);
-        let sourceIds = [];
-        try { if (pr.sourceDnttIds) sourceIds = JSON.parse(pr.sourceDnttIds); } catch {}
-        if (sourceIds.length > 0) {
-          const dntts = await Promise.all(sourceIds.map(sid => paymentRequestAPI.getById(sid)));
-          setSourceDntts(dntts);
-        } else {
-          setSourceDntts([]);
-        }
-        const poId = pr.poId;
-        if (!poId) return;
-        const po = await purchaseOrderAPI.getById(poId);
-        if (po.items && po.items.length > 0) {
-          const mapped = po.items.map(item => ({
-            posCode: item.posCode || '',
-            productName: item.productName || '',
-            spec: item.spec || '',
-            orderedQty: String(item.orderedQty || ''),
-            unitPrice: String(item.unitPrice || ''),
-            currency: item.currency || 'CNY',
-            exchangeRate: String(item.exchangeRate || '3520')
-          }));
-          setProducts(mapped);
-          const total = mapped.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
-          setForm(prev => ({ ...prev, expectedQty: String(total), actualQty: '' }));
-        }
-      } catch {}
+        const data = await purchaseOrderAPI.getAll('', 0, 10000);
+        const allOrders = data.orders || [];
+        const approved = allOrders.filter(o =>
+          ['APPROVED', 'SENT_TO_ACCOUNTING', 'SHIPPING', 'IN_TRANSIT', 'COMPLETED', 'PAID'].includes(o?.status)
+        );
+        setOrders(approved);
+      } catch (err) {
+        toast.error(err.message);
+      }
     };
-    loadProductsFromPR();
-  }, [form.paymentRequestId]);
-
-  useEffect(() => {
-    if (!form.paymentRequestId) { setLinkedWaybills([]); setSourceDntts([]); return; }
-    waybillAPI.getByPaymentRequestId(form.paymentRequestId)
-      .then(setLinkedWaybills)
-      .catch(() => {});
-  }, [form.paymentRequestId]);
+    loadOrders();
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -117,62 +83,117 @@ function WaybillNew() {
     load();
   }, [id]);
 
+  const addPO = (poId) => {
+    if (!poId) return;
+    if (selectedPOs.some(o => String(o.id) === poId)) return;
+    const order = orders.find(o => String(o.id) === poId);
+    if (!order) return;
+    setSelectedPOs(prev => [...prev, order]);
+    if (order.items && order.items.length > 0) {
+      const mapped = order.items.map((item, idx) => ({
+        id: `${order.id}-${idx}`,
+        poId: order.id,
+        poCode: order.poCode || 'PO-' + order.id,
+        posCode: item.posCode || '',
+        productName: item.productName || '',
+        spec: item.spec || '',
+        orderedQty: String(item.orderedQty || ''),
+        unitPrice: String(item.unitPrice || ''),
+        currency: item.currency || 'CNY',
+        exchangeRate: String(item.exchangeRate || '3520'),
+        totalAmountForeign: item.totalAmountForeign || (Number(item.unitPrice || 0) * Number(item.orderedQty || 0)),
+        totalAmountVnd: item.totalAmountVnd || 0,
+      }));
+      setAvailableItems(prev => [...prev, ...mapped]);
+    }
+  };
+
+  const removePO = (poId) => {
+    setSelectedPOs(prev => prev.filter(o => o.id !== poId));
+    setAvailableItems(prev => prev.filter(item => item.poId !== poId));
+    setSelectedItemIds(prev => {
+      const next = new Set(prev);
+      availableItems.filter(item => item.poId === poId).forEach(item => next.delete(item.id));
+      return next;
+    });
+    setProducts(prev => prev.filter(p => p.poId !== poId));
+  };
+
+  const toggleItem = (itemId) => {
+    setSelectedItemIds(prev => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
+
+  const addSelectedItems = () => {
+    const newProducts = [];
+    selectedItemIds.forEach(id => {
+      const item = availableItems.find(i => i.id === id);
+      if (item && !products.some(p => p._itemId === id)) {
+        newProducts.push({
+          _itemId: id,
+          poId: item.poId,
+          poCode: item.poCode,
+          posCode: item.posCode,
+          productName: item.productName,
+          spec: item.spec,
+          orderedQty: item.orderedQty,
+          unitPrice: item.unitPrice,
+          currency: item.currency,
+          exchangeRate: item.exchangeRate,
+        });
+      }
+    });
+    if (newProducts.length > 0) {
+      setProducts(prev => [...prev, ...newProducts]);
+      const total = [...products, ...newProducts].reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
+      setForm(prev => ({ ...prev, expectedQty: String(total) }));
+    }
+    setSelectedItemIds(new Set());
+  };
+
+  const removeProduct = (idx) => {
+    const removed = products[idx];
+    setProducts(prev => prev.filter((_, i) => i !== idx));
+    const remaining = products.filter((_, i) => i !== idx);
+    const total = remaining.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
+    setForm(prev => ({ ...prev, expectedQty: String(total) }));
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const addOrUpdateProduct = () => {
-    if (!productForm.productName) { toast.error('Thiếu tên sản phẩm.'); return; }
-    const totalQty = calcTotalQty(formVariants);
-    if (totalQty <= 0) { toast.error('Thiếu số lượng cho biến thể.'); return; }
-    setError('');
-    const productPayload = {
-      ...productForm,
-      spec: JSON.stringify(formVariants),
-      orderedQty: String(totalQty)
-    };
-    if (editingIdx !== null) {
-      setProducts(prev => prev.map((p, i) => i === editingIdx ? productPayload : p));
-      setEditingIdx(null);
-    } else {
-      setProducts(prev => [...prev, productPayload]);
-    }
-    setProductForm({ ...emptyProduct });
-    setFormVariants([{ name: '', qty: '' }]);
-  };
-
-  const editProduct = (idx) => {
-    setProductForm({ ...products[idx] });
-    setFormVariants(parseVariants(products[idx].spec));
-    setEditingIdx(idx);
-  };
-
-  const removeProduct = (idx) => {
-    setProducts(prev => prev.filter((_, i) => i !== idx));
-    if (editingIdx === idx) { setProductForm({ ...emptyProduct }); setFormVariants([{ name: '', qty: '' }]); setEditingIdx(null); }
-  };
-
-  const resetProductForm = () => {
-    setProductForm({ ...emptyProduct });
-    setFormVariants([{ name: '', qty: '' }]);
-    setEditingIdx(null);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (products.length === 0) {
+      toast.error('Vui lòng chọn ít nhất một sản phẩm từ đơn hàng.');
+      return;
+    }
     setLoading(true);
     setError('');
+    const productsPayload = products.map(p => ({
+      poId: p.poId,
+      poCode: p.poCode,
+      posCode: p.posCode,
+      productName: p.productName,
+      spec: p.spec,
+      orderedQty: p.orderedQty,
+      unitPrice: p.unitPrice,
+      currency: p.currency,
+      exchangeRate: p.exchangeRate,
+    }));
     const payload = {
       ...form,
       expectedQty: form.expectedQty ? Number(form.expectedQty) : null,
       actualQty: form.actualQty ? Number(form.actualQty) : null,
       paymentRequestId: form.paymentRequestId ? Number(form.paymentRequestId) : null,
-      products: products.length > 0 ? JSON.stringify(products) : null
+      products: JSON.stringify(productsPayload)
     };
-    if (!isEdit) {
-      delete payload.waybillCode;
-    }
     try {
       if (isEdit) {
         await waybillAPI.update(id, payload);
@@ -185,27 +206,28 @@ function WaybillNew() {
     finally { setLoading(false); }
   };
 
+  const orderOptions = orders.map(order => ({
+    value: String(order.id),
+    label: `${order.poCode || 'PO-' + order.id} · ${order.supplierName || order.posCode || 'N/A'}`
+  }));
+
   return (
     <div className="page-screen">
       <div className="page-topbar">
         <div className="page-title-group">
           <h1 className="page-title">{isEdit ? 'Cập nhật vận đơn' : 'Tạo vận đơn mới'}</h1>
-          <p className="page-subtitle">Waybill — theo dõi vận chuyển và đối chiếu kho</p>
+          <p className="page-subtitle">Waybill — chọn sản phẩm từ nhiều đơn hàng để gộp vào một vận đơn</p>
         </div>
       </div>
 
       <div className="page-content">
         {error ? <div className="error-message">{error}</div> : null}
 
-        <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 800, margin: '0 auto' }}>
+        <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 900, margin: '0 auto' }}>
           <div className="form-row">
             <div className="form-group">
-              <label>Mã vận đơn</label>
-              {isEdit ? (
-                <input name="waybillCode" value={form.waybillCode} onChange={handleChange} required />
-              ) : (
-                <input value="Tự động tạo khi lưu" disabled style={{ color: '#888', fontStyle: 'italic' }} />
-              )}
+              <label>Mã vận đơn <span className="required">*</span></label>
+              <input name="waybillCode" value={form.waybillCode} onChange={handleChange} placeholder="Nhập mã vận đơn..." required />
             </div>
             <div className="form-group">
               <label>Đơn vị vận chuyển <span className="required">*</span></label>
@@ -215,15 +237,6 @@ function WaybillNew() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Liên kết DNTT</label>
-              <select name="paymentRequestId" value={form.paymentRequestId} onChange={handleChange}>
-                <option value="">-- Không liên kết --</option>
-                {paymentRequests.filter(pr => pr.type === 'VAN_CHUYEN').map(pr => (
-                  <option key={pr.id} value={pr.id}>DNTT-{pr.id} - {pr.amountVnd?.toLocaleString('vi-VN')}₫</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group">
               <label>Trạng thái</label>
               <select name="status" value={form.status} onChange={handleChange}>
                 <option value="PENDING">Chờ vận chuyển</option>
@@ -232,44 +245,15 @@ function WaybillNew() {
                 <option value="CANCELLED">Đã hủy</option>
               </select>
             </div>
+            <div className="form-group">
+              <label>Địa chỉ gửi</label>
+              <input name="origin" value={form.origin} onChange={handleChange} />
+            </div>
+            <div className="form-group">
+              <label>Địa chỉ nhận</label>
+              <input name="destination" value={form.destination} onChange={handleChange} />
+            </div>
           </div>
-
-          {sourceDntts.length > 0 && (
-            <div className="surface-card" style={{ padding: 12, marginBottom: 16, background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0' }}>
-              <strong style={{ fontSize: 13, color: '#166534' }}>DNTT Mua hàng liên kết ({sourceDntts.length})</strong>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
-                {sourceDntts.map(dntt => (
-                  <div key={dntt.id} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
-                    <a href={`/payments/${dntt.id}`} style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer', fontWeight: 500 }}>
-                      {formatDnttCode(dntt.id)}
-                    </a>
-                    <span className="muted-copy">{Number(dntt.amountVnd || 0).toLocaleString('vi-VN')} ₫</span>
-                    <span className="muted-copy">{dntt.poIds ? dntt.poIds.map(id => `PO-${id}`).join(', ') : '-'}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {linkedWaybills.length > 0 && (
-            <div className="surface-card" style={{ padding: 12, marginBottom: 16, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-              <strong style={{ fontSize: 13 }}>Các vận đơn khác cùng DNTT ({linkedWaybills.length})</strong>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
-                {linkedWaybills.map(wb => (
-                  <div key={wb.id} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12 }}>
-                    <a onClick={() => navigate(`/waybills/${wb.id}`)}
-                      style={{ color: '#2563eb', textDecoration: 'underline', cursor: 'pointer' }}>
-                      {wb.waybillCode}
-                    </a>
-                    <span className={`badge badge-${(wb.status || '').toLowerCase()}`}>{wb.status}</span>
-                    <span className="muted-copy">{wb.carrier || ''}</span>
-                    <span className="muted-copy">SL dự kiến: {wb.expectedQty ?? '-'}</span>
-                    <span className="muted-copy">SL thực tế: {wb.actualQty ?? '-'}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="form-row">
             <div className="form-group">
@@ -282,83 +266,126 @@ function WaybillNew() {
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Địa chỉ gửi</label>
-              <input name="origin" value={form.origin} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label>Địa chỉ nhận</label>
-              <input name="destination" value={form.destination} onChange={handleChange} />
-            </div>
-          </div>
+          <fieldset style={{ marginTop: 20 }}>
+            <legend>Chọn đơn hàng (PO) và sản phẩm</legend>
 
-          <div className="form-group">
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+              <select
+                style={{ flex: 1, padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }}
+                value="" onChange={e => addPO(e.target.value)}
+              >
+                <option value="">-- Chọn đơn hàng --</option>
+                {orderOptions
+                  .filter(opt => !selectedPOs.some(o => String(o.id) === opt.value))
+                  .map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+              </select>
+            </div>
+
+            {selectedPOs.length > 0 && (
+              <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 12 }}>
+                <table className="table" style={{ fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 30 }}><input type="checkbox" checked={availableItems.length > 0 && selectedItemIds.size === availableItems.length}
+                        onChange={() => {
+                          if (selectedItemIds.size === availableItems.length) setSelectedItemIds(new Set());
+                          else setSelectedItemIds(new Set(availableItems.map(i => i.id)));
+                        }} /></th>
+                      <th>PO</th>
+                      <th>Mã POS</th>
+                      <th>Sản phẩm</th>
+                      <th>Chi tiết</th>
+                      <th style={{ width: 50 }}>SL</th>
+                      <th style={{ width: 50 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availableItems.map((item) => (
+                      <tr key={item.id}>
+                        <td><input type="checkbox" checked={selectedItemIds.has(item.id)} onChange={() => toggleItem(item.id)} /></td>
+                        <td style={{ fontSize: 12 }}>{item.poCode}</td>
+                        <td style={{ fontSize: 12 }}>{item.posCode}</td>
+                        <td style={{ fontSize: 12 }}>{item.productName}</td>
+                        <td style={{ fontSize: 12, color: '#475569' }}>{item.spec || '-'}</td>
+                        <td>{item.orderedQty}</td>
+                        <td>
+                          <button type="button" onClick={() => removePO(item.poId)}
+                            style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
+                            title="Xóa PO này">✕</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            <button type="button" className="btn btn-primary" onClick={addSelectedItems}
+              disabled={selectedItemIds.size === 0}>
+              ADD ({selectedItemIds.size}) sản phẩm vào vận đơn
+            </button>
+          </fieldset>
+
+          <fieldset style={{ marginTop: 12 }}>
+            <legend>Danh sách sản phẩm trong vận đơn ({products.length})</legend>
+
+            {products.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#94a3b8', padding: 20, fontSize: 13 }}>
+                Chưa có sản phẩm. Chọn đơn hàng và tích sản phẩm phía trên.
+              </div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="table" style={{ fontSize: 13 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 30 }}>#</th>
+                      <th>PO</th>
+                      <th>Sản phẩm</th>
+                      <th>Chi tiết</th>
+                      <th style={{ width: 50 }}>SL</th>
+                      <th style={{ width: 100 }}>Đơn giá (NT)</th>
+                      <th style={{ width: 60 }}>TG</th>
+                      <th style={{ width: 80 }}>Thành tiền</th>
+                      <th style={{ width: 40 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map((p, idx) => {
+                      const pVariants = parseVariants(p.spec);
+                      const hasVariants = pVariants.some(v => v.name || v.qty);
+                      const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
+                      const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
+                      return (
+                        <tr key={idx}>
+                          <td>{idx + 1}</td>
+                          <td style={{ fontSize: 12 }}>{p.poCode}</td>
+                          <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
+                          <td style={{ fontSize: 12, color: '#475569' }}>
+                            {!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}
+                          </td>
+                          <td>{p.orderedQty}</td>
+                          <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
+                          <td>{p.exchangeRate || '3520'}</td>
+                          <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
+                          <td>
+                            <button type="button" onClick={() => removeProduct(idx)}
+                              style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </fieldset>
+
+          <div className="form-group" style={{ marginTop: 12 }}>
             <label>Ghi chú</label>
             <textarea name="note" rows={3} value={form.note} onChange={handleChange} />
           </div>
-
-          <fieldset style={{ marginTop: 20 }}>
-            <legend>Danh sách sản phẩm ({products.length})</legend>
-
-            <div className="table-wrapper" style={{ marginTop: 12 }}>
-              <table className="table" style={{ fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    <th style={{ width: 30 }}>#</th>
-                    <th>Sản phẩm</th>
-                    <th style={{ minWidth: 160 }}>Chi tiết</th>
-                    <th style={{ width: 60 }}>SL</th>
-                    <th style={{ width: 110 }}>Đơn giá (NT)</th>
-                    <th style={{ width: 60 }}>TG</th>
-                    <th style={{ width: 110 }}>Thành tiền (NT)</th>
-                    <th style={{ width: 100 }}>Quy đổi VNĐ</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.length === 0 && (
-                    <tr>
-                      <td colSpan={8} style={{ textAlign: 'center', color: '#94a3b8', padding: 20 }}>
-                        Chưa có sản phẩm. Vui lòng chọn DNTT để tải sản phẩm từ đơn hàng.
-                      </td>
-                    </tr>
-                  )}
-                  {products.flatMap((p, idx) => {
-                    const pVariants = parseVariants(p.spec);
-                    const hasVariants = pVariants.some(v => v.name || v.qty);
-                    const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
-                    const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
-                    return [
-                      <tr key={idx}>
-                        <td>{idx + 1}</td>
-                        <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
-                        <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
-                        <td>{p.orderedQty}</td>
-                        <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                        <td>{p.exchangeRate || '3520'}</td>
-                        <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
-                        <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
-                      </tr>,
-                      ...(hasVariants ? pVariants.filter(v => v.name || v.qty).map((v, vi) => (
-                        <tr key={`${idx}-v${vi}`} style={{ background: '#f8fafc' }}>
-                          <td></td>
-                          <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
-                            <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
-                          </td>
-                          <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
-                          <td>{v.qty || 0}</td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                        </tr>
-                      )) : [])
-                    ];
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </fieldset>
 
           <div className="form-actions" style={{ marginTop: 20 }}>
             <button type="button" className="btn btn-secondary" onClick={() => navigate('/waybills')}>Hủy</button>

@@ -8,11 +8,14 @@ import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.PaymentRequestRepository;
 import com.sgiprocurement.repository.PaymentRequestWaybillRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 
@@ -34,6 +37,9 @@ public class WaybillService {
 
     @Autowired
     private WarehouseReceiptService warehouseReceiptService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public List<WaybillDTO> getAllWaybills() {
         return waybillRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
@@ -68,8 +74,6 @@ public class WaybillService {
             paymentRequestWaybillRepository.save(link);
         }
 
-        updatePoStatusIfLinked(saved);
-
         return convertToDTO(saved);
     }
 
@@ -88,7 +92,7 @@ public class WaybillService {
         waybill.setPaymentRequestId(dto.getPaymentRequestId());
         waybill.setProducts(dto.getProducts());
         Waybill saved = waybillRepository.save(waybill);
-        
+
         if (oldPaymentRequestId != null && !oldPaymentRequestId.equals(dto.getPaymentRequestId())) {
             List<PaymentRequestWaybill> oldLinks = paymentRequestWaybillRepository.findByPaymentRequestId(oldPaymentRequestId);
             oldLinks.stream()
@@ -96,17 +100,14 @@ public class WaybillService {
                     .findFirst()
                     .ifPresent(l -> paymentRequestWaybillRepository.delete(l));
         }
-        
+
         if (dto.getPaymentRequestId() != null && (oldPaymentRequestId == null || !oldPaymentRequestId.equals(dto.getPaymentRequestId()))) {
             PaymentRequestWaybill link = new PaymentRequestWaybill();
             link.setPaymentRequestId(dto.getPaymentRequestId());
             link.setWaybillId(saved.getId());
             paymentRequestWaybillRepository.save(link);
         }
-        
-        // Update PO status if linked
-        updatePoStatusIfLinked(saved);
-        
+
         return convertToDTO(saved);
     }
 
@@ -140,8 +141,10 @@ public class WaybillService {
         Waybill savedWaybill = waybillRepository.save(waybill);
         
         // Khi xác nhận giao hàng, cập nhật trạng thái PO sang SHIPPING nếu đang ở trạng thái trước đó
-        updatePoStatusIfLinked(savedWaybill);
-        
+        if (savedWaybill.getPaymentRequestId() != null) {
+            updatePoStatusIfLinked(savedWaybill);
+        }
+
         // Tự động tạo phiếu nhập kho trạng thái PENDING để thủ kho xác nhận thủ công
         try {
             warehouseReceiptService.createFromWaybill(savedWaybill);
@@ -174,6 +177,25 @@ public class WaybillService {
         if (waybill.getPaymentRequestId() != null && !prIds.contains(waybill.getPaymentRequestId())) {
             prIds.add(0, waybill.getPaymentRequestId());
         }
+
+        String poIds = null;
+        if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
+            try {
+                List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
+                Set<String> poIdSet = new java.util.LinkedHashSet<>();
+                for (Map<String, Object> p : productList) {
+                    if (p.containsKey("poId")) {
+                        poIdSet.add(String.valueOf(p.get("poId")));
+                    }
+                }
+                if (!poIdSet.isEmpty()) {
+                    poIds = String.join(",", poIdSet);
+                }
+            } catch (Exception e) {
+                // ignore parse errors
+            }
+        }
+
         return new WaybillDTO(
                 waybill.getId(),
                 waybill.getWaybillCode(),
@@ -188,7 +210,8 @@ public class WaybillService {
                 waybill.getUpdatedAt(),
                 waybill.getPaymentRequestId(),
                 waybill.getProducts(),
-                prIds
+                prIds,
+                poIds
         );
     }
 

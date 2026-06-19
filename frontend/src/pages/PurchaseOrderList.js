@@ -5,7 +5,7 @@ import '../styles/ProductList.css';
 import { purchaseOrderAPI, productCostAPI } from '../services/api';
 import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
-import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, getUser } from '../utils/permissions';
+import { isAdmin, canCreatePO, canEditPO, canDeletePO, canImportPO, canApprovePO_L1, canCrudWaybill, getUser } from '../utils/permissions';
 
 const statusLabels = {
   DRAFT: 'Nháp', PENDING_L1: 'Chờ duyệt', APPROVED: 'Phê duyệt',
@@ -28,8 +28,46 @@ function PurchaseOrderList() {
   const userData = getUser();
   const isAdminUser = isAdmin(userData);
   const canApprove = canApprovePO_L1(userData);
+  const canCreateWaybill = canCrudWaybill(userData);
   const userRole = userData?.role;
   const userDept = userData?.department;
+  const [selectedWbItems, setSelectedWbItems] = useState(new Set());
+
+  const toggleWbItem = (key) => {
+    setSelectedWbItems(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const getSelectedWbProductList = () => {
+    const result = [];
+    orders.forEach(order => {
+      (order.items || []).forEach((item, idx) => {
+        const key = `${order.id}-${idx}`;
+        if (selectedWbItems.has(key)) {
+          result.push({
+            posCode: item.posCode || '',
+            productName: item.productName || '',
+            spec: item.spec || '',
+            orderedQty: String(item.orderedQty || ''),
+            unitPrice: String(item.unitPrice || ''),
+            currency: item.currency || 'CNY',
+            exchangeRate: String(item.exchangeRate || '3520')
+          });
+        }
+      });
+    });
+    return result;
+  };
+
+  const handleCreateWaybill = () => {
+    const products = getSelectedWbProductList();
+    if (products.length === 0) return;
+    setSelectedWbItems(new Set());
+    navigate('/waybills/new', { state: { fromPOItems: products } });
+  };
   const isDeptRestricted = userRole === 'SALES' || userRole === 'SALES_MANAGER';
 
   const [selectedDepartment, setSelectedDepartment] = useState(
@@ -293,6 +331,29 @@ function PurchaseOrderList() {
 
         {error ? <div className="error-message">{error}</div> : null}
 
+        {canCreateWaybill && selectedWbItems.size > 0 && (
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '12px 20px', marginBottom: 16,
+            background: 'linear-gradient(135deg, #1e3a5f, #2d5a8e)', color: '#fff',
+            borderRadius: 12, boxShadow: '0 4px 16px rgba(30, 58, 95, 0.25)'
+          }}>
+            <span style={{ fontWeight: 600, fontSize: 15 }}>
+              Đã chọn <strong>{selectedWbItems.size}</strong> sản phẩm từ đơn hàng
+            </span>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}
+                onClick={() => setSelectedWbItems(new Set())}>
+                Bỏ chọn
+              </button>
+              <button className="btn btn-sm" style={{ background: '#16a34a', color: '#fff', fontWeight: 700, border: 'none' }}
+                onClick={handleCreateWaybill}>
+                Tạo vận đơn từ mục đã chọn
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="loading">Đang tải dữ liệu...</div>
         ) : orders.length === 0 ? (
@@ -364,6 +425,7 @@ Ghi chú: {order.note}
                   <table className="table">
                     <thead>
                       <tr>
+                        {canCreateWaybill && <th style={{ width: 36 }}></th>}
                         <th style={{ width: 40 }}>#</th>
                         <th style={{ width: 180 }}>Tên sản phẩm</th>
                         <th style={{ width: 110 }}>Mã POS</th>
@@ -391,8 +453,16 @@ Ghi chú: {order.note}
                           }
                         } catch { }
                         const rows = [];
+                        const itemKey = `${order.id}-${idx}`;
+                        const isWbSelected = selectedWbItems.has(itemKey);
                         rows.push(
-                          <tr key={item.id || idx}>
+                          <tr key={item.id || idx} style={isWbSelected ? { background: '#eff6ff' } : {}}>
+                            {canCreateWaybill && (
+                              <td>
+                                <input type="checkbox" checked={isWbSelected}
+                                  onChange={() => toggleWbItem(itemKey)} />
+                              </td>
+                            )}
                             <td>{idx + 1}</td>
                             <td>{getName(item)}</td>
                             <td>{item.posCode && item.posCode !== 'N/A' ? (
@@ -438,6 +508,7 @@ Ghi chú: {order.note}
                               if (!v.name && !v.qty) return;
                               rows.push(
                                 <tr key={`${item.id || idx}-v${vi}`} style={{ background: '#f8fafc' }}>
+                                  {canCreateWaybill && <td></td>}
                                   <td></td>
                                   <td style={{ paddingLeft: 24, fontSize: 13, color: '#475569' }}>
                                     <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
