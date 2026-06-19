@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { waybillAPI, purchaseOrderAPI } from '../services/api';
@@ -38,9 +38,13 @@ function WaybillNew() {
   const [form, setForm] = useState({
     waybillCode: '', carrier: '', status: 'IN_TRANSIT',
     origin: '', destination: '',
-    expectedQty: '', actualQty: '',
+    actualQty: '',
     note: ''
   });
+
+  const computedExpectedQty = useMemo(() => {
+    return products.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
+  }, [products]);
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -68,7 +72,7 @@ function WaybillNew() {
           waybillCode: data.waybillCode || '', carrier: data.carrier || '',
           status: data.status || 'IN_TRANSIT',
           origin: data.origin || '', destination: data.destination || '',
-          expectedQty: data.expectedQty ?? '', actualQty: data.actualQty ?? '',
+          actualQty: data.actualQty ?? '',
           note: data.note || ''
         });
         if (data.products) {
@@ -149,18 +153,12 @@ function WaybillNew() {
     });
     if (newProducts.length > 0) {
       setProducts(prev => [...prev, ...newProducts]);
-      const total = [...products, ...newProducts].reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
-      setForm(prev => ({ ...prev, expectedQty: String(total) }));
     }
     setSelectedItemIds(new Set());
   };
 
   const removeProduct = (idx) => {
-    const removed = products[idx];
     setProducts(prev => prev.filter((_, i) => i !== idx));
-    const remaining = products.filter((_, i) => i !== idx);
-    const total = remaining.reduce((sum, p) => sum + (Number(p.orderedQty) || 0), 0);
-    setForm(prev => ({ ...prev, expectedQty: String(total) }));
   };
 
   const handleChange = (e) => {
@@ -189,7 +187,7 @@ function WaybillNew() {
     }));
     const payload = {
       ...form,
-      expectedQty: form.expectedQty ? Number(form.expectedQty) : null,
+      expectedQty: computedExpectedQty || null,
       actualQty: form.actualQty ? Number(form.actualQty) : null,
       products: JSON.stringify(productsPayload)
     };
@@ -257,7 +255,8 @@ function WaybillNew() {
           <div className="form-row">
             <div className="form-group">
               <label>SL dự kiến <span className="required">*</span></label>
-              <input type="number" name="expectedQty" value={form.expectedQty} onChange={handleChange} placeholder="0" required />
+              <input type="number" value={computedExpectedQty || ''} readOnly
+                style={{ background: '#f1f5f9', cursor: 'not-allowed' }} required />
             </div>
             <div className="form-group">
               <label>SL thực tế</label>
