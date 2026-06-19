@@ -36,10 +36,10 @@ function WaybillNew() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [form, setForm] = useState({
-    waybillCode: '', carrier: '', status: 'IN_TRANSIT',
+    carrier: '', status: 'IN_TRANSIT',
     origin: '', destination: '',
     expectedQty: '', actualQty: '',
-    paymentRequestId: '', note: ''
+    note: ''
   });
 
   useEffect(() => {
@@ -65,11 +65,11 @@ function WaybillNew() {
       try {
         const data = await waybillAPI.getById(id);
         setForm({
-          waybillCode: data.waybillCode || '', carrier: data.carrier || '',
+          carrier: data.carrier || '',
           status: data.status || 'IN_TRANSIT',
           origin: data.origin || '', destination: data.destination || '',
           expectedQty: data.expectedQty ?? '', actualQty: data.actualQty ?? '',
-          paymentRequestId: String(data.paymentRequestId || ''), note: data.note || ''
+          note: data.note || ''
         });
         if (data.products) {
           try {
@@ -188,10 +188,13 @@ function WaybillNew() {
       exchangeRate: p.exchangeRate,
     }));
     const payload = {
-      ...form,
+      carrier: form.carrier,
+      status: form.status,
+      origin: form.origin,
+      destination: form.destination,
       expectedQty: form.expectedQty ? Number(form.expectedQty) : null,
       actualQty: form.actualQty ? Number(form.actualQty) : null,
-      paymentRequestId: form.paymentRequestId ? Number(form.paymentRequestId) : null,
+      note: form.note,
       products: JSON.stringify(productsPayload)
     };
     try {
@@ -226,8 +229,8 @@ function WaybillNew() {
         <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 900, margin: '0 auto' }}>
           <div className="form-row">
             <div className="form-group">
-              <label>Mã vận đơn <span className="required">*</span></label>
-              <input name="waybillCode" value={form.waybillCode} onChange={handleChange} placeholder="Nhập mã vận đơn..." required />
+              <label>Mã vận đơn</label>
+              <input value="Tự động tạo" disabled style={{ background: '#f1f5f9', color: '#64748b' }} />
             </div>
             <div className="form-group">
               <label>Đơn vị vận chuyển <span className="required">*</span></label>
