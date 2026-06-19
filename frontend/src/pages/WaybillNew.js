@@ -47,37 +47,32 @@ function WaybillNew() {
   }, [products]);
 
   useEffect(() => {
-    const loadOrders = async () => {
-      try {
-        const data = await purchaseOrderAPI.getAll('', 0, 10000);
-        const allOrders = data.orders || [];
-        const approved = allOrders.filter(o =>
-          ['APPROVED', 'SENT_TO_ACCOUNTING', 'SHIPPING', 'IN_TRANSIT', 'COMPLETED', 'PAID'].includes(o?.status)
-        );
-        setOrders(approved);
-
-        const fromPOItems = location.state?.fromPOItems;
-        if (fromPOItems && fromPOItems.length > 0) {
-          const mapped = fromPOItems.map((item, i) => ({
-            _itemId: `from-po-${i}`,
-            poId: item.poId,
-            poCode: item.poCode,
-            posCode: item.posCode || '',
-            productName: item.productName || '',
-            spec: item.spec || '',
-            orderedQty: String(item.orderedQty || ''),
-            unitPrice: String(item.unitPrice || ''),
-            currency: item.currency || 'CNY',
-            exchangeRate: String(item.exchangeRate || '3520'),
-          }));
-          setProducts(mapped);
-        }
-      } catch (err) {
-        toast.error(err.message);
-      }
-    };
-    loadOrders();
+    const fromPOItems = location.state?.fromPOItems;
+    if (fromPOItems && fromPOItems.length > 0) {
+      const mapped = fromPOItems.map((item, i) => ({
+        _itemId: `from-po-${i}`,
+        poId: item.poId,
+        poCode: item.poCode,
+        posCode: item.posCode || '',
+        productName: item.productName || '',
+        spec: item.spec || '',
+        orderedQty: String(item.orderedQty || ''),
+        unitPrice: String(item.unitPrice || ''),
+        currency: item.currency || 'CNY',
+        exchangeRate: String(item.exchangeRate || '3520'),
+      }));
+      setProducts(mapped);
+    }
     window.history.replaceState({}, document.title);
+  }, []);
+
+  useEffect(() => {
+    purchaseOrderAPI.getAll('', 0, 10000).then(data => {
+      const allOrders = data.orders || [];
+      setOrders(allOrders.filter(o =>
+        ['APPROVED', 'SENT_TO_ACCOUNTING', 'SHIPPING', 'IN_TRANSIT', 'COMPLETED', 'PAID'].includes(o?.status)
+      ));
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
