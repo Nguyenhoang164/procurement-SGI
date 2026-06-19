@@ -48,6 +48,8 @@ function PurchaseOrderList() {
         const key = `${order.id}-${idx}`;
         if (selectedWbItems.has(key)) {
           result.push({
+            poId: order.id,
+            poCode: order.poCode || 'PO-' + order.id,
             posCode: item.posCode || '',
             productName: item.productName || '',
             spec: item.spec || '',

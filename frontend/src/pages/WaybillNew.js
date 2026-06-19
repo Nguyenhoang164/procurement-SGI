@@ -55,11 +55,29 @@ function WaybillNew() {
           ['APPROVED', 'SENT_TO_ACCOUNTING', 'SHIPPING', 'IN_TRANSIT', 'COMPLETED', 'PAID'].includes(o?.status)
         );
         setOrders(approved);
+
+        const fromPOItems = location.state?.fromPOItems;
+        if (fromPOItems && fromPOItems.length > 0) {
+          const mapped = fromPOItems.map((item, i) => ({
+            _itemId: `from-po-${i}`,
+            poId: item.poId,
+            poCode: item.poCode,
+            posCode: item.posCode || '',
+            productName: item.productName || '',
+            spec: item.spec || '',
+            orderedQty: String(item.orderedQty || ''),
+            unitPrice: String(item.unitPrice || ''),
+            currency: item.currency || 'CNY',
+            exchangeRate: String(item.exchangeRate || '3520'),
+          }));
+          setProducts(mapped);
+        }
       } catch (err) {
         toast.error(err.message);
       }
     };
     loadOrders();
+    window.history.replaceState({}, document.title);
   }, []);
 
   useEffect(() => {
