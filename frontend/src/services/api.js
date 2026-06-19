@@ -31,8 +31,16 @@ export const getHeaders = () => {
   return headers;
 };
 
+const redirectToLogin = () => {
+  localStorage.clear();
+  window.location.href = '/login';
+};
+
 const requestJson = async (url, options = {}) => {
   const response = await fetch(url, options);
+  if (response.status === 401) {
+    redirectToLogin();
+  }
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || `Yêu cầu thất bại với mã ${response.status}`);
@@ -42,6 +50,9 @@ const requestJson = async (url, options = {}) => {
 
 const requestText = async (url, options = {}) => {
   const response = await fetch(url, options);
+  if (response.status === 401) {
+    redirectToLogin();
+  }
   if (!response.ok) {
     const message = await response.text();
     throw new Error(message || `Yêu cầu thất bại với mã ${response.status}`);
