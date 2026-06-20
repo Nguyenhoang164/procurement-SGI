@@ -415,7 +415,7 @@ function PurchaseOrderDetail() {
                         <td>{item.exchangeRate ? Number(item.exchangeRate).toLocaleString() : '-'}</td>
                         <td>{item.shippingMethod || order.shippingMethod || '-'}</td>
                         <td className="money">{Number(item.totalAmountForeign || 0).toLocaleString()} {item.currency}</td>
-                        <td className="money">{Number(item.totalAmountVnd || 0).toLocaleString()} {item.currency === 'VND' ? '₫' : item.currency}</td>
+                        <td className="money">{Number(item.totalAmountVnd || 0).toLocaleString()} {item.currency === 'VND' ? 'đ' : item.currency}</td>
                         <td className="money">
                           {item.posCode && costMap[item.posCode]?.weightedAvgCostVnd
                             ? Number(costMap[item.posCode].weightedAvgCostVnd).toLocaleString('vi-VN')
