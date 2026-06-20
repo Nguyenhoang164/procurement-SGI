@@ -1059,28 +1059,37 @@ function PaymentRequestNew() {
                 <thead>
                   <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
                     <th style={{ textAlign: 'left', padding: '2px' }}>STT</th>
-                    <th style={{ textAlign: 'left', padding: '2px' }}>Sản phẩm</th>
-                    <th style={{ textAlign: 'center', padding: '2px', width: 30 }}>Số lượng</th>
-                    <th style={{ textAlign: 'center', padding: '2px' }}>KL/T.tích</th>
-                    <th style={{ textAlign: 'right', padding: '2px' }}>Đơn giá VC</th>
-                    <th style={{ textAlign: 'right', padding: '2px' }}>Tổng cước</th>
+                    <th style={{ textAlign: 'left', padding: '2px' }}>Tên SP</th>
+                    <th style={{ textAlign: 'left', padding: '2px' }}>Mã POS</th>
+                    <th style={{ textAlign: 'center', padding: '2px', width: 30 }}>SL</th>
+                    <th style={{ textAlign: 'center', padding: '2px' }}>Số kiện</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Đơn giá</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Thành tiền</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Quy đổi VNĐ</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {shipmentItems.map((item, idx) => (
-                    <tr key={item.key} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '2px' }}>{idx + 1}</td>
-                      <td style={{ padding: '2px' }}>{item.productName || '-'}</td>
-                      <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
-                      <td style={{ textAlign: 'center', padding: '2px' }}>{item.volume || 0}</td>
-                      <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.unitPrice || 0).toLocaleString('vi-VN')}</td>
-                      <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{item.total.toLocaleString('vi-VN')} ₫</td>
-                    </tr>
-                  ))}
+                  {shipmentItems.map((item, idx) => {
+                    const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
+                    const rate = Number(item.exchangeRate) || 0;
+                    const vnd = Math.round(sub * rate);
+                    return (
+                      <tr key={item.key} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                        <td style={{ padding: '2px' }}>{idx + 1}</td>
+                        <td style={{ padding: '2px' }}>{item.productName || '-'}</td>
+                        <td style={{ padding: '2px', fontSize: 11 }}>{item.posCode || '-'}</td>
+                        <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
+                        <td style={{ textAlign: 'center', padding: '2px' }}>{item.packageCount || item.orderedQty || '-'}</td>
+                        <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.unitPrice || 0).toLocaleString('vi-VN')}</td>
+                        <td style={{ textAlign: 'right', padding: '2px' }}>{sub.toLocaleString('vi-VN')}</td>
+                        <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{vnd.toLocaleString('vi-VN')} ₫</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               <div style={{ marginTop: 6, fontSize: 12, textAlign: 'right' }}>
-                <strong>Tổng cước VC: {shipmentItems.reduce((s, item) => s + item.total, 0).toLocaleString('vi-VN')} ₫</strong>
+                <strong>Tổng phí vận chuyển: {waybillTotalFreight.toLocaleString('vi-VN')} ₫</strong>
               </div>
             </>
           )}
