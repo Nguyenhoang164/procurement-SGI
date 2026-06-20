@@ -182,7 +182,7 @@ function PurchaseOrderDetail() {
     <div className="page-screen">
       <div className="page-topbar">
         <div className="page-title-group">
-          <h1 className="page-title">Chi tiết đơn hàng — {order.poCode || order.posCode}</h1>
+          <h1 className="page-title">Chi tiết đơn hàng — {order.poCode || 'PO-' + order.id}</h1>
           <p className="page-subtitle">Theo dõi tiến trình: Chờ duyệt → Phê duyệt → Vận chuyển → Hoàn tất</p>
         </div>
         <div className="page-actions">
