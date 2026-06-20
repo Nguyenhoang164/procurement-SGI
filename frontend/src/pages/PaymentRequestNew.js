@@ -688,7 +688,6 @@ function PaymentRequestNew() {
                             <th style={{ width: 30 }}>#</th>
                             <th>Tên SP</th>
                             <th style={{ width: 100 }}>Mã POS</th>
-                            <th style={{ width: 80 }}>Chi tiết</th>
                             <th style={{ width: 40 }}>SL</th>
                             <th style={{ width: 55 }}>Số kiện</th>
                             <th style={{ width: 100 }}>Đơn giá</th>
@@ -708,7 +707,6 @@ function PaymentRequestNew() {
                                 <td>{idx + 1}</td>
                                 <td>{item.productName}</td>
                                 <td style={{ fontSize: 11 }}>{item.posCode || '-'}</td>
-                                <td style={{ fontSize: 11, color: '#475569' }}>{item.spec || '-'}</td>
                                 <td>{item.orderedQty}</td>
                                 <td>{item.packageCount || item.orderedQty || '-'}</td>
                                 <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
