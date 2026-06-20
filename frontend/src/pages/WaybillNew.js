@@ -375,7 +375,8 @@ function WaybillNew() {
                         <th>SL</th>
                         <th style={{ width: 70 }}>KL/T.tích</th>
                         <th style={{ width: 85 }}>Đơn giá VC</th>
-                        <th style={{ width: 90 }}>Tổng cước (tệ)</th>
+                        <th style={{ width: 80 }}>Tỷ giá</th>
+                        <th style={{ width: 90 }}>Tổng cước</th>
                         <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
                         <th style={{ width: 55 }}>Số kiện</th>
                         <th style={{ width: 35 }}></th>
@@ -401,7 +402,10 @@ function WaybillNew() {
                                 onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
-                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')}</td>
+                            <td style={{ fontSize: 11, color: '#475569' }}>
+                              1 {p.currency || 'CNY'} = {Number(p.exchangeRate || 3520).toLocaleString()} VND
+                            </td>
+                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
                             <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
                             <td>
                               <input type="number" value={p.packageCount || ''}
@@ -419,8 +423,25 @@ function WaybillNew() {
                   </table>
                 </div>
                 {products.length > 0 && (
-                  <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
-                    Tổng cước VC: {products.reduce((s, p) => s + (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * (Number(p.exchangeRate) || 1), 0).toLocaleString('vi-VN')} ₫
+                  <div style={{ marginTop: 8, fontSize: 13, textAlign: 'right', lineHeight: 1.8 }}>
+                    {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
+                      const items = products.filter(p => (p.currency || 'CNY') === currency);
+                      const totalForeign = items.reduce((s, p) => s + (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0), 0);
+                      const rate = items[0]?.exchangeRate || '3520';
+                      const totalVnd = Math.round(totalForeign * Number(rate));
+                      return (
+                        <div key={currency}>
+                          Tổng cước ({currency}): <strong>{totalForeign.toLocaleString('vi-VN')} {currency}</strong>
+                          {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                        </div>
+                      );
+                    })}
+                    <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
+                      Tổng cước VC: {products.reduce((s, p) => {
+                        const rate = Number(p.exchangeRate || 3520);
+                        return s + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
+                      }, 0).toLocaleString('vi-VN')} VND
+                    </div>
                   </div>
                 )}
               </div>
