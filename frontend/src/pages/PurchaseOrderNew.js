@@ -22,13 +22,13 @@ const calcTotalQty = (variants) => {
 const emptyItemForm = {
   productName: '', posCode: '', spec: '', orderedQty: '', unitPrice: '',
   currency: 'CNY', exchangeRate: '3520', country: 'Trung Quốc', shippingMethod: 'AIR PHI',
-  priority: 'NORMAL', productType: 'NEW',
+  priority: 'NORMAL', productType: 'NEW', department: '',
   weightedAvgCostVnd: '', latestUnitCostVnd: '', latestOrderCode: '', latestCostDate: ''
 };
 const blankItemForm = {
   productName: '', posCode: '', spec: '', orderedQty: '', unitPrice: '',
   currency: '', exchangeRate: '', country: '', shippingMethod: '',
-  productType: '', weightedAvgCostVnd: '', latestUnitCostVnd: '', latestOrderCode: '', latestCostDate: ''
+  productType: '', department: '', weightedAvgCostVnd: '', latestUnitCostVnd: '', latestOrderCode: '', latestCostDate: ''
 };
 
 function PurchaseOrderNew() {
@@ -78,23 +78,24 @@ function PurchaseOrderNew() {
         depositVnd: data.depositVnd ?? '0'
       });
        if (data.items && data.items.length > 0) {
-         setItems(data.items.map(item => ({
-           productName: item.productName || '',
-           posCode: item.posCode || '',
-           spec: item.spec || '',
-           orderedQty: item.orderedQty ?? '',
-           unitPrice: item.unitPrice ?? '',
-           currency: item.currency || 'CNY',
-           exchangeRate: item.exchangeRate ?? '3520',
-           country: item.country || 'Trung Quốc',
-           shippingMethod: item.shippingMethod || 'AIR PHI',
-          priority: item.priority || 'NORMAL',
-          productType: item.productType || 'NEW',
-           weightedAvgCostVnd: item.weightedAvgCostVnd ?? costMap[item.posCode]?.weightedAvgCostVnd ?? '',
-           latestUnitCostVnd: item.latestUnitCostVnd ?? costMap[item.posCode]?.latestUnitCostVnd ?? '',
-           latestOrderCode: item.latestOrderCode ?? costMap[item.posCode]?.latestOrderCode ?? '',
-           latestCostDate: item.latestCostDate ?? costMap[item.posCode]?.latestCostDate ?? ''
-         })));
+          setItems(data.items.map(item => ({
+            productName: item.productName || '',
+            posCode: item.posCode || '',
+            spec: item.spec || '',
+            orderedQty: item.orderedQty ?? '',
+            unitPrice: item.unitPrice ?? '',
+            currency: item.currency || 'CNY',
+            exchangeRate: item.exchangeRate ?? '3520',
+            country: item.country || 'Trung Quốc',
+            shippingMethod: item.shippingMethod || 'AIR PHI',
+           priority: item.priority || 'NORMAL',
+           productType: item.productType || 'NEW',
+           department: item.department || '',
+            weightedAvgCostVnd: item.weightedAvgCostVnd ?? costMap[item.posCode]?.weightedAvgCostVnd ?? '',
+            latestUnitCostVnd: item.latestUnitCostVnd ?? costMap[item.posCode]?.latestUnitCostVnd ?? '',
+            latestOrderCode: item.latestOrderCode ?? costMap[item.posCode]?.latestOrderCode ?? '',
+            latestCostDate: item.latestCostDate ?? costMap[item.posCode]?.latestCostDate ?? ''
+          })));
         setItemForm({ ...blankItemForm });
         setFormVariants([{ name: '', qty: '' }]);
        }
@@ -151,23 +152,28 @@ function PurchaseOrderNew() {
           setSourcePlanId(plan.id);
           setHeader(prev => ({ ...prev, note: plan.note || '' }));
           if (plan.items && plan.items.length > 0) {
-           const mapped = plan.items.map(item => ({
-             productName: item.productName || '',
-             posCode: item.posCode || '',
-             spec: item.spec || '',
-             orderedQty: item.suggestedQty ?? '',
-             unitPrice: item.referencePrice ?? '',
-             currency: 'CNY',
-             exchangeRate: '3520',
-             country: item.country || 'Trung Quốc',
-             shippingMethod: item.shippingMethod || 'AIR PHI',
-              priority: item.priority || 'NORMAL',
-              productType: item.productType || 'NEW'
-            }));
+           const mapped = plan.items.map(item => {
+             const currency = item.currency || 'CNY';
+             const rate = item.exchangeRate || exchangeRates[currency] || (currency === 'CNY' ? 3520 : currency === 'USD' ? 25400 : currency === 'TWD' ? 780 : 3520);
+             return {
+               productName: item.productName || '',
+               posCode: item.posCode || '',
+               spec: item.spec || '',
+               orderedQty: item.suggestedQty ?? '',
+               unitPrice: item.referencePrice ?? '',
+               currency,
+               exchangeRate: String(rate),
+               country: item.country || 'Trung Quốc',
+               shippingMethod: item.shippingMethod || 'AIR PHI',
+               priority: item.priority || 'NORMAL',
+               productType: item.productType || 'NEW',
+               department: item.department || ''
+             };
+           });
             setItems(mapped);
           }
         }
-   }, [id, location.state]);
+   }, [id, location.state, exchangeRates]);
 
   const calculated = useMemo(() => {
     const itemTotals = items.map(item => {
@@ -255,18 +261,19 @@ function PurchaseOrderNew() {
     setError('');
     try {
        const itemList = items.map(item => ({
-         productName: item.productName, posCode: item.posCode,
-         spec: item.spec, orderedQty: parseInt(item.orderedQty, 10) || 0,
-         unitPrice: parseFloat(item.unitPrice) || 0,
-         currency: item.currency, exchangeRate: parseFloat(item.exchangeRate) || 1,
-         country: item.country, shippingMethod: item.shippingMethod,
+          productName: item.productName, posCode: item.posCode,
+          spec: item.spec, orderedQty: parseInt(item.orderedQty, 10) || 0,
+          unitPrice: parseFloat(item.unitPrice) || 0,
+          currency: item.currency, exchangeRate: parseFloat(item.exchangeRate) || 1,
+          country: item.country, shippingMethod: item.shippingMethod,
           priority: item.priority || 'NORMAL',
           productType: item.productType || 'NEW',
-         weightedAvgCostVnd: item.weightedAvgCostVnd ? parseFloat(item.weightedAvgCostVnd) : null,
-         latestUnitCostVnd: item.latestUnitCostVnd ? parseFloat(item.latestUnitCostVnd) : null,
-         latestOrderCode: item.latestOrderCode || null,
-         latestCostDate: item.latestCostDate || null
-      }));
+          department: item.department || '',
+          weightedAvgCostVnd: item.weightedAvgCostVnd ? parseFloat(item.weightedAvgCostVnd) : null,
+          latestUnitCostVnd: item.latestUnitCostVnd ? parseFloat(item.latestUnitCostVnd) : null,
+          latestOrderCode: item.latestOrderCode || null,
+          latestCostDate: item.latestCostDate || null
+       }));
       const submitData = {
         ...header, items: itemList, sourcePlanId,
         intlShippingVnd: calculated.intlShippingVnd,
