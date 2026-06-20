@@ -156,9 +156,9 @@ function WaybillDetail() {
                         <th style={{ width: 80 }}>Chi tiết</th>
                         <th style={{ width: 60 }}>SL</th>
                         <th style={{ width: 70 }}>Số kiện</th>
-                        <th style={{ width: 100 }}>Đơn giá (NT)</th>
-                        <th style={{ width: 50 }}>TG</th>
-                        <th style={{ width: 100 }}>Thành tiền (NT)</th>
+                        <th style={{ width: 100 }}>Đơn giá</th>
+                        <th style={{ width: 120 }}>Tỷ giá → VND</th>
+                        <th style={{ width: 100 }}>Thành tiền</th>
                         <th style={{ width: 100 }}>Quy đổi VNĐ</th>
                       </tr>
                     </thead>
@@ -178,7 +178,7 @@ function WaybillDetail() {
                             <td>{p.orderedQty}</td>
                             <td>{p.packageCount || p.orderedQty || '-'}</td>
                             <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                            <td>{p.exchangeRate || '3520'}</td>
+                            <td style={{ fontSize: 11 }}>1 {p.currency || 'CNY'} = {Number(p.exchangeRate || 3520).toLocaleString()} VND</td>
                             <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
                             <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                           </tr>
@@ -210,6 +210,33 @@ function WaybillDetail() {
                 </div>
               </div>
             ))}
+          </section>
+        )}
+
+        {products.length > 0 && (
+          <section className="detail-section" style={{ marginTop: 16, background: '#f8fafc', borderRadius: 8, padding: 12 }}>
+            <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>
+              {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
+                const items = products.filter(p => (p.currency || 'CNY') === currency);
+                const totalForeign = items.reduce((s, p) => s + (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0), 0);
+                const rate = items[0]?.exchangeRate || '3520';
+                const totalVnd = Math.round(totalForeign * Number(rate));
+                return (
+                  <div key={currency}>
+                    Tổng ({currency}): <strong>{totalForeign.toLocaleString()} {currency}</strong>
+                    {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                  </div>
+                );
+              })}
+              <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
+                Tổng cộng quy đổi: <strong style={{ color: '#dc2626', fontSize: 16 }}>
+                  {products.reduce((s, p) => {
+                    const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
+                    return s + Math.round(sub * (Number(p.exchangeRate) || 1));
+                  }, 0).toLocaleString('vi-VN')} VND
+                </strong>
+              </div>
+            </div>
           </section>
         )}
 
