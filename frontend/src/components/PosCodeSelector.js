@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { productAPI } from '../services/api';
 
-function PosCodeSelector({ value, onChange, onProductSelect }) {
+function PosCodeSelector({ value, onChange, onProductSelect, department }) {
   const [searchTerm, setSearchTerm] = useState(value || '');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -33,7 +33,7 @@ function PosCodeSelector({ value, onChange, onProductSelect }) {
     onChange(val);
     if (val.length > 1) {
       try {
-        const results = await productAPI.search(val);
+        const results = await productAPI.search(val, department);
         setSuggestions(results);
         setShowSuggestions(true);
       } catch (err) {

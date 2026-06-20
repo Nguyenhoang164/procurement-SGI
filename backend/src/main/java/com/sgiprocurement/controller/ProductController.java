@@ -31,11 +31,18 @@ public class ProductController {
 
     // SEARCH products
     @GetMapping("/search")
-    public ResponseEntity<List<ProductDTO>> searchProducts(@RequestParam(required = false) String query) {
+    public ResponseEntity<List<ProductDTO>> searchProducts(
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String department) {
         if (query == null || query.isBlank()) {
             return ResponseEntity.ok(List.of());
         }
-        List<ProductDTO> products = productService.searchProducts(query);
+        List<ProductDTO> products;
+        if (department != null && !department.isBlank()) {
+            products = productService.searchProductsByDepartment(query, department);
+        } else {
+            products = productService.searchProducts(query);
+        }
         return ResponseEntity.ok(products);
     }
 

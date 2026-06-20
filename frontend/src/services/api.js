@@ -331,7 +331,11 @@ export const productAPI = {
   getAll: async () => requestJson(`${API_BASE_URL}/products`, { headers: getHeaders() }),
   getById: async (id) => requestJson(`${API_BASE_URL}/products/${id}`, { headers: getHeaders() }),
   getByPosCode: async (posCode) => requestJson(`${API_BASE_URL}/products/by-pos-code/${encodeURIComponent(posCode)}`, { headers: getHeaders() }),
-  search: async (query) => requestJson(`${API_BASE_URL}/products/search?query=${encodeURIComponent(query)}`, { headers: getHeaders() }),
+  search: async (query, department) => {
+    const params = new URLSearchParams({ query });
+    if (department) params.set('department', department);
+    return requestJson(`${API_BASE_URL}/products/search?${params.toString()}`, { headers: getHeaders() });
+  },
   generateCode: async (market, productName, department, iteration = 0) => {
     const params = new URLSearchParams({ market, productName, category: productName, department: department || '', iteration: String(iteration) });
     return requestText(`${API_BASE_URL}/products/generate-code?${params.toString()}`, {

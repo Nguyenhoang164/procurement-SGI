@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { weeklyPlanAPI, tradeRouteAPI } from '../services/api';
 import PosCodeSelector from '../components/PosCodeSelector';
+import { getUser } from '../utils/permissions';
 
 const CURRENCIES = ['CNY', 'USD', 'VND', 'JPY', 'KRW', 'PHP', 'EUR', 'GBP', 'AUD', 'SGD', 'THB', 'MYR'];
 
@@ -39,6 +40,8 @@ const blankForm = {
 function WeeklyPlanNew() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const userData = getUser();
+  const userDepartment = userData?.department || '';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
@@ -157,7 +160,7 @@ function WeeklyPlanNew() {
             <div className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
                 <label>Chọn sản phẩm (tra cứu hoặc tạo mới) <span className="required">*</span><HelpIcon text="Chọn sản phẩm có sẵn hoặc tạo mới từ danh sách" /></label>
-                <PosCodeSelector value={form.posCode}
+                <PosCodeSelector value={form.posCode} department={userDepartment}
                   onChange={(v) => setForm(f => ({ ...f, posCode: v }))}
                   onProductSelect={(p) => {
                     setForm(f => ({ ...f, posCode: p.posCode, productName: p.productName }));

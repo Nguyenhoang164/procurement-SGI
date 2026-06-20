@@ -50,6 +50,16 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
+    public List<ProductDTO> searchProductsByDepartment(String query, String department) {
+        if (department == null || department.isBlank()) {
+            return searchProducts(query);
+        }
+        return productRepository.findByProductNameContainingIgnoreCaseAndDepartment(query, department)
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     public ProductDTO getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
