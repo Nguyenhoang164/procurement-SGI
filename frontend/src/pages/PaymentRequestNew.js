@@ -173,7 +173,7 @@ function PaymentRequestNew() {
     if (formData.type === 'VAN_CHUYEN') {
       return shipmentItems.reduce((s, item) => {
         const v = Number(item.volume) || 0;
-        const p = Number(item.unitPrice) || 0;
+        const p = Number(item.unitPriceVC) || 0;
         const rate = Number(item.exchangeRate) || 1;
         return s + Math.round(v * p * rate);
       }, 0);
@@ -301,17 +301,17 @@ function PaymentRequestNew() {
     setShipmentItems(prev => prev.map(item => {
       if (item.key !== key) return item;
       const updated = { ...item, [field]: value };
-      if (field === 'volume' || field === 'unitPrice' || field === 'exchangeRate') {
+      if (field === 'volume' || field === 'unitPriceVC' || field === 'exchangeRate') {
         const v = Number(updated.volume) || 0;
-        const p = Number(updated.unitPrice) || 0;
+        const p = Number(updated.unitPriceVC) || 0;
         updated.total = v * p;
       }
       return updated;
     }));
-    if (field === 'volume' || field === 'unitPrice') {
+    if (field === 'volume' || field === 'unitPriceVC') {
       const total = shipmentItems.reduce((s, item) => {
-        const v = item.key === key ? (Number(value) || 0) : (Number(item.volume) || 0);
-        const p = item.key === key ? (field === 'unitPrice' ? Number(value) : Number(item.unitPrice)) : (Number(item.unitPrice) || 0);
+        const v = item.key === key ? (field === 'volume' ? (Number(value) || 0) : (Number(item.volume) || 0)) : (Number(item.volume) || 0);
+        const p = item.key === key ? (field === 'unitPriceVC' ? (Number(value) || 0) : (Number(item.unitPriceVC) || 0)) : (Number(item.unitPriceVC) || 0);
         return s + v * p * (Number(item.exchangeRate) || 1);
       }, 0);
       if (total > 0) {
@@ -385,7 +385,7 @@ function PaymentRequestNew() {
     const amount = formData.type === 'VAN_CHUYEN'
       ? shipmentItems.reduce((s, item) => {
           const v = Number(item.volume) || 0;
-          const p = Number(item.unitPrice) || 0;
+          const p = Number(item.unitPriceVC) || 0;
           const rate = Number(item.exchangeRate) || 1;
           return s + Math.round(v * p * rate);
         }, 0)
@@ -592,9 +592,11 @@ function PaymentRequestNew() {
                           poCode: p.poCode || '',
                           posCode: p.posCode || '',
                           productName: p.productName || '',
+                          spec: p.spec || '',
                           orderedQty: p.orderedQty || 0,
-                          volume: p.volume || '',
-                          unitPrice: p.unitPriceVC || '',
+                          unitPrice: Number(p.unitPrice) || 0,
+                          unitPriceVC: Number(p.unitPriceVC) || 0,
+                          volume: Number(p.volume) || 0,
                           exchangeRate: p.exchangeRate || '3520',
                           currency: p.currency || 'CNY',
                           packageCount: p.packageCount || '',
@@ -708,50 +710,51 @@ function PaymentRequestNew() {
                 ) : (
                   <div className="table-wrapper">
                     <div style={{ overflowX: 'auto' }}>
-                      <table className="table" style={{ fontSize: 12, minWidth: 1000 }}>
+                      <table className="table" style={{ fontSize: 12, minWidth: 1100 }}>
                         <thead>
                           <tr>
                             <th style={{ width: 30 }}>#</th>
-                            <th>Vận đơn</th>
-                            <th>PO</th>
-                            <th style={{ minWidth: 120 }}>Sản phẩm</th>
+                            <th>Tên SP</th>
+                            <th style={{ width: 100 }}>Mã POS</th>
+                            <th style={{ width: 80 }}>Chi tiết</th>
                             <th style={{ width: 40 }}>SL</th>
+                            <th style={{ width: 55 }}>Số kiện</th>
+                            <th style={{ width: 100 }}>Đơn giá</th>
+                            <th style={{ width: 110 }}>Tỷ giá → VND</th>
+                            <th style={{ width: 100 }}>Thành tiền</th>
+                            <th style={{ width: 100 }}>Quy đổi VNĐ</th>
                             <th style={{ width: 70 }}>KL/T.tích</th>
                             <th style={{ width: 85 }}>Đơn giá VC</th>
-                            <th style={{ width: 70 }}>Tỷ giá</th>
-                            <th style={{ width: 90 }}>Tổng cước (NT)</th>
-                            <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
-                            <th style={{ width: 55 }}>Số kiện</th>
                             <th style={{ width: 35 }}></th>
                           </tr>
                         </thead>
                         <tbody>
                           {shipmentItems.map((item, idx) => {
-                            const totalForeign = (Number(item.volume) || 0) * (Number(item.unitPrice) || 0);
-                            const totalVnd = Math.round(totalForeign * (Number(item.exchangeRate) || 1));
+                            const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
+                            const rate = Number(item.exchangeRate) || 0;
+                            const vnd = Math.round(sub * rate);
                             return (
                               <tr key={item.key}>
                                 <td>{idx + 1}</td>
-                                <td style={{ fontSize: 11 }}>{item.waybillCode || '-'}</td>
-                                <td style={{ fontSize: 11 }}>{item.poCode}</td>
-                                <td>{item.productName}{item.posCode ? ` (${item.posCode})` : ''}</td>
+                                <td>{item.productName}</td>
+                                <td style={{ fontSize: 11 }}>{item.posCode || '-'}</td>
+                                <td style={{ fontSize: 11, color: '#475569' }}>{item.spec || '-'}</td>
                                 <td>{item.orderedQty}</td>
+                                <td>{item.packageCount || item.orderedQty || '-'}</td>
+                                <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
+                                <td style={{ fontSize: 11 }}>1 {item.currency || 'CNY'} = {rate.toLocaleString()} VND</td>
+                                <td>{sub.toLocaleString()} {item.currency || 'CNY'}</td>
+                                <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                                 <td>
                                   <input type="number" step="0.01" value={item.volume}
                                     onChange={e => updateShipmentItem(item.key, 'volume', e.target.value)}
-                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, maxWidth: 70 }} />
                                 </td>
                                 <td>
-                                  <input type="number" step="0.01" value={item.unitPrice}
-                                    onChange={e => updateShipmentItem(item.key, 'unitPrice', e.target.value)}
-                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                                  <input type="number" step="0.01" value={item.unitPriceVC}
+                                    onChange={e => updateShipmentItem(item.key, 'unitPriceVC', e.target.value)}
+                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, maxWidth: 85 }} />
                                 </td>
-                                <td style={{ fontSize: 11, color: '#475569' }}>
-                                  1 {item.currency || 'CNY'} = {Number(item.exchangeRate || 3520).toLocaleString()} VND
-                                </td>
-                                <td style={{ fontWeight: 600 }}>{totalForeign.toLocaleString('vi-VN')} {item.currency || 'CNY'}</td>
-                                <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
-                                <td>{item.packageCount || '-'}</td>
                                 <td>
                                   <button type="button" onClick={() => removeShipmentItem(item.key)}
                                     style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
