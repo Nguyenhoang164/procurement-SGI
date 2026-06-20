@@ -128,7 +128,7 @@ function WeeklyPlanNew() {
     setLoading(true);
     setError('');
     try {
-      const payload = { note, items };
+      const payload = { note, items, initiatorDepartment: userDepartment };
       if (id) { await weeklyPlanAPI.update(id, payload); }
       else { await weeklyPlanAPI.create(payload); }
       navigate('/weekly-plans');
@@ -157,6 +157,9 @@ function WeeklyPlanNew() {
         <form className="app-form" onSubmit={handleSubmit}>
           <fieldset>
             <legend>Nhập thông tin sản phẩm</legend>
+            <div style={{ marginBottom: 16, padding: '10px 14px', background: '#f0f7ff', borderRadius: 6, border: '1px solid #d0e3f7', fontSize: 14, fontWeight: 500, color: '#1e4b7a' }}>
+              Phòng ban thực hiện: {userDepartment || 'Chưa có'}
+            </div>
             <div className="form-row">
               <div className="form-group" style={{ flex: 2 }}>
                 <label>Chọn sản phẩm (tra cứu hoặc tạo mới) <span className="required">*</span><HelpIcon text="Chọn sản phẩm có sẵn hoặc tạo mới từ danh sách" /></label>
