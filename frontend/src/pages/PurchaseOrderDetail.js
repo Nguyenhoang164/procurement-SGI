@@ -280,7 +280,6 @@ function PurchaseOrderDetail() {
                   <span className="value"><a href={order.landing} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>{order.landing}</a></span>
                 </div>
               )}
-              <div className="info-row"><span className="label">Hình thức VC</span><span className="value">{order.shippingMethod || '-'}</span></div>
               <div className="info-row"><span className="label">Số sản phẩm</span><span className="value">{order.items ? order.items.length : 0}</span></div>
               <div className="info-row"><span className="label">Trạng thái</span><span className={`badge badge-${order.status?.toLowerCase()}`}>{getOrderStatusLabel(order.status)}</span></div>
               <div className="info-row">
@@ -379,6 +378,7 @@ function PurchaseOrderDetail() {
                     <th style={{ width: 100 }}>Chi tiết</th>
                     <th style={{ width: 110 }}>Đơn giá (NT)</th>
                     <th style={{ width: 70 }}>TG</th>
+                    <th style={{ width: 110 }}>Hình thức VC</th>
                     <th style={{ width: 100 }}>Tiền NT</th>
                     <th style={{ width: 100 }}>Tiền VND</th>
                     <th style={{ width: 100 }}>Giá vốn TB</th>
@@ -413,6 +413,7 @@ function PurchaseOrderDetail() {
                         <td style={{ fontSize: 13, color: '#475569', maxWidth: 120 }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                         <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency}</td>
                         <td>{item.exchangeRate ? Number(item.exchangeRate).toLocaleString() : '-'}</td>
+                        <td>{item.shippingMethod || order.shippingMethod || '-'}</td>
                         <td className="money">{Number(item.totalAmountForeign || 0).toLocaleString()} {item.currency}</td>
                         <td className="money">{Number(item.totalAmountVnd || 0).toLocaleString()} {item.currency === 'VND' ? '₫' : item.currency}</td>
                         <td className="money">
@@ -464,6 +465,7 @@ function PurchaseOrderDetail() {
                             <td></td>
                             <td style={{ fontSize: 13 }}>{v.qty || 0}</td>
                             <td style={{ fontSize: 12, color: '#64748b' }}>{v.name}</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>

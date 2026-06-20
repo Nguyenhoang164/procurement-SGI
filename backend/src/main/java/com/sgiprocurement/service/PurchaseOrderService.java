@@ -1104,6 +1104,7 @@ public class PurchaseOrderService {
         dto.setNote(item.getNote());
         dto.setSourceLink(item.getSourceLink());
         dto.setDepartment(item.getDepartment());
+        dto.setShippingMethod(item.getShippingMethod());
         populateCostFromProduct(dto, item.getPosCode());
         return dto;
     }
@@ -1125,6 +1126,7 @@ public class PurchaseOrderService {
         item.setNote(dto.getNote());
         item.setSourceLink(dto.getSourceLink());
         item.setDepartment(dto.getDepartment());
+        item.setShippingMethod(dto.getShippingMethod());
         item.setWeightedAvgCostVnd(dto.getWeightedAvgCostVnd());
         item.setLatestUnitCostVnd(dto.getLatestUnitCostVnd());
         item.setLatestOrderCode(dto.getLatestOrderCode());

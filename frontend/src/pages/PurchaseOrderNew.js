@@ -384,9 +384,9 @@ function PurchaseOrderNew() {
               </div>
               <div className="form-group">
                 <label>Tỷ giá</label>
-                <input type="number" value={itemForm.exchangeRate}
-                  onChange={(e) => setItemForm(f => ({ ...f, exchangeRate: e.target.value.replace(/[^0-9.,-]/g, '') }))}
-                  step="0.0001" readOnly={!!exchangeRates[itemForm.currency]} />
+                  <input type="number" value={itemForm.exchangeRate}
+                   onChange={(e) => setItemForm(f => ({ ...f, exchangeRate: e.target.value.replace(/[^0-9.,-]/g, '') }))}
+                   step="0.0001" />
               </div>
             </div>
 

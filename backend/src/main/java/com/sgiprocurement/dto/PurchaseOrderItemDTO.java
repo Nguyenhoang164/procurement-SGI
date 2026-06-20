@@ -31,6 +31,7 @@ public class PurchaseOrderItemDTO {
     private String latestOrderCode;
     private LocalDateTime latestCostDate;
     private String latestCurrency;
+    private String shippingMethod;
 
 }
 

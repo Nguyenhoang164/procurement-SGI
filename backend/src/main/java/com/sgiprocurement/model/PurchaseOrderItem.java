@@ -64,6 +64,9 @@ public class PurchaseOrderItem {
     @Column(length = 100)
     private String department;
 
+    @Column(name = "shipping_method", length = 50)
+    private String shippingMethod;
+
     @Transient
     private BigDecimal weightedAvgCostVnd;
 
