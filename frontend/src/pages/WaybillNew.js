@@ -397,7 +397,7 @@ function WaybillNew() {
                     <tbody>
                       {products.map((p, idx) => {
                         const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                        const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 1));
+                        const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 3520));
                         return (
                           <tr key={idx}>
                             <td>{idx + 1}</td>
