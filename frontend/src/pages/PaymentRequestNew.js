@@ -151,7 +151,6 @@ function PaymentRequestNew() {
       setSourceDnttDetails([]);
       setAvailableProducts([]);
       setSelectedProductIds(new Set());
-      setShipmentItems([]);
     }
   }, [selectedSourceDntts, orders, productMap]);
 
@@ -570,11 +569,10 @@ function PaymentRequestNew() {
                           packageCount: p.packageCount || '',
                         }));
                         setShipmentItems(items);
-                        const totalFreight = prods.reduce((s, p) => {
-                          const v = Number(p.volume) || 0;
-                          const u = Number(p.unitPriceVC) || 0;
-                          const r = Number(p.exchangeRate) || 1;
-                          return s + Math.round(v * u * r);
+                        const totalFreight = items.reduce((s, item) => {
+                          const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
+                          const r = Number(item.exchangeRate) || 1;
+                          return s + Math.round(sub * r);
                         }, 0);
                         setWaybillTotalFreight(totalFreight);
                       }
