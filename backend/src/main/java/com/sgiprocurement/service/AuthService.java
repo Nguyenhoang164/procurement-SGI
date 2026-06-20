@@ -73,7 +73,8 @@ public class AuthService {
                 user.getId(),
                 user.getUsername(),
                 user.getRole(),
-                user.getMarket()
+                user.getMarket(),
+                user.getDepartment()
         );
     }
 
@@ -127,7 +128,8 @@ public class AuthService {
         String token = jwtTokenProvider.generateToken(saved.getId(), saved.getUsername(), saved.getRole());
         return new AuthResponse(
                 token, "Bearer", saved.getId(),
-                saved.getUsername(), saved.getRole(), saved.getMarket()
+                saved.getUsername(), saved.getRole(), saved.getMarket(),
+                saved.getDepartment()
         );
     }
 

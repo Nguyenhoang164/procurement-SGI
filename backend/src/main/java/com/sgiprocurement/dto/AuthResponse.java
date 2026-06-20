@@ -15,5 +15,6 @@ public class AuthResponse {
     private String username;
     private String role;
     private String market;
+    private String department;
 
 }

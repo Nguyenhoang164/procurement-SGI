@@ -75,8 +75,8 @@ function App() {
           }
         }
         const stored = JSON.parse(localStorage.getItem('user') || '{}');
-        if (data.role && data.role !== stored.role) {
-          const updated = { ...stored, role: data.role, active: data.active };
+        if (data.role && (data.role !== stored.role || data.department !== stored.department)) {
+          const updated = { ...stored, role: data.role, active: data.active, department: data.department };
           setUser(updated);
           localStorage.setItem('user', JSON.stringify(updated));
           setRoleChanged(true);

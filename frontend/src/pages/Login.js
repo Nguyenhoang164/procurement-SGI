@@ -26,7 +26,8 @@ function Login({ onLogin }) {
         userId: response.userId,
         username: response.username,
         role: response.role,
-        market: response.market
+        market: response.market,
+        department: response.department
       });
       navigate('/dashboard');
     } catch (err) {
