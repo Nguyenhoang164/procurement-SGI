@@ -286,7 +286,6 @@ public class PurchaseOrderService {
             po.getItems().clear();
             for (PurchaseOrderItemDTO itemDTO : dto.getItems()) {
                 PurchaseOrderItem item = convertItemToEntity(itemDTO);
-                item.setExchangeRate(po.getExchangeRate());
                 item.setPurchaseOrder(po);
                 calculateItemAmounts(item);
                 po.getItems().add(item);
