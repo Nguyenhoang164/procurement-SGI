@@ -56,6 +56,7 @@ function PaymentRequestNew() {
   const [selectedWaybillId, setSelectedWaybillId] = useState('');
   const [selectedWaybill, setSelectedWaybill] = useState(null);
   const [waybillProducts, setWaybillProducts] = useState([]);
+  const [waybillTotalFreight, setWaybillTotalFreight] = useState(0);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -171,12 +172,8 @@ function PaymentRequestNew() {
 
   const suggestTotalAmount = useMemo(() => {
     if (formData.type === 'VAN_CHUYEN') {
-      return shipmentItems.reduce((s, item) => {
-        const v = Number(item.volume) || 0;
-        const p = Number(item.unitPriceVC) || 0;
-        const rate = Number(item.exchangeRate) || 1;
-        return s + Math.round(v * p * rate);
-      }, 0);
+      if (selectedWaybill) return waybillTotalFreight;
+      return 0;
     }
     if (selectedOrders.length === 0) return 0;
     if (isEdit && formData.amountVnd) return Number(formData.amountVnd);
@@ -285,12 +282,9 @@ function PaymentRequestNew() {
           spec: prod.spec || '',
           orderedQty: prod.orderedQty,
           unitPrice: Number(prod.unitPrice) || 0,
-          unitPriceVC: 0,
-          volume: 0,
           exchangeRate: '3520',
           currency: prod.currency || 'CNY',
           packageCount: prod.orderedQty || '',
-          total: 0,
         });
       }
     });
@@ -303,26 +297,9 @@ function PaymentRequestNew() {
   };
 
   const updateShipmentItem = (key, field, value) => {
-    setShipmentItems(prev => prev.map(item => {
-      if (item.key !== key) return item;
-      const updated = { ...item, [field]: value };
-      if (field === 'volume' || field === 'unitPriceVC' || field === 'exchangeRate') {
-        const v = Number(updated.volume) || 0;
-        const p = Number(updated.unitPriceVC) || 0;
-        updated.total = v * p;
-      }
-      return updated;
-    }));
-    if (field === 'volume' || field === 'unitPriceVC') {
-      const total = shipmentItems.reduce((s, item) => {
-        const v = item.key === key ? (field === 'volume' ? (Number(value) || 0) : (Number(item.volume) || 0)) : (Number(item.volume) || 0);
-        const p = item.key === key ? (field === 'unitPriceVC' ? (Number(value) || 0) : (Number(item.unitPriceVC) || 0)) : (Number(item.unitPriceVC) || 0);
-        return s + v * p * (Number(item.exchangeRate) || 1);
-      }, 0);
-      if (total > 0) {
-        setFormData((prev) => ({ ...prev, amountVnd: String(total) }));
-      }
-    }
+    setShipmentItems(prev => prev.map(item =>
+      item.key === key ? { ...item, [field]: value } : item
+    ));
   };
 
   const [refLookupResult, setRefLookupResult] = useState(null);
@@ -387,14 +364,7 @@ function PaymentRequestNew() {
     if (formData.type === 'MUA_HANG') {
       if (selectedOrders.length === 0) { toast.error('Vui lòng chọn ít nhất một đơn hàng.'); return; }
     }
-    const amount = formData.type === 'VAN_CHUYEN'
-      ? shipmentItems.reduce((s, item) => {
-          const v = Number(item.volume) || 0;
-          const p = Number(item.unitPriceVC) || 0;
-          const rate = Number(item.exchangeRate) || 1;
-          return s + Math.round(v * p * rate);
-        }, 0)
-      : Number(formData.amountVnd);
+    const amount = formData.type === 'VAN_CHUYEN' ? waybillTotalFreight : Number(formData.amountVnd);
     if (!Number.isFinite(amount) || amount <= 0) { toast.error('Số tiền phải lớn hơn 0.'); return; }
     if (!formData.reason?.trim()) { toast.error('Vui lòng nhập lý do thanh toán.'); return; }
 
@@ -600,14 +570,18 @@ function PaymentRequestNew() {
                           spec: p.spec || '',
                           orderedQty: p.orderedQty || 0,
                           unitPrice: Number(p.unitPrice) || 0,
-                          unitPriceVC: Number(p.unitPriceVC) || 0,
-                          volume: Number(p.volume) || 0,
                           exchangeRate: p.exchangeRate || '3520',
                           currency: p.currency || 'CNY',
                           packageCount: p.packageCount || '',
-                          total: (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0),
                         }));
                         setShipmentItems(items);
+                        const totalFreight = prods.reduce((s, p) => {
+                          const v = Number(p.volume) || 0;
+                          const u = Number(p.unitPriceVC) || 0;
+                          const r = Number(p.exchangeRate) || 1;
+                          return s + Math.round(v * u * r);
+                        }, 0);
+                        setWaybillTotalFreight(totalFreight);
                       }
                     } catch (err) {
                       toast.error('Lỗi tải vận đơn: ' + err.message);
@@ -715,7 +689,7 @@ function PaymentRequestNew() {
                 ) : (
                   <div className="table-wrapper">
                     <div style={{ overflowX: 'auto' }}>
-                      <table className="table" style={{ fontSize: 12, minWidth: 1100 }}>
+                      <table className="table" style={{ fontSize: 12, minWidth: 900 }}>
                         <thead>
                           <tr>
                             <th style={{ width: 30 }}>#</th>
@@ -728,8 +702,6 @@ function PaymentRequestNew() {
                             <th style={{ width: 110 }}>Tỷ giá → VND</th>
                             <th style={{ width: 100 }}>Thành tiền</th>
                             <th style={{ width: 100 }}>Quy đổi VNĐ</th>
-                            <th style={{ width: 70 }}>KL/T.tích</th>
-                            <th style={{ width: 85 }}>Đơn giá VC</th>
                             <th style={{ width: 35 }}></th>
                           </tr>
                         </thead>
@@ -751,16 +723,6 @@ function PaymentRequestNew() {
                                 <td>{sub.toLocaleString()} {item.currency || 'CNY'}</td>
                                 <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                                 <td>
-                                  <input type="number" step="0.01" value={item.volume}
-                                    onChange={e => updateShipmentItem(item.key, 'volume', e.target.value)}
-                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, maxWidth: 70 }} />
-                                </td>
-                                <td>
-                                  <input type="number" step="0.01" value={item.unitPriceVC}
-                                    onChange={e => updateShipmentItem(item.key, 'unitPriceVC', e.target.value)}
-                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, maxWidth: 85 }} />
-                                </td>
-                                <td>
                                   <button type="button" onClick={() => removeShipmentItem(item.key)}
                                     style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
                                 </td>
@@ -770,19 +732,13 @@ function PaymentRequestNew() {
                         </tbody>
                       </table>
                     </div>
-                    <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
-                      Tổng cước VC: {shipmentItems.reduce((s, item) => {
-                        const v = Number(item.volume) || 0;
-                        const p = Number(item.unitPriceVC) || 0;
-                        const rate = Number(item.exchangeRate) || 1;
-                        return s + Math.round(v * p * rate);
-                      }, 0).toLocaleString('vi-VN')} ₫
-                    </div>
+                    {selectedWaybill && (
+                      <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
+                        Tổng phí vận chuyển: <strong style={{ color: '#dc2626' }}>{waybillTotalFreight.toLocaleString('vi-VN')} ₫</strong>
+                      </div>
+                    )}
                   </div>
                 )}
-                <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
-                  Tổng cước VC: {shipmentItems.reduce((s, item) => s + item.total, 0).toLocaleString('vi-VN')} ₫
-                </div>
               </fieldset>
             </>
           )}
