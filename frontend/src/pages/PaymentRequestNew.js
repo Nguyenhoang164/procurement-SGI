@@ -180,7 +180,7 @@ function PaymentRequestNew() {
     return selectedOrders.reduce((sum, order) => {
       return sum + suggestAmountForType(formData.type, order);
     }, 0);
-  }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems]);
+  }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight]);
 
   useEffect(() => {
     if (suggestTotalAmount > 0) {
@@ -294,12 +294,6 @@ function PaymentRequestNew() {
 
   const removeShipmentItem = (key) => {
     setShipmentItems(prev => prev.filter(item => item.key !== key));
-  };
-
-  const updateShipmentItem = (key, field, value) => {
-    setShipmentItems(prev => prev.map(item =>
-      item.key === key ? { ...item, [field]: value } : item
-    ));
   };
 
   const [refLookupResult, setRefLookupResult] = useState(null);
@@ -548,6 +542,7 @@ function PaymentRequestNew() {
                       setSelectedWaybill(null);
                       setWaybillProducts([]);
                       setShipmentItems([]);
+                      setWaybillTotalFreight(0);
                       return;
                     }
                     try {
