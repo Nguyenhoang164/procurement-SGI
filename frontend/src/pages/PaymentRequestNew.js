@@ -186,10 +186,10 @@ function PaymentRequestNew() {
   }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems]);
 
   useEffect(() => {
-    if (formData.type !== 'VAN_CHUYEN' && suggestTotalAmount > 0) {
+    if (suggestTotalAmount > 0) {
       setFormData((prev) => ({ ...prev, amountVnd: String(suggestTotalAmount) }));
     }
-  }, [suggestTotalAmount, formData.type]);
+  }, [suggestTotalAmount]);
 
   const maySubmit = canCreatePayment(user);
 
@@ -282,9 +282,14 @@ function PaymentRequestNew() {
           poCode: prod.poCode,
           posCode: prod.posCode,
           productName: prod.productName,
+          spec: prod.spec || '',
           orderedQty: prod.orderedQty,
-          volume: '',
-          unitPrice: '',
+          unitPrice: Number(prod.unitPrice) || 0,
+          unitPriceVC: 0,
+          volume: 0,
+          exchangeRate: '3520',
+          currency: prod.currency || 'CNY',
+          packageCount: prod.orderedQty || '',
           total: 0,
         });
       }
@@ -764,6 +769,14 @@ function PaymentRequestNew() {
                           })}
                         </tbody>
                       </table>
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
+                      Tổng cước VC: {shipmentItems.reduce((s, item) => {
+                        const v = Number(item.volume) || 0;
+                        const p = Number(item.unitPriceVC) || 0;
+                        const rate = Number(item.exchangeRate) || 1;
+                        return s + Math.round(v * p * rate);
+                      }, 0).toLocaleString('vi-VN')} ₫
                     </div>
                   </div>
                 )}
