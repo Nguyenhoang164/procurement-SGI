@@ -46,6 +46,13 @@ function WaybillNew() {
     return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
   }, [products]);
 
+  const computedFreightVnd = useMemo(() => {
+    return products.reduce((sum, p) => {
+      const rate = Number(p.exchangeRate || 3520);
+      return sum + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
+    }, 0);
+  }, [products]);
+
   const updateProductField = (idx, field, value) => {
     setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
   };
@@ -284,9 +291,14 @@ function WaybillNew() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>SL dự kiến (tổng số kiện) <span className="required">*</span></label>
+              <label>Tổng số kiện <span className="required">*</span></label>
               <input type="number" value={computedExpectedQty || ''} readOnly
                 style={{ background: '#f1f5f9', cursor: 'not-allowed' }} required />
+            </div>
+            <div className="form-group">
+              <label>Tổng cước VC (VNĐ)</label>
+              <input type="number" value={computedFreightVnd || ''} readOnly
+                style={{ background: '#f1f5f9', cursor: 'not-allowed' }} />
             </div>
             <div className="form-group">
               <label>SL thực tế</label>
@@ -378,7 +390,7 @@ function WaybillNew() {
                         <th style={{ width: 80 }}>Tỷ giá</th>
                         <th style={{ width: 90 }}>Tổng cước</th>
                         <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
-                        <th style={{ width: 55 }}>Số kiện</th>
+                        <th style={{ width: 100 }}>Số kiện</th>
                         <th style={{ width: 35 }}></th>
                       </tr>
                     </thead>
