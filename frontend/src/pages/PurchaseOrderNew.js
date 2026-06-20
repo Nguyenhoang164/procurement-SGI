@@ -438,11 +438,16 @@ function PurchaseOrderNew() {
                  <label>Hình thức VC</label>
                  <select value={itemForm.shippingMethod}
                    onChange={(e) => setItemForm(f => ({ ...f, shippingMethod: e.target.value }))}>
-                    <option value="AIR PHI">AIR PHI</option>
-                    <option value="SEA">SEA</option>
-                    <option value="EXPRESS">EXPRESS</option>
-                    <option value="Đi hàng">Đi hàng</option>
-                    <option value="OTHER">OTHER</option>
+                     <option value="SEA PHI">SEA PHI</option>
+                     <option value="AIR PHI">AIR PHI</option>
+                     <option value="SEA MALAY">SEA MALAY</option>
+                     <option value="AIR MALAY">AIR MALAY</option>
+                     <option value="SEA">SEA</option>
+                     <option value="LALAMOVE">LALAMOVE</option>
+                     <option value="SHOPEE PHI">SHOPEE PHI</option>
+                     <option value="EXPRESS">EXPRESS</option>
+                     <option value="Đi hàng">Đi hàng</option>
+                     <option value="OTHER">OTHER</option>
                  </select>
                </div>
                <div className="form-group">
