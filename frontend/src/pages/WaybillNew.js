@@ -67,6 +67,7 @@ function WaybillNew() {
         volume: item.volume || '',
         unitPriceVC: item.unitPriceVC || '',
         packageCount: item.packageCount || String(item.orderedQty || ''),
+        purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
       }));
       setProducts(mapped);
     }
@@ -116,6 +117,7 @@ function WaybillNew() {
     if (order.items && order.items.length > 0) {
       const mapped = order.items.map((item, idx) => ({
         id: `${order.id}-${idx}`,
+        purchaseOrderItemId: item.id,
         poId: order.id,
         poCode: order.poCode || 'PO-' + order.id,
         posCode: item.posCode || '',
@@ -159,6 +161,7 @@ function WaybillNew() {
       if (item && !products.some(p => p._itemId === id)) {
         newProducts.push({
           _itemId: id,
+          purchaseOrderItemId: item.purchaseOrderItemId,
           poId: item.poId,
           poCode: item.poCode,
           posCode: item.posCode,
@@ -210,6 +213,7 @@ function WaybillNew() {
       volume: p.volume || '',
       unitPriceVC: p.unitPriceVC || '',
       packageCount: p.packageCount || '',
+      purchaseOrderItemId: p.purchaseOrderItemId || null,
     }));
     const payload = {
       ...form,
@@ -308,7 +312,7 @@ function WaybillNew() {
             </div>
 
             {selectedPOs.length > 0 && (
-              <div style={{ maxHeight: 300, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 12 }}>
+              <div style={{ maxHeight: 600, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginBottom: 12 }}>
                 <table className="table" style={{ fontSize: 13 }}>
                   <thead>
                     <tr>

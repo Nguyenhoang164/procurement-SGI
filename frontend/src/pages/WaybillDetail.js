@@ -155,6 +155,7 @@ function WaybillDetail() {
                         <th style={{ width: 110 }}>Mã POS</th>
                         <th style={{ width: 80 }}>Chi tiết</th>
                         <th style={{ width: 60 }}>SL</th>
+                        <th style={{ width: 70 }}>Số kiện</th>
                         <th style={{ width: 100 }}>Đơn giá (NT)</th>
                         <th style={{ width: 50 }}>TG</th>
                         <th style={{ width: 100 }}>Thành tiền (NT)</th>
@@ -175,6 +176,7 @@ function WaybillDetail() {
                             <td>{p.posCode || '-'}</td>
                             <td style={{ fontSize: 12, color: '#475569' }}>{!hasVariants ? (p.spec || '-') : pVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td>{p.orderedQty}</td>
+                            <td>{p.packageCount || p.orderedQty || '-'}</td>
                             <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
                             <td>{p.exchangeRate || '3520'}</td>
                             <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
