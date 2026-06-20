@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
-import { waybillAPI, paymentRequestAPI, shipmentTrackingAPI } from '../services/api';
+import { waybillAPI, paymentRequestAPI, shipmentTrackingAPI, exchangeRateAPI } from '../services/api';
 import { formatDnttCode } from '../utils/paymentUtils';
 import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
 
@@ -24,6 +24,8 @@ function WaybillDetail() {
   const [error, setError] = useState('');
   const [linkedPayments, setLinkedPayments] = useState([]);
   const [trackings, setTrackings] = useState([]);
+  const [exchangeRates, setExchangeRates] = useState({});
+  const [ratesLoading, setRatesLoading] = useState(true);
 
   const fetchWaybill = useCallback(async () => {
     try {
@@ -36,6 +38,12 @@ function WaybillDetail() {
         setLinkedPayments(linked);
       }
       shipmentTrackingAPI.getByWaybillId(id).then(setTrackings).catch(() => {});
+      exchangeRateAPI.getAll().then(rates => {
+        const map = {};
+        rates.forEach(r => { map[r.currency] = r.rate; });
+        setExchangeRates(map);
+        setRatesLoading(false);
+      }).catch(() => setRatesLoading(false));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -167,8 +175,9 @@ function WaybillDetail() {
                         const pVariants = parseVariants(p.spec);
                         const hasVariants = pVariants.some(v => v.name || v.qty);
                         const rows = [];
+                        const rate = Number(p.exchangeRate || exchangeRates[p.currency] || 0);
                         const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
-                        const vnd = Math.round(sub * (Number(p.exchangeRate) || 1));
+                        const vnd = Math.round(sub * rate);
                         rows.push(
                           <tr key={idx}>
                             <td>{idx + 1}</td>
@@ -178,7 +187,7 @@ function WaybillDetail() {
                             <td>{p.orderedQty}</td>
                             <td>{p.packageCount || p.orderedQty || '-'}</td>
                             <td>{Number(p.unitPrice || 0).toLocaleString()} {p.currency || 'CNY'}</td>
-                            <td style={{ fontSize: 11 }}>1 {p.currency || 'CNY'} = {Number(p.exchangeRate || 3520).toLocaleString()} VND</td>
+                            <td style={{ fontSize: 11 }}>1 {p.currency || 'CNY'} = {Number(p.exchangeRate || exchangeRates[p.currency] || 0).toLocaleString()} VND</td>
                             <td>{sub.toLocaleString()} {p.currency || 'CNY'}</td>
                             <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                           </tr>
@@ -215,24 +224,46 @@ function WaybillDetail() {
 
         {products.length > 0 && (
           <section className="detail-section" style={{ marginTop: 16, background: '#f8fafc', borderRadius: 8, padding: 12 }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: 14 }}>Tỷ giá tham chiếu từ hệ thống</h4>
+            {!ratesLoading && Object.keys(exchangeRates).length > 0 && (
+              <div style={{ fontSize: 12, color: '#475569', marginBottom: 12 }}>
+                {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
+                  const sysRate = exchangeRates[currency];
+                  if (!sysRate) return null;
+                  return (
+                    <span key={currency} style={{ display: 'inline-block', marginRight: 16, background: '#e0f2fe', padding: '4px 10px', borderRadius: 4 }}>
+                      1 <strong>{currency}</strong> = <strong>{Number(sysRate).toLocaleString()} VND</strong>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>
               {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
                 const items = products.filter(p => (p.currency || 'CNY') === currency);
                 const totalForeign = items.reduce((s, p) => s + (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0), 0);
-                const rate = items[0]?.exchangeRate || '3520';
-                const totalVnd = Math.round(totalForeign * Number(rate));
+                const storedRate = items[0]?.exchangeRate;
+                const sysRate = exchangeRates[currency];
+                const rate = Number(storedRate || sysRate || 0);
+                const totalVnd = Math.round(totalForeign * rate);
                 return (
                   <div key={currency}>
                     Tổng ({currency}): <strong>{totalForeign.toLocaleString()} {currency}</strong>
-                    {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                    {' × '} {rate.toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                    {storedRate && sysRate && Number(storedRate) !== Number(sysRate) && (
+                      <span style={{ color: '#d97706', fontSize: 11, marginLeft: 8 }}>
+                        (tỷ giá hệ thống: {Number(sysRate).toLocaleString()})
+                      </span>
+                    )}
                   </div>
                 );
               })}
               <div style={{ marginTop: 4, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
                 Tổng cộng quy đổi: <strong style={{ color: '#dc2626', fontSize: 16 }}>
                   {products.reduce((s, p) => {
+                    const r = Number(p.exchangeRate || exchangeRates[p.currency] || 0);
                     const sub = (Number(p.unitPrice) || 0) * (Number(p.orderedQty) || 0);
-                    return s + Math.round(sub * (Number(p.exchangeRate) || 1));
+                    return s + Math.round(sub * r);
                   }, 0).toLocaleString('vi-VN')} VND
                 </strong>
               </div>
