@@ -48,7 +48,7 @@ function PurchaseOrderNew() {
     landing: '',
     packageMeasurement: '', note: '', domesticShippingVnd: '0', intlShippingVnd: '0',
     internationalShippingUnitPriceVnd: '0', orderFeeVnd: '0', localDeliveryFeeVnd: '0',
-    depositVnd: '0'
+    depositVnd: '0', initiatorDepartment: ''
   });
   const [exchangeRates, setExchangeRates] = useState({});
   const [productMap, setProductMap] = useState({});
@@ -150,7 +150,7 @@ function PurchaseOrderNew() {
     const plan = location.state?.fromPlan;
         if (plan) {
           setSourcePlanId(plan.id);
-          setHeader(prev => ({ ...prev, note: plan.note || '' }));
+          setHeader(prev => ({ ...prev, note: plan.note || '', initiatorDepartment: plan.initiatorDepartment || '' }));
           if (plan.items && plan.items.length > 0) {
            const mapped = plan.items.map(item => {
              const currency = item.currency || 'CNY';
@@ -666,6 +666,15 @@ function PurchaseOrderNew() {
             </div>
 
             <div className="form-row">
+              <div className="form-group">
+                <label>Phòng ban thực hiện</label>
+                {sourcePlanId ? (
+                  <input className="calculated-input" type="text" value={header.initiatorDepartment || ''} readOnly />
+                ) : (
+                  <input type="text" name="initiatorDepartment" value={header.initiatorDepartment}
+                    onChange={handleHeaderChange} placeholder="VD: KD1, PKD2..." />
+                )}
+              </div>
               <div className="form-group">
                 <label>Trạng thái</label>
                 <input className="calculated-input" type="text" value={status} readOnly />

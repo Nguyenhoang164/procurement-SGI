@@ -115,8 +115,11 @@ function WeeklyPlanList() {
     if (items.length === 0) return;
     const sourcePlanIds = [...new Set(items.map(i => i._sourcePlanId))];
     const planRef = sourcePlanIds.length === 1 ? sourcePlanIds[0] : null;
+    const firstPlanId = sourcePlanIds.length > 0 ? sourcePlanIds[0] : null;
+    const firstPlan = firstPlanId ? filteredPlans.find(p => p.id === firstPlanId) : null;
     const syntheticPlan = {
       id: planRef,
+      initiatorDepartment: firstPlan?.initiatorDepartment || '',
       items: items.map(({ _sourcePlanId, ...rest }) => rest)
     };
     setSelectedItems(new Set());
