@@ -48,7 +48,7 @@ function PurchaseOrderNew() {
     landing: '',
     packageMeasurement: '', note: '', domesticShippingVnd: '0', intlShippingVnd: '0',
     internationalShippingUnitPriceVnd: '0', orderFeeVnd: '0', localDeliveryFeeVnd: '0',
-    depositVnd: '0', initiatorDepartment: ''
+    depositVnd: '0', initiatorDepartment: '', shippingMethod: ''
   });
   const [exchangeRates, setExchangeRates] = useState({});
   const [productMap, setProductMap] = useState({});
@@ -75,7 +75,8 @@ function PurchaseOrderNew() {
         internationalShippingUnitPriceVnd: data.internationalShippingUnitPriceVnd ?? '0',
         orderFeeVnd: data.orderFeeVnd ?? '0',
         localDeliveryFeeVnd: data.localDeliveryFeeVnd ?? '0',
-        depositVnd: data.depositVnd ?? '0'
+        depositVnd: data.depositVnd ?? '0',
+        shippingMethod: data.shippingMethod ?? ''
       });
        if (data.items && data.items.length > 0) {
           setItems(data.items.map(item => ({
@@ -150,7 +151,8 @@ function PurchaseOrderNew() {
     const plan = location.state?.fromPlan;
         if (plan) {
           setSourcePlanId(plan.id);
-          setHeader(prev => ({ ...prev, note: plan.note || '', initiatorDepartment: plan.initiatorDepartment || '' }));
+          const planShipping = plan.items?.[0]?.shippingMethod || '';
+          setHeader(prev => ({ ...prev, note: plan.note || '', initiatorDepartment: plan.initiatorDepartment || '', shippingMethod: planShipping }));
           if (plan.items && plan.items.length > 0) {
            const mapped = plan.items.map(item => {
              const currency = item.currency || 'CNY';
@@ -436,8 +438,12 @@ function PurchaseOrderNew() {
                </div>
                <div className="form-group">
                  <label>Hình thức VC</label>
-                 <select value={itemForm.shippingMethod}
-                   onChange={(e) => setItemForm(f => ({ ...f, shippingMethod: e.target.value }))}>
+                  <select value={itemForm.shippingMethod}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setItemForm(f => ({ ...f, shippingMethod: val }));
+                      setHeader(prev => ({ ...prev, shippingMethod: val }));
+                    }}>
                      <option value="SEA PHI">SEA PHI</option>
                      <option value="AIR PHI">AIR PHI</option>
                      <option value="SEA MALAY">SEA MALAY</option>
