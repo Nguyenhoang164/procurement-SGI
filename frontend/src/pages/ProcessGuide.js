@@ -16,7 +16,7 @@ const STEPS = [
   { id: 'purchase-order', label: 'Đơn mua hàng', icon: '📄', color: '#059669',
     desc: `${R.SALES} tạo đơn hàng (PO) từ kế hoạch. ${R.SALES_MANAGER} phê duyệt L1. ${R.CEO} gửi kế toán. ${R.PURCHASING} xem đơn hàng.` },
   { id: 'payment-request', label: 'Đề nghị thanh toán', icon: '💰', color: '#d97706',
-    desc: `${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT}/${R.SALES}/${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.CEO} duyệt L2.` },
+    desc: `${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.CEO} duyệt L2.` },
   { id: 'waybill', label: 'Vận đơn', icon: '🚢', color: '#7c3aed',
     desc: `${R.WAREHOUSE}/${R.SALES}/${R.PURCHASING} tạo vận đơn theo lô hàng. ${R.WAREHOUSE} xác nhận khi hàng về.` },
   { id: 'warehouse-receipt', label: 'Nhập kho', icon: '📦', color: '#dc2626',
@@ -114,30 +114,14 @@ Lưu ý quan trọng:
   },
   ACCOUNTANT: {
     desc: 'Quản lý các nghiệp vụ thanh toán cho đơn hàng.',
-    functions: ['Tạo đề nghị thanh toán từ PO', 'Phê duyệt L1 đề nghị thanh toán', 'Thực hiện chi trả và xác nhận thanh toán'],
+    functions: ['Phê duyệt L1 đề nghị thanh toán', 'Thực hiện chi trả và xác nhận thanh toán', 'Hỗ trợ tạo đề nghị thanh toán (nếu cần)'],
     tasks: [
       {
-        step: 'Tạo đề nghị thanh toán',
-        guide: `Vào menu "Đề nghị thanh toán" → "Thêm đề nghị".
-
-Chi tiết các trường:
-• Loại thanh toán: MUA_HANG (thanh toán tiền hàng cho nhà cung cấp) / VAN_CHUYEN (cước vận chuyển).
-• Nếu MUA_HANG:
-  - Chọn đơn hàng (PO): Chọn PO đã được duyệt từ danh sách. Có thể chọn nhiều PO.
-  - Mỗi PO hiển thị chi tiết: tiền hàng, VC nội địa, cước VC QT, phí đặt hàng, ship nội địa.
-  - Loại tiền tệ + Số tiền: tự động gợi ý từ PO, có thể sửa.
-  - Biểu mẫu giấy: chọn "Thanh toán" / "Hoàn ứng", nhập phòng ban, lý do TT (bắt buộc).
-  - Tài khoản NH: chọn từ danh sách đã lưu hoặc nhập mới (số TK + chủ TK + tên NH).
-  - Chênh lệch tỷ giá: tra cứu DNTT trước để lấy chênh lệch.
-  - Chi phí phát sinh: thêm tên phí + số tiền nếu có.
-• Nếu VAN_CHUYEN: Chọn vận đơn → tự động load sản phẩm + tính tổng cước.
-• File đính kèm: Tối đa 8 file (ảnh, PDF, DOC, XLS).
-
-Yêu cầu đặc biệt:
-- Bắt buộc chọn ít nhất 1 PO (nếu MUA_HANG).
-- Số tiền phải > 0.
-- Lý do thanh toán không được để trống.
-- Sau khi tạo, DNTT ở trạng thái PENDING_L1 — chờ duyệt.`
+        step: 'Tạo đề nghị thanh toán (hỗ trợ)',
+        guide: `Việc tạo DNTT do Nhân viên Mua hàng đảm nhiệm chính.
+Kế toán chỉ tạo DNTT trong trường hợp hỗ trợ hoặc khi cần xử lý gấp.
+→ Vào "Đề nghị thanh toán" → "Thêm đề nghị".
+→ Chi tiết các trường xem ở tab Nhân viên mua hàng.`
       },
       {
         step: 'Duyệt L1',
@@ -167,13 +151,13 @@ Yêu cầu: Chỉ bấm "Xác nhận TT" khi tiền đã thực sự đến tài
   },
   CHIEF_ACCOUNTANT: {
     desc: 'Quản lý cấp cao bộ phận kế toán, kiểm tra rà soát nghiệp vụ.',
-    functions: ['Tất cả chức năng của Kế toán', 'Kiểm tra, rà soát các nghiệp vụ kế toán'],
+    functions: ['Kiểm tra, rà soát đề nghị thanh toán', 'Phê duyệt L1 và chi trả', 'Đối chiếu chứng từ kế toán'],
     tasks: [
       {
-        step: 'Tạo đề nghị thanh toán',
-        guide: `Giống hướng dẫn của Kế toán (xem tab Kế toán).
-→ Vào "Đề nghị thanh toán" → "Thêm đề nghị".
-→ Chọn PO, nhập số tiền, loại TT, tài khoản NH, lý do, đính kèm chứng từ.`
+        step: 'Tạo đề nghị thanh toán (hỗ trợ)',
+        guide: `Việc tạo DNTT do Nhân viên Mua hàng đảm nhiệm chính.
+KT trưởng có thể tạo hỗ trợ nếu cần.
+→ Chi tiết xem ở tab Nhân viên mua hàng.`
       },
       {
         step: 'Duyệt L1',
@@ -203,7 +187,7 @@ Lưu ý: KT trưởng có thể xem tất cả DNTT của mọi phòng ban.`
   },
   SALES: {
     desc: 'Người đề xuất nhu cầu nhập hàng, đầu mối tạo đơn hàng.',
-    functions: ['Lập kế hoạch nhập hàng tuần', 'Tạo đơn hàng (PO) từ kế hoạch đã duyệt', 'Tạo đề nghị thanh toán', 'Tạo vận đơn theo lô hàng'],
+    functions: ['Lập kế hoạch nhập hàng tuần', 'Tạo đơn hàng (PO) từ kế hoạch đã duyệt', 'Tạo vận đơn theo lô hàng', 'Theo dõi trạng thái thanh toán (DNTT do bên Mua hàng tạo)'],
     tasks: [
       {
         step: 'Kế hoạch tuần — Lập mới',
@@ -286,45 +270,9 @@ GHI CHÚ: Nhập ghi chú chung cho đơn hàng.`
 → Vào danh sách Đơn hàng → chọn PO cần duyệt.
 → Người tạo: bấm "Trình duyệt" để gửi lên Trưởng phòng KD (L1).
 → Sau khi duyệt L1, CEO vào chi tiết → bấm "Gửi kế toán".
-→ Kế toán nhận được và xử lý thanh toán.
+→ Nhân viên Mua hàng sẽ tạo Đề nghị thanh toán dựa trên PO đã được duyệt.
 
 Trạng thái PO: DRAFT → PENDING_L1 → APPROVED (hoặc REJECTED) → ...`
-      },
-      {
-        step: 'Đề nghị thanh toán',
-        guide: `Vào menu "Đề nghị thanh toán" → "Thêm đề nghị".
-
-Hai loại thanh toán:
-
-LOẠI 1 — MUA_HÀNG (Thanh toán tiền hàng):
-• Chọn đơn hàng (PO): Chọn từ danh sách PO đã được phê duyệt. Có thể chọn nhiều PO cùng lúc.
-  - Mỗi PO hiển thị: Tiền hàng + VC nội địa + Cước VC QT + Phí đặt hàng + Ship nội địa.
-  - Nếu chọn nhiều PO, tổng tự động tính.
-• Loại tiền tệ: VND (mặc định) / USD / CNY.
-• Số tiền (bắt buộc): Tự động gợi ý từ các PO đã chọn, có thể sửa tay.
-• Biểu mẫu giấy đề nghị TT:
-  - Loại phiếu: "Thanh toán" (thường) / "Hoàn ứng" (hoàn lại tiền tạm ứng).
-  - Phòng ban / Bộ phận: Nhập tên phòng ban (VD: Kinh doanh).
-  - Số tiền tạm ứng (nếu có): Nhập nếu đã tạm ứng trước đó.
-  - Số tiền đã chi (nếu có): Nhập nếu đã chi tiêu một phần.
-  - Lý do thanh toán (bắt buộc): Mô tả nội dung/nhập lý do thanh toán.
-• Thông tin tài khoản chuyển khoản:
-  - Chọn tài khoản có sẵn (đã lưu trong hệ thống) HOẶC nhập tài khoản mới.
-  - Số tài khoản, Chủ TK, Ngân hàng + QR Code (ảnh).
-• Chênh lệch tỷ giá & CP phát sinh (Mở rộng):
-  - TK chênh lệch TG tham chiếu: Nhập mã DNTT trước đó để tra cứu chênh lệch tỷ giá.
-  - Chênh lệch TG (VNĐ): Nhập số tiền chênh lệch.
-  - Phí vận chuyển bổ sung.
-  - Chi phí phát sinh khác: "Thêm chi phí" → nhập tên phí + số tiền.
-• File đính kèm: Tối đa 8 file (hỗ trợ ảnh, PDF, DOC, XLS).
-
-LOẠI 2 — VẬN_CHUYỂN (Thanh toán cước vận chuyển):
-• Chọn Vận đơn: Chọn từ danh sách waybill → tự động load sản phẩm của vận đơn đó.
-• Sản phẩm từ vận đơn tự động được thêm vào danh sách bên dưới.
-• Hoặc mở rộng "Chọn từ DNTT Mua hàng đã thanh toán" để chọn sản phẩm từ DNTT trước.
-• Tổng phí vận chuyển tự động tính từ các sản phẩm.
-
-SAU KHI LƯU: Trạng thái ban đầu là PENDING_L1 — trình kế toán duyệt.`
       },
       {
         step: 'Vận đơn (Waybill)',
@@ -351,7 +299,7 @@ Ghi chú: Nhập ghi chú nếu cần.`
   },
   SALES_MANAGER: {
     desc: 'Trưởng phòng kinh doanh, quản lý đội sales và phê duyệt cấp 1.',
-    functions: ['Tất cả chức năng của Sales', 'Phê duyệt kế hoạch tuần (L1)', 'Phê duyệt đơn mua hàng (L1)'],
+    functions: ['Phê duyệt kế hoạch tuần (L1)', 'Phê duyệt đơn mua hàng (L1)', 'Lập kế hoạch tuần', 'Tạo đơn hàng (PO)'],
     tasks: [
       {
         step: 'Kế hoạch tuần — Lập mới',
@@ -387,15 +335,7 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
 → Chọn nguồn từ Kế hoạch tuần đã duyệt hoặc tạo mới hoàn toàn.
 → Nhập thông tin sản phẩm: tên, SL, đơn giá, tiền tệ, tỷ giá, nguồn nhập, hình thức VC, quy cách.
 → Thêm vào danh sách → nhập thông tin chung (nhà cung cấp, ngày đặt, landing, phòng ban).
-→ Lưu đơn → tự động gửi duyệt L1 lên Trưởng phòng KD (nếu là SM, có thể tự duyệt L1).`
-      },
-      {
-        step: 'Đề nghị thanh toán — Lập mới',
-        guide: `Vào "Đề nghị thanh toán" → "Thêm đề nghị".
-→ Chọn loại: MUA_HANG (thanh toán tiền hàng) hoặc VAN_CHUYEN (cước vận chuyển).
-→ MUA_HANG: Chọn PO đã duyệt → nhập số tiền → lý do TT → chọn tài khoản NH → đính kèm chứng từ.
-→ VAN_CHUYEN: Chọn vận đơn → sản phẩm tự động load → kiểm tra tổng phí.
-→ Chi tiết các trường xem ở tab Sales (giống nhau).`
+→ Lưu đơn → tự động gửi duyệt L1.`
       },
       {
         step: 'Vận đơn (Waybill)',
@@ -409,8 +349,8 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
     ]
   },
   PURCHASING: {
-    desc: 'Nhân viên mua hàng, theo dõi và hỗ trợ quá trình mua hàng.',
-    functions: ['Xem kế hoạch nhập hàng tuần', 'Xem đơn hàng (PO)', 'Tạo đề nghị thanh toán', 'Tạo vận đơn'],
+    desc: 'Nhân viên mua hàng — đầu mối chính tạo Đề nghị thanh toán (DNTT) để thanh toán cho nhà cung cấp và cước vận chuyển.',
+    functions: ['Tạo đề nghị thanh toán (DNTT) từ PO đã duyệt', 'Tạo đề nghị thanh toán cước vận chuyển', 'Tạo vận đơn', 'Xem kế hoạch tuần và đơn hàng để phối hợp'],
     tasks: [
       {
         step: 'Xem kế hoạch tuần',
@@ -423,17 +363,50 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
         step: 'Xem đơn hàng (PO)',
         guide: `Vào menu "Đơn hàng" → danh sách PO đã duyệt.
 → Xem thông tin: sản phẩm, đơn giá, tổng tiền, tỷ giá, nhà cung cấp.
-→ Theo dõi trạng thái PO để phối hợp với Sales và Kho.
+→ Theo dõi trạng thái PO để biết khi nào cần tạo DNTT thanh toán.
 → Không có quyền tạo/sửa PO — chỉ xem.`
       },
       {
-        step: 'Đề nghị thanh toán',
-        guide: `Vào "Đề nghị thanh toán" → "Thêm đề nghị".
-→ Chọn loại MUA_HANG (mua hàng) hoặc VAN_CHUYEN (vận chuyển).
-→ MUA_HANG: Chọn PO (đã duyệt) → nhập số tiền → lý do → tài khoản NH → file đính kèm.
-→ VAN_CHUYEN: Chọn vận đơn → tự động load sản phẩm.
-→ Chi tiết các trường xem ở tab Sales/Kế toán.
-→ Lưu ý: Nhân viên Mua hàng cũng có thể tạo DNTT để đề xuất thanh toán.`
+        step: 'Đề nghị thanh toán (DNTT) — Tạo mới',
+        guide: `Đây là nhiệm vụ chính của Nhân viên Mua hàng.
+Vào menu "Đề nghị thanh toán" → "Thêm đề nghị".
+
+Hai loại thanh toán:
+
+LOẠI 1 — MUA_HÀNG (Thanh toán tiền hàng cho nhà cung cấp):
+• Chọn đơn hàng (PO): Chọn từ danh sách PO đã được phê duyệt. Có thể chọn nhiều PO cùng lúc.
+  - Mỗi PO hiển thị: Tiền hàng + VC nội địa + Cước VC QT + Phí đặt hàng + Ship nội địa.
+  - Nếu chọn nhiều PO, tổng tiền tự động tính.
+• Loại tiền tệ: VND (mặc định) / USD / CNY.
+• Số tiền (bắt buộc): Tự động gợi ý từ các PO đã chọn, có thể sửa tay.
+• Biểu mẫu giấy đề nghị TT:
+  - Loại phiếu: "Thanh toán" (thanh toán thẳng) / "Hoàn ứng" (hoàn lại tiền tạm ứng).
+  - Phòng ban / Bộ phận: Nhập tên phòng ban (VD: Kinh doanh, Mua hàng).
+  - Số tiền tạm ứng (nếu có): Nhập nếu đã tạm ứng trước đó.
+  - Số tiền đã chi (nếu có): Nhập nếu đã chi tiêu một phần.
+  - Lý do thanh toán (bắt buộc): Mô tả nội dung thanh toán — VD: "Thanh toán lô hàng PO-0012".
+• Thông tin tài khoản chuyển khoản:
+  - Chọn tài khoản có sẵn (đã lưu trong hệ thống) HOẶC nhập tài khoản mới.
+  - Nhập số tài khoản, Chủ tài khoản (IN HOA), Tên ngân hàng.
+  - Có thể upload QR Code để thuận tiện chuyển khoản.
+• Chênh lệch tỷ giá & CP phát sinh (mở rộng — bấm để xem):
+  - TK chênh lệch TG tham chiếu: Nhập mã DNTT trước đó để tra cứu chênh lệch tỷ giá.
+  - Chênh lệch TG (VNĐ): Nhập số tiền chênh lệch nếu có.
+  - Phí vận chuyển bổ sung: Nhập nếu có phát sinh thêm.
+  - Chi phí phát sinh khác: Bấm "+ Thêm chi phí" → nhập tên phí + số tiền.
+• File đính kèm: Tối đa 8 file (ảnh chụp hóa đơn, PDF, DOC, XLS). Nên đính kèm hóa đơn/chứng từ gốc.
+
+LOẠI 2 — VẬN_CHUYỂN (Thanh toán cước vận chuyển):
+• Chọn Vận đơn: Chọn từ danh sách waybill → tự động load sản phẩm của vận đơn đó.
+• Sản phẩm từ vận đơn tự động được thêm vào danh sách, tổng phí tự động tính.
+• Nếu cần, có thể mở rộng "Chọn từ DNTT Mua hàng đã thanh toán" để lấy sản phẩm từ DNTT trước.
+
+YÊU CẦU ĐẶC BIỆT:
+- Bắt buộc chọn ít nhất 1 PO (nếu loại MUA_HANG).
+- Số tiền phải lớn hơn 0.
+- Lý do thanh toán không được để trống.
+- Sau khi tạo, DNTT ở trạng thái PENDING_L1 — chờ Kế toán duyệt L1, sau đó CEO duyệt L2.
+- Có thể theo dõi trạng thái DNTT tại danh sách "Đề nghị thanh toán".`
       },
       {
         step: 'Vận đơn (Waybill)',
