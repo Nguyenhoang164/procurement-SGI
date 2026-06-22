@@ -35,18 +35,18 @@ export function canCrudProducts(user) { return isAdmin(user); }
 export function canImportProducts(user) { return hasRole(user, ROLES.ADMIN, ROLES.CEO, ROLES.WAREHOUSE, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 
 // Purchase Orders
-export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
-export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canCreatePO(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
+export function canEditPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
 export function canDeletePO(user) { return isAdmin(user); }
-export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
+export function canImportPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
 export function canSubmitPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canApprovePO_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canRejectPO(user) { return hasRole(user, ROLES.ADMIN, ROLES.SALES_MANAGER); }
 export function canSendPOToAccounting(user) { return isAdmin(user); }
 
 // Payment Requests
-export function canCreatePayment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
-export function canEditPaymentByRole(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
+export function canCreatePayment(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
+export function canEditPaymentByRole(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
 export function canDeletePayment(user) { return isAdmin(user); }
 export function canApprovePR_L1(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT); }
 export function canApprovePR_L2(user) { return isAdmin(user); }

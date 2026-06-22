@@ -51,14 +51,14 @@ public class PaymentRequestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> createPaymentRequest(@Valid @RequestBody PaymentRequestDTO dto) {
         PaymentRequestDTO created = paymentRequestService.createPaymentRequest(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> updatePaymentRequest(
             @PathVariable Long id,
             @Valid @RequestBody PaymentRequestDTO dto) {
@@ -143,7 +143,7 @@ public class PaymentRequestController {
     }
 
     @PostMapping(path = "/{id}/attachments", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PaymentRequestDTO> uploadAttachments(
             @PathVariable Long id,
             @RequestPart("files") MultipartFile[] files) throws IOException {

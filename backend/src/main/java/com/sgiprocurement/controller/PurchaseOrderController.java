@@ -62,14 +62,14 @@ public class PurchaseOrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PurchaseOrderDTO> createPurchaseOrder(@Valid @RequestBody PurchaseOrderDTO dto) {
         PurchaseOrderDTO created = purchaseOrderService.createPurchaseOrder(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER', 'PURCHASING')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PurchaseOrderDTO> updatePurchaseOrder(
             @PathVariable Long id,
             @Valid @RequestBody PurchaseOrderDTO dto) {
@@ -147,14 +147,14 @@ public class PurchaseOrderController {
     }
 
     @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<Map<String, Object>> importPurchaseOrders(@RequestBody List<PurchaseOrderDTO> orders) {
         int count = purchaseOrderService.importPurchaseOrders(orders);
         return ResponseEntity.ok(Map.of("imported", count, "message", "Đã import " + count + " đơn hàng"));
     }
 
     @PostMapping("/import/excel")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<PurchaseOrderImportResult> importExcel(@RequestParam("file") MultipartFile file) {
         PurchaseOrderImportResult result = purchaseOrderService.importFromExcel(file);
         HttpStatus status = result.getErrorCount() > 0 ? HttpStatus.MULTI_STATUS : HttpStatus.OK;
