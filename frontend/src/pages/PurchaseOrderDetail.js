@@ -569,7 +569,7 @@ function PurchaseOrderDetail() {
           </div>
         </div>
       ) : null}
-      <CommentSection entityType="PURCHASE_ORDER" entityId={po.id} />
+      <CommentSection entityType="PURCHASE_ORDER" entityId={order.id} />
     </div>
   );
 }
