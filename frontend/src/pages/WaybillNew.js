@@ -74,6 +74,7 @@ function WaybillNew() {
         volume: item.volume || '',
         unitPriceVC: item.unitPriceVC || '',
         packageCount: item.packageCount || String(item.orderedQty || ''),
+        shippingMethod: item.shippingMethod || '',
         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
       }));
       setProducts(mapped);
@@ -181,6 +182,7 @@ function WaybillNew() {
           volume: '',
           unitPriceVC: '',
           packageCount: item.orderedQty,
+          shippingMethod: item.shippingMethod || '',
         });
       }
     });
@@ -220,6 +222,7 @@ function WaybillNew() {
       volume: p.volume || '',
       unitPriceVC: p.unitPriceVC || '',
       packageCount: p.packageCount || '',
+      shippingMethod: p.shippingMethod || '',
       purchaseOrderItemId: p.purchaseOrderItemId || null,
     }));
     const payload = {
