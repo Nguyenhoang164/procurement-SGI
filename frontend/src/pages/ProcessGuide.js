@@ -406,7 +406,7 @@ function ProcessGuide() {
               </div>
               <div>
                 <div style={{ fontWeight: 700, fontSize: 16 }}>{user?.username}</div>
-                <div style={{ fontSize: 13, color: '#6b7280' }}>{ROLE_LABELS[role] || role}</div>
+                <div style={{ fontSize: 13, color: '#6b7280' }}>{ROLE_LABELS[role] || role}{user?.department ? ` · ${user.department}` : ''}</div>
               </div>
             </div>
 
