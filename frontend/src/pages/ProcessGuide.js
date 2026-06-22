@@ -14,31 +14,29 @@ const STEPS = [
   { id: 'weekly-plan', label: 'Kế hoạch tuần', icon: '📋', color: '#2563eb',
     desc: `${R.SALES} lập kế hoạch nhập hàng theo tuần, trình duyệt. ${R.SALES_MANAGER} phê duyệt. ${R.PURCHASING} xem kế hoạch.` },
   { id: 'purchase-order', label: 'Đơn mua hàng', icon: '📄', color: '#059669',
-    desc: `${R.SALES} tạo đơn hàng (PO) từ kế hoạch. ${R.SALES_MANAGER} phê duyệt L1. ${R.CEO} gửi kế toán. ${R.PURCHASING} xem đơn hàng.` },
+    desc: `${R.PURCHASING} tạo đơn hàng (PO). ${R.SALES_MANAGER} phê duyệt L1. ${R.ADMIN} gửi kế toán.` },
   { id: 'payment-request', label: 'Đề nghị thanh toán', icon: '💰', color: '#d97706',
-    desc: `${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.CEO} duyệt L2.` },
+    desc: `${R.PURCHASING} tạo đề nghị thanh toán. ${R.ACCOUNTANT}/${R.CHIEF_ACCOUNTANT} duyệt L1, chi trả. ${R.ADMIN} duyệt L2.` },
   { id: 'waybill', label: 'Vận đơn', icon: '🚢', color: '#7c3aed',
-    desc: `${R.WAREHOUSE}/${R.SALES}/${R.PURCHASING} tạo vận đơn theo lô hàng. ${R.WAREHOUSE} xác nhận khi hàng về.` },
+    desc: `${R.WAREHOUSE}/${R.PURCHASING} tạo vận đơn theo lô hàng. ${R.WAREHOUSE} xác nhận khi hàng về.` },
   { id: 'warehouse-receipt', label: 'Nhập kho', icon: '📦', color: '#dc2626',
     desc: `${R.WAREHOUSE} tạo phiếu nhập kho, nhập hàng, upload hình ảnh biên lai và item.` }
 ];
 
 const ROLE_DETAILS = {
   ADMIN: {
-    desc: 'Quản trị hệ thống, không tham gia trực tiếp vào quy trình mua hàng.',
-    functions: ['Quản lý người dùng (thêm, sửa, vô hiệu hóa tài khoản)', 'Cấu hình và bảo trì hệ thống', 'Theo dõi nhật ký hoạt động'],
+    desc: 'Quản trị hệ thống, có toàn quyền trên tất cả các nghiệp vụ.',
+    functions: ['Quản lý người dùng (thêm, sửa, vô hiệu hóa tài khoản)', 'Cấu hình và bảo trì hệ thống', 'Theo dõi nhật ký hoạt động', 'Thực hiện tất cả thao tác CRUD trên toàn bộ dữ liệu'],
     tasks: [
       { step: 'Quản lý người dùng', guide: 'Vào menu Quản trị → Người dùng. Điền username, chọn role (xem danh sách role ở dưới), đặt trạng thái Active/Inactive. Lưu ý: Username không được trùng.' },
       { step: 'Theo dõi hệ thống', guide: 'Kiểm tra nhật ký hoạt động (nếu có), đảm bảo hệ thống vận hành ổn định. Báo cáo lỗi cho bộ phận kỹ thuật nếu phát hiện bất thường.' }
     ]
   },
   CEO: {
-    desc: 'Người quản lý cấp cao nhất, phê duyệt các bước quan trọng trong quy trình.',
-    functions: ['Phê duyệt cấp cao (L2) cho đơn mua hàng và đề nghị thanh toán', 'Quản lý người dùng (thêm, sửa, vô hiệu hóa)', 'Xem toàn bộ quy trình mua hàng'],
+    desc: 'Người quản lý cấp cao nhất, xem toàn bộ quy trình và quản lý người dùng.',
+    functions: ['Quản lý người dùng (thêm, sửa, vô hiệu hóa)', 'Xem toàn bộ quy trình mua hàng', 'Không tham gia trực tiếp tạo/sửa dữ liệu nghiệp vụ'],
     tasks: [
-      { step: 'Quản lý người dùng', guide: 'Vào menu Quản trị → Người dùng → "Thêm người dùng". Nhập username, mật khẩu (tự tạo), chọn role phù hợp. Có thể vô hiệu hóa tài khoản bằng cách chuyển trạng thái Inactive. Lưu ý: Username phải là duy nhất.' },
-      { step: 'Đơn mua hàng (PO) — Gửi kế toán', guide: 'Sau khi Trưởng phòng KD duyệt L1 (PO ở trạng thái APPROVED):\n→ Vào danh sách Đơn hàng → chọn PO cần xử lý.\n→ Xem chi tiết PO, kiểm tra thông tin.\n→ Bấm "Gửi kế toán" để chuyển PO sang bộ phận kế toán.\n→ Kế toán nhận được và tiến hành tạo DNTT thanh toán.' },
-      { step: 'Đề nghị thanh toán — Duyệt L2', guide: 'Vào danh sách Đề nghị thanh toán → lọc DNTT có trạng thái PENDING_L2.\n→ Bấm vào DNTT để xem chi tiết:\n  - Kiểm tra số tiền, PO liên quan, chứng từ kèm theo.\n  - Xem lịch sử duyệt L1 (ai duyệt, khi nào).\n→ Bấm "Duyệt" (L2) để phê duyệt, hoặc "Từ chối" kèm lý do.\n→ Sau khi duyệt L2, DNTT chuyển sang APPROVED — kế toán có thể chi trả.' }
+      { step: 'Quản lý người dùng', guide: 'Vào menu Quản trị → Người dùng → "Thêm người dùng". Nhập username, mật khẩu (tự tạo), chọn role phù hợp. Có thể vô hiệu hóa tài khoản bằng cách chuyển trạng thái Inactive. Lưu ý: Username phải là duy nhất.' }
     ]
   },
   WAREHOUSE: {
@@ -114,15 +112,8 @@ Lưu ý quan trọng:
   },
   ACCOUNTANT: {
     desc: 'Quản lý các nghiệp vụ thanh toán cho đơn hàng.',
-    functions: ['Phê duyệt L1 đề nghị thanh toán', 'Thực hiện chi trả và xác nhận thanh toán', 'Hỗ trợ tạo đề nghị thanh toán (nếu cần)'],
+    functions: ['Phê duyệt L1 đề nghị thanh toán', 'Thực hiện chi trả và xác nhận thanh toán', 'Quản lý tài khoản ngân hàng'],
     tasks: [
-      {
-        step: 'Tạo đề nghị thanh toán (hỗ trợ)',
-        guide: `Việc tạo DNTT do Nhân viên Mua hàng đảm nhiệm chính.
-Kế toán chỉ tạo DNTT trong trường hợp hỗ trợ hoặc khi cần xử lý gấp.
-→ Vào "Đề nghị thanh toán" → "Thêm đề nghị".
-→ Chi tiết các trường xem ở tab Nhân viên mua hàng.`
-      },
       {
         step: 'Duyệt L1',
         guide: `Vào danh sách Đề nghị thanh toán → bấm vào DNTT có trạng thái PENDING_L1.
@@ -151,14 +142,8 @@ Yêu cầu: Chỉ bấm "Xác nhận TT" khi tiền đã thực sự đến tài
   },
   CHIEF_ACCOUNTANT: {
     desc: 'Quản lý cấp cao bộ phận kế toán, kiểm tra rà soát nghiệp vụ.',
-    functions: ['Kiểm tra, rà soát đề nghị thanh toán', 'Phê duyệt L1 và chi trả', 'Đối chiếu chứng từ kế toán'],
+    functions: ['Kiểm tra, rà soát đề nghị thanh toán', 'Phê duyệt L1 và chi trả', 'Đối chiếu chứng từ kế toán', 'Kiểm tra kế toán (soát xét)'],
     tasks: [
-      {
-        step: 'Tạo đề nghị thanh toán (hỗ trợ)',
-        guide: `Việc tạo DNTT do Nhân viên Mua hàng đảm nhiệm chính.
-KT trưởng có thể tạo hỗ trợ nếu cần.
-→ Chi tiết xem ở tab Nhân viên mua hàng.`
-      },
       {
         step: 'Duyệt L1',
         guide: `Vào danh sách DNTT → chọn DNTT PENDING_L1.
@@ -186,13 +171,13 @@ Lưu ý: KT trưởng có thể xem tất cả DNTT của mọi phòng ban.`
     ]
   },
   SALES: {
-    desc: 'Người đề xuất nhu cầu nhập hàng, đầu mối tạo đơn hàng.',
-    functions: ['Lập kế hoạch nhập hàng tuần', 'Tạo đơn hàng (PO) từ kế hoạch đã duyệt', 'Tạo vận đơn theo lô hàng', 'Theo dõi trạng thái thanh toán (DNTT do bên Mua hàng tạo)'],
+    desc: 'Người đề xuất nhu cầu nhập hàng, lập kế hoạch tuần.',
+    functions: ['Lập kế hoạch nhập hàng tuần', 'Trình duyệt và theo dõi kế hoạch tuần', 'Xem đơn hàng, đề nghị thanh toán, vận đơn'],
     tasks: [
       {
         step: 'Kế hoạch tuần — Lập mới',
         guide: `Vào menu "Kế hoạch tuần" → "Thêm kế hoạch".
-
+ 
 Các trường nhập liệu chi tiết:
 • Chọn sản phẩm (bắt buộc): Dùng ô tìm kiếm (PosCodeSelector) để tra cứu sản phẩm đã có trong hệ thống. Nếu là SP mới, nhập trực tiếp tên và mã POS.
 • Tên sản phẩm (bắt buộc): Nhập tên tiếng Việt đầy đủ của sản phẩm.
@@ -204,7 +189,7 @@ Các trường nhập liệu chi tiết:
 • Mức độ ưu tiên: "Cao" = nhập gấp, "Trung bình" = nhập trong tháng, "Thấp" = có thể chờ.
 • Link nguồn: URL sản phẩm trên trang thương mại điện tử (Taobao, 1688, Alibaba...).
 • Biến thể & Số lượng (bắt buộc): Khai báo biến thể (size/màu sắc/phiên bản) và số lượng tương ứng. Bấm "+ Thêm biến thể" nếu có nhiều loại.
-
+ 
 Yêu cầu đặc biệt:
 - Phải thêm ít nhất 1 sản phẩm vào danh sách trước khi lưu.
 - SL đề xuất tự động tính tổng từ các biến thể.
@@ -216,90 +201,14 @@ Yêu cầu đặc biệt:
 → Vào danh sách Kế hoạch tuần → chọn phiếu KH vừa tạo.
 → Bấm nút "Trình duyệt" ở góc phải (hoặc trong chi tiết).
 → Hệ thống chuyển trạng thái thành PENDING và gửi thông báo cho Trưởng phòng KD.
-
+ 
 Lưu ý: Chỉ có thể trình duyệt nếu KH tuần đang ở trạng thái DRAFT. Sau khi trình duyệt, không thể sửa — muốn sửa phải chờ bị từ chối.`
-      },
-      {
-        step: 'Đơn hàng (PO) — Tạo mới',
-        guide: `Vào menu "Đơn hàng" → "Thêm đơn hàng".
-Có thể tạo từ Kế hoạch tuần đã duyệt: tại danh sách KH tuần, bấm "Tạo PO" để tự động copy thông tin.
-
-Các trường nhập chi tiết:
-PHẦN 1 — NHẬP THÔNG TIN SẢN PHẨM:
-• Chọn sản phẩm (bắt buộc): Tra cứu sản phẩm. Khi chọn, thông tin giá vốn TB & giá vốn gần nhất tự động hiện (nếu SP đã có).
-• Tên sản phẩm (bắt buộc): Tên in trên đơn hàng.
-• Đơn giá (bắt buộc): Giá theo từng đơn vị sản phẩm, chọn đúng tiền tệ giao dịch.
-• Tiền tệ: CNY/USD/VND — tự động gợi ý tỷ giá tương ứng.
-• Tỷ giá: Mặc định theo hệ thống, có thể sửa tay nếu cần.
-• Biến thể & SL: Giống KH tuần — thêm biến thể và số lượng.
-• Nguồn nhập: Trung Quốc (mặc định) / Việt Nam / Khác.
-• Hình thức VC: Chọn phương thức vận chuyển quốc tế (SEA PHI, AIR PHI, SEA MALAY...).
-• Ưu tiên: Thường / Cao / Khẩn cấp.
-• Quy cách: Mô tả quy cách đóng gói (VD: "Hộp 10 cái", "Thùng 50 cái").
-
-Giá vốn tham khảo (tự động hiện nếu SP đã có trong hệ thống):
-• Giá vốn trung bình (VNĐ): Bình quân từ các đơn hàng trước.
-• Giá vốn gần nhất + Mã đơn gần nhất + Ngày gần nhất.
-
-PHẦN 2 — THÔNG TIN CHUNG:
-• Nhà cung cấp: Tên nhà cung cấp nước ngoài.
-• Ngày đặt hàng: Chọn ngày tạo PO.
-• Landing page: Link tham khảo (không bắt buộc).
-• Phòng ban thực hiện: Tự động nếu tạo từ kế hoạch.
-• Nguồn kế hoạch: Hiển thị mã KH đã duyệt nếu tạo từ kế hoạch.
-
-PHẦN 3 — CHI PHÍ (CHỈ HIỆN KHI TRẠNG THÁI IN_TRANSIT):
-• VC nội địa (VNĐ): Chi phí vận chuyển trong nước.
-• Đơn giá VC QT (đ/kg): Giá vận chuyển quốc tế theo kg.
-• Khối lượng / Thể tích: Cân nặng hoặc thể tích lô hàng.
-• Phí đặt hàng: Phí dịch vụ đặt hàng.
-• Phí giao hàng địa phương: Ship từ cảng/bưu cục về kho.
-• Ngày TT cước VC: Ngày thanh toán cước vận chuyển.
-
-TỔNG HỢP & GIÁ VỐN:
-• Tổng tiền lô (VNĐ): Tự động tính.
-• GV đầy đủ 1 SP: Tổng tiền / số lượng.
-• Phương thức thanh toán: CNY qua CK bank / USD qua CK bank / VND.
-• Đã cọc / Còn phải TT: Nhập số tiền đã cọc (nếu có), tự động tính còn lại.
-
-GHI CHÚ: Nhập ghi chú chung cho đơn hàng.`
-      },
-      {
-        step: 'Đơn hàng (PO) — Trình duyệt & gửi kế toán',
-        guide: `Sau khi tạo PO thành công:
-→ Vào danh sách Đơn hàng → chọn PO cần duyệt.
-→ Người tạo: bấm "Trình duyệt" để gửi lên Trưởng phòng KD (L1).
-→ Sau khi duyệt L1, CEO vào chi tiết → bấm "Gửi kế toán".
-→ Nhân viên Mua hàng sẽ tạo Đề nghị thanh toán dựa trên PO đã được duyệt.
-
-Trạng thái PO: DRAFT → PENDING_L1 → APPROVED (hoặc REJECTED) → ...`
-      },
-      {
-        step: 'Vận đơn (Waybill)',
-        guide: `Vào menu "Vận đơn" → "Thêm vận đơn".
-
-Các trường nhập:
-• Mã vận đơn (bắt buộc): Mã do hãng vận chuyển cung cấp (VD: DHL123456).
-• Đơn vị vận chuyển (bắt buộc): Tên hãng vận chuyển (DHL, FedEx, đường biển...).
-• Trạng thái: Chờ VC / Đang VC / Đã giao / Đã hủy.
-• Địa chỉ gửi: Nơi xuất phát (VD: Quảng Châu, Trung Quốc).
-• Địa chỉ nhận: Nơi giao hàng (VD: Kho Hà Nội).
-• Tổng số kiện: Tự động tính từ các sản phẩm.
-• Tổng cước VC (VNĐ): Tự động tính (KL × Đơn giá VC × Tỷ giá).
-• SL thực tế: Nhập tay khi hàng về.
-
-Chọn đơn hàng (PO) và sản phẩm:
-• Chọn đơn hàng từ danh sách PO đã duyệt.
-• Tích chọn các sản phẩm muốn gộp vào vận đơn (hỗ trợ gộp nhiều PO).
-• Nhập KL/thể tích + Đơn giá VC + Số kiện cho từng sản phẩm.
-
-Ghi chú: Nhập ghi chú nếu cần.`
       },
     ]
   },
   SALES_MANAGER: {
     desc: 'Trưởng phòng kinh doanh, quản lý đội sales và phê duyệt cấp 1.',
-    functions: ['Phê duyệt kế hoạch tuần (L1)', 'Phê duyệt đơn mua hàng (L1)', 'Lập kế hoạch tuần', 'Tạo đơn hàng (PO)'],
+    functions: ['Phê duyệt kế hoạch tuần (L1)', 'Phê duyệt đơn mua hàng (L1)', 'Lập kế hoạch tuần', 'Từ chối đơn hàng và kế hoạch tuần'],
     tasks: [
       {
         step: 'Kế hoạch tuần — Lập mới',
@@ -314,7 +223,7 @@ Ghi chú: Nhập ghi chú nếu cần.`
 → Lọc/bấm vào phiếu có trạng thái PENDING (chờ duyệt).
 → Xem chi tiết từng sản phẩm: kiểm tra tên, giá, số lượng, biến thể.
 → Bấm "Duyệt" (L1) để phê duyệt, hoặc "Từ chối" kèm lý do.
-
+ 
 Nguyên tắc duyệt: Chỉ duyệt nếu thông tin sản phẩm, giá cả và số lượng chính xác. Nếu thiếu thông tin, từ chối và yêu cầu bổ sung.`
       },
       {
@@ -326,31 +235,14 @@ Nguyên tắc duyệt: Chỉ duyệt nếu thông tin sản phẩm, giá cả v�
   - Kiểm tra thông tin chung: nhà cung cấp, ngày đặt, phòng ban.
   - Kiểm tra tổng tiền lô, giá vốn.
 → Nhấn "Duyệt L1" hoặc "Từ chối" kèm lý do.
-
-Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có thể gửi cho kế toán.`
-      },
-      {
-        step: 'Đơn hàng (PO) — Tạo mới',
-        guide: `Vào "Đơn hàng" → "Thêm đơn hàng".
-→ Chọn nguồn từ Kế hoạch tuần đã duyệt hoặc tạo mới hoàn toàn.
-→ Nhập thông tin sản phẩm: tên, SL, đơn giá, tiền tệ, tỷ giá, nguồn nhập, hình thức VC, quy cách.
-→ Thêm vào danh sách → nhập thông tin chung (nhà cung cấp, ngày đặt, landing, phòng ban).
-→ Lưu đơn → tự động gửi duyệt L1.`
-      },
-      {
-        step: 'Vận đơn (Waybill)',
-        guide: `Vào "Vận đơn" → "Thêm vận đơn".
-→ Nhập mã vận đơn, hãng VC, trạng thái, địa chỉ.
-→ Chọn PO → tích sản phẩm → ADD vào vận đơn.
-→ Nhập KL (thể tích) + Đơn giá VC + Số kiện cho từng SP.
-→ Tổng cước tự động tính.
-→ Lưu ý: Có thể gộp nhiều PO vào một vận đơn.`
+ 
+Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — chờ xử lý tiếp.`
       },
     ]
   },
   PURCHASING: {
-    desc: 'Nhân viên mua hàng — đầu mối chính tạo Đề nghị thanh toán (DNTT) để thanh toán cho nhà cung cấp và cước vận chuyển.',
-    functions: ['Tạo đề nghị thanh toán (DNTT) từ PO đã duyệt', 'Tạo đề nghị thanh toán cước vận chuyển', 'Tạo vận đơn', 'Xem kế hoạch tuần và đơn hàng để phối hợp'],
+    desc: 'Nhân viên mua hàng — đầu mối chính tạo đơn hàng (PO) và Đề nghị thanh toán (DNTT).',
+    functions: ['Tạo và sửa đơn hàng (PO)', 'Tạo đề nghị thanh toán (DNTT) từ PO đã duyệt', 'Tạo đề nghị thanh toán cước vận chuyển', 'Tạo vận đơn', 'Xem kế hoạch tuần để phối hợp'],
     tasks: [
       {
         step: 'Xem kế hoạch tuần',
@@ -360,11 +252,33 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
 → Không có quyền tạo/sửa kế hoạch — chỉ xem.`
       },
       {
-        step: 'Xem đơn hàng (PO)',
-        guide: `Vào menu "Đơn hàng" → danh sách PO đã duyệt.
-→ Xem thông tin: sản phẩm, đơn giá, tổng tiền, tỷ giá, nhà cung cấp.
-→ Theo dõi trạng thái PO để biết khi nào cần tạo DNTT thanh toán.
-→ Không có quyền tạo/sửa PO — chỉ xem.`
+        step: 'Đơn hàng (PO) — Tạo mới',
+        guide: `Vào menu "Đơn hàng" → "Thêm đơn hàng".
+ 
+PHẦN 1 — NHẬP THÔNG TIN SẢN PHẨM:
+• Chọn sản phẩm (bắt buộc): Tra cứu sản phẩm. Khi chọn, thông tin giá vốn TB & giá vốn gần nhất tự động hiện (nếu SP đã có).
+• Tên sản phẩm (bắt buộc): Tên in trên đơn hàng.
+• Đơn giá (bắt buộc): Giá theo từng đơn vị sản phẩm, chọn đúng tiền tệ giao dịch.
+• Tiền tệ: CNY/USD/VND — tự động gợi ý tỷ giá tương ứng.
+• Tỷ giá: Mặc định theo hệ thống, có thể sửa tay nếu cần.
+• Biến thể & SL: Thêm biến thể và số lượng.
+• Nguồn nhập: Trung Quốc (mặc định) / Việt Nam / Khác.
+• Hình thức VC: Chọn phương thức vận chuyển quốc tế.
+• Ưu tiên: Thường / Cao / Khẩn cấp.
+• Quy cách: Mô tả quy cách đóng gói.
+ 
+PHẦN 2 — THÔNG TIN CHUNG:
+• Nhà cung cấp: Tên nhà cung cấp nước ngoài.
+• Ngày đặt hàng: Chọn ngày tạo PO.
+• Landing page: Link tham khảo (không bắt buộc).
+• Phòng ban thực hiện: Nhập phòng ban.
+ 
+PHẦN 3 — CHI PHÍ (CHỈ HIỆN KHI TRẠNG THÁI IN_TRANSIT):
+• VC nội địa (VNĐ), Đơn giá VC QT, Khối lượng/Thể tích, Phí đặt hàng, Phí giao hàng địa phương.
+ 
+TỔNG HỢP & GIÁ VỐN: Tự động tính.
+ 
+GHI CHÚ: Nhập ghi chú chung cho đơn hàng.`
       },
       {
         step: 'Đề nghị thanh toán (DNTT) — Tạo mới',
