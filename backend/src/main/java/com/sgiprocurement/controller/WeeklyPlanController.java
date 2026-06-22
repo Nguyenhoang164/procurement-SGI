@@ -24,15 +24,17 @@ public class WeeklyPlanController {
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
     public ResponseEntity<List<WeeklyPlanDTO>> getAllWeeklyPlans(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        List<WeeklyPlanDTO> plans = weeklyPlanService.getAllWeeklyPlans(startDate, endDate);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String department) {
+        List<WeeklyPlanDTO> plans = weeklyPlanService.getAllWeeklyPlans(startDate, endDate, department);
         return ResponseEntity.ok(plans);
     }
 
     @GetMapping("/pending")
     @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'WAREHOUSE', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING')")
-    public ResponseEntity<List<WeeklyPlanDTO>> getPendingWeeklyPlans() {
-        return ResponseEntity.ok(weeklyPlanService.getPendingWeeklyPlans());
+    public ResponseEntity<List<WeeklyPlanDTO>> getPendingWeeklyPlans(
+            @RequestParam(required = false) String department) {
+        return ResponseEntity.ok(weeklyPlanService.getPendingWeeklyPlans(department));
     }
 
     @GetMapping("/{id}")

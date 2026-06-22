@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { weeklyPlanAPI, productAPI } from '../services/api';
-import { canCrudWeeklyPlan, canDeleteWeeklyPlan, canCreatePO, getUser } from '../utils/permissions';
+import { canCrudWeeklyPlan, canDeleteWeeklyPlan, canCreatePO, getUser, ROLES } from '../utils/permissions';
 
 const statusLabels = {
   'DRAFT': 'Bản nháp',
@@ -131,7 +131,12 @@ function WeeklyPlanList() {
     try {
       const m = mode || dateMode;
       const { start, end } = getDateRange(m);
-      const data = await weeklyPlanAPI.getAll(start, end);
+      const userData = getUser();
+      const userRole = userData?.role || '';
+      const userDepartment = userData?.department || '';
+      const isDeptRestricted = userRole === ROLES.SALES || userRole === ROLES.SALES_MANAGER;
+      const department = isDeptRestricted ? userDepartment : undefined;
+      const data = await weeklyPlanAPI.getAll(start, end, department);
       setPlans(data);
       setError('');
     } catch (err) {
@@ -157,7 +162,10 @@ function WeeklyPlanList() {
   };
 
   const getPlanCode = (id) => `KH-${String(id).padStart(4, '0')}`;
+  const userDept = getUser()?.department || '';
+  const isRestrictedUser = getUser()?.role === ROLES.SALES || getUser()?.role === ROLES.SALES_MANAGER;
   const filteredPlans = plans.filter((plan) => {
+    if (isRestrictedUser && userDept && plan.initiatorDepartment !== userDept) return false;
     const keyword = searchKeyword.trim().toUpperCase();
     if (!keyword) return true;
     const compactKeyword = keyword.replace(/^KH-?/, '').replace(/^0+/, '');

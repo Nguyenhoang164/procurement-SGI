@@ -33,14 +33,15 @@ public class WeeklyPlanService {
     private UserRepository userRepository;
 
     public List<WeeklyPlanDTO> getAllWeeklyPlans() {
-        return getAllWeeklyPlans(null, null);
+        return getAllWeeklyPlans(null, null, null);
     }
 
-    public List<WeeklyPlanDTO> getAllWeeklyPlans(LocalDate startDate, LocalDate endDate) {
+    public List<WeeklyPlanDTO> getAllWeeklyPlans(LocalDate startDate, LocalDate endDate, String department) {
         return weeklyPlanRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"))
                 .stream()
                 .filter(p -> startDate == null || !p.getProposedDate().toLocalDate().isBefore(startDate))
                 .filter(p -> endDate == null || !p.getProposedDate().toLocalDate().isAfter(endDate))
+                .filter(p -> department == null || department.isEmpty() || department.equals(p.getInitiatorDepartment()))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -58,9 +59,10 @@ public class WeeklyPlanService {
                 .collect(Collectors.toList());
     }
 
-    public List<WeeklyPlanDTO> getPendingWeeklyPlans() {
+    public List<WeeklyPlanDTO> getPendingWeeklyPlans(String department) {
         return weeklyPlanRepository.findByStatusIn(List.of("PENDING_L1", "PENDING_L2"))
                 .stream()
+                .filter(p -> department == null || department.isEmpty() || department.equals(p.getInitiatorDepartment()))
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }

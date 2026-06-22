@@ -78,11 +78,17 @@ export const authAPI = {
 };
 
 export const weeklyPlanAPI = {
-  getPending: async () => requestJson(`${API_BASE_URL}/weekly-plans/pending`, { headers: getHeaders() }),
-  getAll: async (startDate, endDate) => {
+  getPending: async (department) => {
+    const params = new URLSearchParams();
+    if (department) params.append('department', department);
+    const qs = params.toString();
+    return requestJson(`${API_BASE_URL}/weekly-plans/pending${qs ? '?' + qs : ''}`, { headers: getHeaders() });
+  },
+  getAll: async (startDate, endDate, department) => {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
+    if (department) params.append('department', department);
     const qs = params.toString();
     return requestJson(`${API_BASE_URL}/weekly-plans${qs ? '?' + qs : ''}`, { headers: getHeaders() });
   },
