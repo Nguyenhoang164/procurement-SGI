@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { waybillAPI, paymentRequestAPI, shipmentTrackingAPI, exchangeRateAPI } from '../services/api';
+import CommentSection from '../components/CommentSection';
 import { formatDnttCode } from '../utils/paymentUtils';
 import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
 
@@ -290,6 +291,7 @@ function WaybillDetail() {
           </section>
         )}
       </div>
+      <CommentSection entityType="WAYBILL" entityId={waybill.id} />
     </div>
   );
 }

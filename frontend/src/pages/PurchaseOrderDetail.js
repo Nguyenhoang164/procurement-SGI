@@ -2,6 +2,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { purchaseOrderAPI, costCommentAPI, productAPI, productCostAPI } from '../services/api';
+import CommentSection from '../components/CommentSection';
 import { canCreatePaymentForOrder, getPaymentStatusBadgeClass, getPaymentStatusLabel } from '../utils/paymentUtils';
 import { isAdmin, canEditPO, canApprovePO_L1, canRejectPO, canAddCostComment, canSendPOToAccounting, hasRole, ROLES } from '../utils/permissions';
 
@@ -568,6 +569,7 @@ function PurchaseOrderDetail() {
           </div>
         </div>
       ) : null}
+      <CommentSection entityType="PURCHASE_ORDER" entityId={po.id} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 ﻿import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { productAPI, productComboAPI, resolveFileUrl } from '../services/api';
+import CommentSection from '../components/CommentSection';
 import '../styles/ProductDetail.css';
 
 const emptyComboForm = {
@@ -286,6 +287,7 @@ function ProductDetail() {
             </table>
           </div>
         </section>
+        <CommentSection entityType="PRODUCT" entityId={product.id} />
       </div>
     </div>
   );

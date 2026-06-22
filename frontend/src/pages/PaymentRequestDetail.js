@@ -2,6 +2,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { paymentRequestAPI, productAPI, purchaseOrderAPI, resolveFileUrl, waybillAPI, bankAccountAPI } from '../services/api';
+import CommentSection from '../components/CommentSection';
 import {
   canCreatePayment,
   canEditPayment,
@@ -1209,6 +1210,7 @@ function PaymentRequestDetail() {
           </div>
         </div>
       )}
+      <CommentSection entityType="PAYMENT_REQUEST" entityId={request.id} />
     </div>
   );
 }

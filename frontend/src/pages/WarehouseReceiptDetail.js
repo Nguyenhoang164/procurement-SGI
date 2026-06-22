@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
 import { warehouseAPI, productCostAPI } from '../services/api';
+import CommentSection from '../components/CommentSection';
 import { canCrudWarehouseReceipt, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
@@ -339,6 +340,7 @@ function WarehouseReceiptDetail() {
               <div className="info-row"><span className="label">Cập nhật</span><span className="value">{formatDate(receipt.updatedAt)}</span></div>
             </div>
           </section>
+          <CommentSection entityType="WAREHOUSE_RECEIPT" entityId={receipt.id} />
         </div>
       </div>
     </div>

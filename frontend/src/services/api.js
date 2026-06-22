@@ -495,6 +495,13 @@ export const auditLogAPI = {
   }
 };
 
+export const noteAPI = {
+  get: async (entityType, entityId) => requestJson(`${API_BASE_URL}/notes/${entityType}/${entityId}`, { headers: getHeaders() }),
+  create: async (data) => requestJson(`${API_BASE_URL}/notes`, {
+    method: 'POST', headers: getHeaders(), body: JSON.stringify(data)
+  })
+};
+
 export const dashboardAPI = {
   getKpi: async () => requestJson(`${API_BASE_URL}/dashboard`, { headers: getHeaders() })
 };

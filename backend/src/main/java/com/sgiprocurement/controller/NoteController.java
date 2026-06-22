@@ -28,29 +28,10 @@ public class NoteController {
 
     @PostMapping
     public ResponseEntity<NoteDTO> createNote(@Valid @RequestBody NoteDTO dto) {
-        String entityType = dto.getEntityType();
         String role = getCurrentRole();
-
-        switch (entityType.toUpperCase()) {
-            case "PAYMENT_REQUEST":
-                if (!hasAnyRole(role, "ADMIN", "ACCOUNTANT", "CHIEF_ACCOUNTANT", "SALES", "SALES_MANAGER", "PURCHASING")) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                }
-                break;
-            case "PURCHASE_ORDER":
-                if (!hasAnyRole(role, "ADMIN", "SALES", "SALES_MANAGER", "PURCHASING")) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                }
-                break;
-            case "WEEKLY_PLAN":
-                if (!hasAnyRole(role, "ADMIN", "SALES", "SALES_MANAGER", "PURCHASING")) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-                }
-                break;
-            default:
-                return ResponseEntity.badRequest().build();
+        if (role.equals("PENDING")) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         return ResponseEntity.status(HttpStatus.CREATED).body(noteService.createNote(dto));
     }
 
