@@ -297,7 +297,7 @@ function WaybillNew() {
             </div>
             <div className="form-group">
               <label>Tổng cước VC (VNĐ)</label>
-              <input type="number" value={computedFreightVnd || ''} readOnly
+              <input type="text" value={(computedFreightVnd || 0).toLocaleString('vi-VN')} readOnly
                 style={{ background: '#f1f5f9', cursor: 'not-allowed' }} />
             </div>
             <div className="form-group">
