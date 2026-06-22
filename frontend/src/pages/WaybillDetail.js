@@ -6,17 +6,6 @@ import CommentSection from '../components/CommentSection';
 import { formatDnttCode } from '../utils/paymentUtils';
 import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
 
-const parseVariants = (spec) => {
-  if (!spec) return [{ name: '', qty: '' }];
-  try {
-    const parsed = JSON.parse(spec);
-    if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    return [{ name: spec, qty: '' }];
-  } catch {
-    return [{ name: spec, qty: '' }];
-  }
-};
-
 function WaybillDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -84,8 +73,6 @@ function WaybillDetail() {
       setConfirming(false);
     }
   };
-
-  const formatDate = (value) => value ? new Date(value).toLocaleDateString('vi-VN') : '-';
 
   if (loading) return <div className="page-content"><div className="loading">Đang tải...</div></div>;
   if (error) return <div className="page-content"><div className="error-message">{error}</div></div>;
