@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 
@@ -50,9 +51,45 @@ public class WaybillService {
     private ObjectMapper objectMapper;
 
     public List<WaybillDTO> getAllWaybills() {
-        return waybillRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
+        List<WaybillDTO> dtos = waybillRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt")).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        enrichShippingMethods(dtos);
+        return dtos;
+    }
+
+    private void enrichShippingMethods(List<WaybillDTO> dtos) {
+        Set<Long> allPoIds = new HashSet<>();
+        for (WaybillDTO dto : dtos) {
+            if (dto.getShippingMethod() == null && dto.getPurchaseOrderIds() != null && !dto.getPurchaseOrderIds().isBlank()) {
+                for (String id : dto.getPurchaseOrderIds().split(",")) {
+                    try { allPoIds.add(Long.valueOf(id.trim())); }
+                    catch (NumberFormatException e) { /* ignore */ }
+                }
+            }
+        }
+        if (allPoIds.isEmpty()) return;
+
+        Map<Long, String> poShippingMap = purchaseOrderRepository.findAllById(allPoIds).stream()
+                .filter(po -> po.getShippingMethod() != null && !po.getShippingMethod().isBlank())
+                .collect(Collectors.toMap(PurchaseOrder::getId, PurchaseOrder::getShippingMethod, (a, b) -> a));
+
+        for (WaybillDTO dto : dtos) {
+            if (dto.getShippingMethod() == null && dto.getPurchaseOrderIds() != null && !dto.getPurchaseOrderIds().isBlank()) {
+                Set<String> methods = new LinkedHashSet<>();
+                for (String id : dto.getPurchaseOrderIds().split(",")) {
+                    try {
+                        Long poId = Long.valueOf(id.trim());
+                        if (poShippingMap.containsKey(poId)) {
+                            methods.add(poShippingMap.get(poId));
+                        }
+                    } catch (NumberFormatException e) { /* ignore */ }
+                }
+                if (!methods.isEmpty()) {
+                    dto.setShippingMethod(String.join(", ", methods));
+                }
+            }
+        }
     }
 
     public WaybillDTO getWaybillById(Long id) {
@@ -135,9 +172,11 @@ public class WaybillService {
     }
 
     public List<WaybillDTO> searchByCode(String keyword) {
-        return waybillRepository.searchByKeyword(keyword).stream()
+        List<WaybillDTO> dtos = waybillRepository.searchByKeyword(keyword).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+        enrichShippingMethods(dtos);
+        return dtos;
     }
 
     @Transactional
