@@ -106,19 +106,44 @@ function WaybillList() {
                     <th>Đơn vị VC</th>
                     <th>DNTT</th>
                     <th>H.thức VC</th>
+                    <th>Sản phẩm</th>
                     <th>Trạng thái</th>
                     <th>Số kiện</th>
-                    <th>Số lượng sản phẩm thực nhận</th>
+                    <th>SL thực nhận</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {waybills.map((wb) => (
+                  {waybills.map((wb) => {
+                    let productList = [];
+                    try {
+                      if (wb.products) productList = JSON.parse(wb.products);
+                    } catch (e) { /* ignore */ }
+                    const prIds = wb.paymentRequestIds && wb.paymentRequestIds.length > 0 ? wb.paymentRequestIds : (wb.paymentRequestId ? [wb.paymentRequestId] : []);
+                    return (
                     <tr key={wb.id}>
                       <td><a href={`/waybills/${wb.id}`} className="link">{wb.waybillCode}</a></td>
                       <td>{wb.carrier || '-'}</td>
-                      <td>{wb.paymentRequestId ? <a href={`/payments/${wb.paymentRequestId}`} className="link">DNTT-{wb.paymentRequestId}</a> : '-'}</td>
+                      <td>
+                        {prIds.length > 0
+                          ? prIds.map((pid, i) => (
+                              <span key={pid}>
+                                {i > 0 && <span style={{ margin: '0 2px' }}>, </span>}
+                                <a href={`/payments/${pid}`} className="link">DNTT-{pid}</a>
+                              </span>
+                            ))
+                          : '-'}
+                      </td>
                       <td>{wb.shippingMethod || '-'}</td>
+                      <td style={{ maxWidth: 250 }}>
+                        {productList.length > 0
+                          ? productList.map((p, i) => (
+                              <span key={i} style={{ display: 'inline-block', background: '#eef2ff', borderRadius: 4, padding: '1px 6px', margin: '1px 2px', fontSize: 12, whiteSpace: 'nowrap' }}>
+                                {p.productShortCode || p.productName || p.posCode || '-'}
+                              </span>
+                            ))
+                          : '-'}
+                      </td>
                       <td>
                         {updatingId === wb.id ? (
                           <span style={{ fontSize: 12, color: '#6b7280' }}>Đang cập nhật...</span>
@@ -148,7 +173,8 @@ function WaybillList() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
