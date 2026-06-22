@@ -104,7 +104,6 @@ function WaybillList() {
                   <tr>
                     <th>Mã vận đơn</th>
                     <th>Đơn vị VC</th>
-                    <th>DNTT</th>
                     <th>H.thức VC</th>
                     <th>Sản phẩm</th>
                     <th>Trạng thái</th>
@@ -119,22 +118,12 @@ function WaybillList() {
                     try {
                       if (wb.products) productList = JSON.parse(wb.products);
                     } catch (e) { /* ignore */ }
-                    const prIds = wb.paymentRequestIds && wb.paymentRequestIds.length > 0 ? wb.paymentRequestIds : (wb.paymentRequestId ? [wb.paymentRequestId] : []);
+                    const shippingMethod = wb.shippingMethod || (productList.length > 0 && productList[0].shippingMethod ? productList[0].shippingMethod : null) || '-';
                     return (
                     <tr key={wb.id}>
                       <td><a href={`/waybills/${wb.id}`} className="link">{wb.waybillCode}</a></td>
                       <td>{wb.carrier || '-'}</td>
-                      <td>
-                        {prIds.length > 0
-                          ? prIds.map((pid, i) => (
-                              <span key={pid}>
-                                {i > 0 && <span style={{ margin: '0 2px' }}>, </span>}
-                                <a href={`/payments/${pid}`} className="link">DNTT-{pid}</a>
-                              </span>
-                            ))
-                          : '-'}
-                      </td>
-                      <td>{wb.shippingMethod || '-'}</td>
+                      <td>{shippingMethod}</td>
                       <td style={{ maxWidth: 250 }}>
                         {productList.length > 0
                           ? productList.map((p, i) => (
