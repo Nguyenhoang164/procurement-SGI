@@ -414,8 +414,10 @@ function WaybillNew() {
                                 onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
-                            <td style={{ fontSize: 11, color: '#475569' }}>
-                              1 {p.currency || 'CNY'} = {Number(p.exchangeRate || 3520).toLocaleString()} VND
+                            <td>
+                              <input type="number" step="1" value={p.exchangeRate || ''}
+                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
                             <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
                             <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
