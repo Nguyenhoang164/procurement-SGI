@@ -34,7 +34,7 @@ class ProductCostControllerTest {
     void getAllProductCosts_shouldReturnList() throws Exception {
         ProductCostDTO dto = new ProductCostDTO("ABC-VN-0001", "Product A", 3, 300,
                 new BigDecimal("50000"), new BigDecimal("45000"), new BigDecimal("5000"));
-        when(productCostService.getAllProductCosts()).thenReturn(List.of(dto));
+        when(productCostService.getAllProductCosts(null, null, null)).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/v1/product-costs"))
                 .andExpect(status().isOk())

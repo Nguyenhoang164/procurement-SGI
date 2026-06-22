@@ -310,10 +310,11 @@ export const exchangeRateAPI = {
 };
 
 export const productCostAPI = {
-  getAll: async (keyword, currency) => {
+  getAll: async (keyword, currency, department) => {
     const params = new URLSearchParams();
     if (keyword) params.set('keyword', keyword);
     if (currency && currency !== 'ALL') params.set('currency', currency);
+    if (department) params.set('department', department);
     const query = params.toString();
     const url = query ? `${API_BASE_URL}/product-costs?${query}` : `${API_BASE_URL}/product-costs`;
     return requestJson(url, { headers: getHeaders() });

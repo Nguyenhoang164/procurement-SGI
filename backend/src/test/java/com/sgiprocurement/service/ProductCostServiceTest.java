@@ -79,7 +79,7 @@ class ProductCostServiceTest {
     void getAllProductCosts_shouldReturnOnlyProductsWithLots() {
         when(productRepository.findAll()).thenReturn(List.of(product1, product2, productWithNoLots));
 
-        List<ProductCostDTO> result = productCostService.getAllProductCosts();
+        List<ProductCostDTO> result = productCostService.getAllProductCosts(null, null, null);
 
         assertEquals(2, result.size());
         assertTrue(result.stream().allMatch(dto -> dto.getLotCount() > 0));
@@ -89,7 +89,7 @@ class ProductCostServiceTest {
     void getAllProductCosts_shouldBeSortedByPosCode() {
         when(productRepository.findAll()).thenReturn(List.of(product2, product1));
 
-        List<ProductCostDTO> result = productCostService.getAllProductCosts();
+        List<ProductCostDTO> result = productCostService.getAllProductCosts(null, null, null);
 
         assertEquals("ABC-VN-0001", result.get(0).getPosCode());
         assertEquals("XYZ-US-0001", result.get(1).getPosCode());

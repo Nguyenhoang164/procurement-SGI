@@ -15,6 +15,8 @@ function ProductCostList() {
   const pageSize = 10;
   const userData = getUser();
   const canDelete = canDeleteProductCost(userData);
+  const isDeptRestricted = userData?.role === 'SALES' || userData?.role === 'SALES_MANAGER';
+  const userDepartment = userData?.department || '';
 
   const currencies = [...new Set(items.map(i => i.latestCurrency).filter(Boolean))];
 
@@ -22,7 +24,8 @@ function ProductCostList() {
     setLoading(true);
     setCurrentPage(1);
     try {
-      const data = await productCostAPI.getAll(keyword, currency);
+      const dept = isDeptRestricted ? userDepartment : undefined;
+      const data = await productCostAPI.getAll(keyword, currency, dept);
       setItems(data);
       setError('');
     } catch (err) {
@@ -30,11 +33,11 @@ function ProductCostList() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isDeptRestricted, userDepartment]);
 
   useEffect(() => {
     loadCosts(searchKeyword, filterCurrency);
-  }, []);
+  }, [loadCosts]);
 
   const handleSearch = () => {
     loadCosts(searchKeyword, filterCurrency);

@@ -26,11 +26,12 @@ public class ProductCostController {
     private ProductCostService productCostService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES_MANAGER', 'SALES')")
     public ResponseEntity<List<ProductCostDTO>> getAllProductCosts(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String currency) {
-        return ResponseEntity.ok(productCostService.getAllProductCosts(keyword, currency));
+            @RequestParam(required = false) String currency,
+            @RequestParam(required = false) String department) {
+        return ResponseEntity.ok(productCostService.getAllProductCosts(keyword, currency, department));
     }
 
     @GetMapping("/alerts")
