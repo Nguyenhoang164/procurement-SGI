@@ -37,14 +37,14 @@ function WaybillDetail() {
       }).catch(() => setRatesLoading(false));
 
       const products = data.products ? (typeof data.products === 'string' ? JSON.parse(data.products) : data.products) : [];
-      const poIds = [...new Set(products.map(p => p.poId).filter(Boolean))];
+      const missingShipping = products.filter(p => !p.shippingMethod).map(p => p.poId).filter(Boolean);
+      const poIds = [...new Set(missingShipping)];
       if (poIds.length > 0) {
-        const poData = await purchaseOrderAPI.getAll('', 0, 10000);
-        const orders = poData.orders || [];
+        const results = await Promise.all(poIds.map(poId =>
+          purchaseOrderAPI.getById(poId).catch(() => null)
+        ));
         const map = {};
-        orders.filter(o => poIds.includes(o.id)).forEach(o => {
-          map[o.id] = o.shippingMethod || '';
-        });
+        results.filter(Boolean).forEach(po => { map[po.id] = po.shippingMethod || ''; });
         setPoShippingMap(map);
       }
     } catch (err) {
