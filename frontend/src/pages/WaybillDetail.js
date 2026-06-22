@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import '../styles/Detail.css';
-import { waybillAPI, paymentRequestAPI, shipmentTrackingAPI, exchangeRateAPI } from '../services/api';
+import { waybillAPI, purchaseOrderAPI, paymentRequestAPI, shipmentTrackingAPI, exchangeRateAPI } from '../services/api';
 import CommentSection from '../components/CommentSection';
 import { formatDnttCode } from '../utils/paymentUtils';
 import { canCrudWaybill, canConfirmWaybill, getUser } from '../utils/permissions';
@@ -27,6 +27,7 @@ function WaybillDetail() {
   const [trackings, setTrackings] = useState([]);
   const [exchangeRates, setExchangeRates] = useState({});
   const [ratesLoading, setRatesLoading] = useState(true);
+  const [poShippingMap, setPoShippingMap] = useState({});
 
   const fetchWaybill = useCallback(async () => {
     try {
@@ -45,6 +46,18 @@ function WaybillDetail() {
         setExchangeRates(map);
         setRatesLoading(false);
       }).catch(() => setRatesLoading(false));
+
+      const products = data.products ? (typeof data.products === 'string' ? JSON.parse(data.products) : data.products) : [];
+      const poIds = [...new Set(products.map(p => p.poId).filter(Boolean))];
+      if (poIds.length > 0) {
+        const poData = await purchaseOrderAPI.getAll('', 0, 10000);
+        const orders = poData.orders || [];
+        const map = {};
+        orders.filter(o => poIds.includes(o.id)).forEach(o => {
+          map[o.id] = o.shippingMethod || '';
+        });
+        setPoShippingMap(map);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -180,7 +193,14 @@ function WaybillDetail() {
                         rows.push(
                           <tr key={idx}>
                             <td>{idx + 1}</td>
-                            <td style={{ fontSize: 11 }}>{p.poCode}</td>
+                            <td style={{ fontSize: 11 }}>
+                              {p.poId ? (
+                                <a href={`/purchase-orders/${p.poId}`} className="link" style={{ fontSize: 11 }}
+                                  onClick={e => { e.preventDefault(); navigate(`/purchase-orders/${p.poId}`); }}>
+                                  {p.poCode}
+                                </a>
+                              ) : p.poCode}
+                            </td>
                             <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
                             <td>{p.orderedQty}</td>
                             <td>{Number(p.volume || 0).toLocaleString('vi-VN')}</td>
@@ -189,7 +209,7 @@ function WaybillDetail() {
                             <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
                             <td style={{ fontWeight: 600 }} className="money">{totalVnd.toLocaleString('vi-VN')} ₫</td>
                             <td>{p.packageCount || p.orderedQty || '-'}</td>
-                            <td>{p.shippingMethod || '-'}</td>
+                            <td>{p.shippingMethod || poShippingMap[p.poId] || '-'}</td>
                           </tr>
                         );
                         return rows;
