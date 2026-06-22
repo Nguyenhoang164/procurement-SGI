@@ -109,6 +109,7 @@ Lưu ý quan trọng:
 - SL nhập không được vượt quá SL còn lại.
 - Upload ảnh là bắt buộc để minh chứng hàng thực tế.
 - Sau khi nhập kho, hệ thống tự động cập nhật tồn kho.`
+      },
     ]
   },
   ACCOUNTANT: {
@@ -161,6 +162,7 @@ QUY TRÌNH CHI TRẢ:
   - Cập nhật trạng thái thanh toán trên PO và Waybill (nếu có).
 
 Yêu cầu: Chỉ bấm "Xác nhận TT" khi tiền đã thực sự đến tài khoản người thụ hưởng.`
+      },
     ]
   },
   CHIEF_ACCOUNTANT: {
@@ -196,6 +198,7 @@ Vai trò KT trưởng: Kiểm tra kỹ hơn về mặt đối chiếu chứng t�
 → Xem báo cáo tổng hợp nếu cần.
 
 Lưu ý: KT trưởng có thể xem tất cả DNTT của mọi phòng ban.`
+      },
     ]
   },
   SALES: {
@@ -343,6 +346,7 @@ Chọn đơn hàng (PO) và sản phẩm:
 • Nhập KL/thể tích + Đơn giá VC + Số kiện cho từng sản phẩm.
 
 Ghi chú: Nhập ghi chú nếu cần.`
+      },
     ]
   },
   SALES_MANAGER: {
@@ -401,6 +405,7 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
 → Nhập KL (thể tích) + Đơn giá VC + Số kiện cho từng SP.
 → Tổng cước tự động tính.
 → Lưu ý: Có thể gộp nhiều PO vào một vận đơn.`
+      },
     ]
   },
   PURCHASING: {
@@ -438,6 +443,7 @@ Lưu ý: Sau khi duyệt L1, PO chuyển sang trạng thái APPROVED — CEO có
 → Nhập KL, đơn giá VC, số kiện từng SP.
 → Có thể gộp nhiều PO vào một vận đơn.
 → Chi tiết xem ở tab Warehouse.`
+      },
     ]
   }
 };
