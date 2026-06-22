@@ -1,11 +1,16 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { productAPI } from '../services/api';
+import { getUser } from '../utils/permissions';
 import * as XLSX from 'xlsx';
 import Pagination from '../components/Pagination';
 import '../styles/ProductList.css';
 
 function ProductList() {
+  const user = getUser();
+  const userRole = user?.role || '';
+  const userDepartment = user?.department || '';
+  const isDeptRestricted = userRole === 'SALES' || userRole === 'SALES_MANAGER';
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,7 +19,7 @@ function ProductList() {
   const [importResult, setImportResult] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState(isDeptRestricted ? userDepartment : '');
   const pageSize = 20;
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
@@ -48,11 +53,13 @@ function ProductList() {
 
   const uniqueDepartments = [...new Set(products.map(p => p.department).filter(Boolean))].sort();
 
-  const filteredProducts = products.filter((p) =>
-    (p.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.posCode?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (!departmentFilter || p.department === departmentFilter)
-  );
+  const filteredProducts = products.filter((p) => {
+    const matchSearch = p.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.posCode?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchDept = !departmentFilter || p.department === departmentFilter;
+    const allowed = !isDeptRestricted || !userDepartment || p.department === userDepartment;
+    return matchSearch && matchDept && allowed;
+  });
 
   const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1;
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -234,10 +241,11 @@ function ProductList() {
           <select
             value={departmentFilter}
             onChange={(e) => setDepartmentFilter(e.target.value)}
-            style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', width: 90 }}
+            disabled={isDeptRestricted}
+            style={{ padding: '7px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', width: 110, ...(isDeptRestricted ? { background: '#f1f5f9', cursor: 'not-allowed' } : {}) }}
           >
-            <option value="">PB</option>
-            {uniqueDepartments.map(d => (
+            <option value="">{isDeptRestricted ? userDepartment : 'PB'}</option>
+            {!isDeptRestricted && uniqueDepartments.map(d => (
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
