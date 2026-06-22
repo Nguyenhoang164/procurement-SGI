@@ -53,6 +53,9 @@ public class Waybill {
     @Column(name = "products", columnDefinition = "TEXT")
     private String products;
 
+    @Column(name = "freight_vnd")
+    private Long freightVnd;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

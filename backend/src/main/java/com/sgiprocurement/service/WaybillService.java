@@ -136,6 +136,7 @@ public class WaybillService {
         Long oldPaymentRequestId = waybill.getPaymentRequestId();
         waybill.setPaymentRequestId(dto.getPaymentRequestId());
         waybill.setProducts(dto.getProducts());
+        waybill.setFreightVnd(dto.getFreightVnd());
         Waybill saved = waybillRepository.save(waybill);
 
         if (oldPaymentRequestId != null && !oldPaymentRequestId.equals(dto.getPaymentRequestId())) {
@@ -282,7 +283,8 @@ public class WaybillService {
                 waybill.getProducts(),
                 shippingMethod,
                 prIds,
-                poIds
+                poIds,
+                waybill.getFreightVnd()
         );
     }
 
@@ -298,6 +300,7 @@ public class WaybillService {
         waybill.setNote(dto.getNote());
         waybill.setPaymentRequestId(dto.getPaymentRequestId());
         waybill.setProducts(dto.getProducts());
+        waybill.setFreightVnd(dto.getFreightVnd());
         return waybill;
     }
 }

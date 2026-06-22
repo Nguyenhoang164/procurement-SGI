@@ -27,5 +27,6 @@ public class WaybillDTO {
     private String shippingMethod;
     private List<Long> paymentRequestIds;
     private String purchaseOrderIds;
+    private Long freightVnd;
 
 }

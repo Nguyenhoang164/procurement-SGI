@@ -34,12 +34,14 @@ function WaybillNew() {
   const [selectedItemIds, setSelectedItemIds] = useState(new Set());
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFreightEdited, setIsFreightEdited] = useState(false);
 
   const [form, setForm] = useState({
     waybillCode: '', carrier: '', status: 'IN_TRANSIT',
     origin: '', destination: '',
     actualQty: '',
-    note: ''
+    note: '',
+    freightVnd: ''
   });
 
   const computedExpectedQty = useMemo(() => {
@@ -102,7 +104,8 @@ function WaybillNew() {
           status: data.status || 'IN_TRANSIT',
           origin: data.origin || '', destination: data.destination || '',
           actualQty: data.actualQty ?? '',
-          note: data.note || ''
+          note: data.note || '',
+          freightVnd: data.freightVnd ?? ''
         });
         if (data.products) {
           try {
@@ -199,8 +202,18 @@ function WaybillNew() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'freightVnd') setIsFreightEdited(true);
     setForm(prev => ({ ...prev, [name]: value }));
   };
+
+  const normalizeFreightVnd = (value) => {
+    if (value === '' || value == null) return null;
+    return Number(value);
+  };
+
+  const freightVndValue = isFreightEdited || (form.freightVnd !== '' && form.freightVnd != null)
+    ? form.freightVnd
+    : computedFreightVnd || '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -230,6 +243,7 @@ function WaybillNew() {
       ...form,
       expectedQty: computedExpectedQty || null,
       actualQty: form.actualQty ? Number(form.actualQty) : null,
+      freightVnd: normalizeFreightVnd(freightVndValue),
       products: JSON.stringify(productsPayload)
     };
     try {
@@ -302,8 +316,9 @@ function WaybillNew() {
             </div>
             <div className="form-group">
               <label>Tổng cước VC (VNĐ)</label>
-              <input type="text" value={(computedFreightVnd || 0).toLocaleString('vi-VN')} readOnly
-                style={{ background: '#f1f5f9', cursor: 'not-allowed' }} />
+              <input type="number" name="freightVnd" value={freightVndValue} onChange={handleChange}
+                min="0" step="1" placeholder="Nhập tổng cước vận chuyển" />
+              <small className="muted-copy">Gợi ý tự tính: {(computedFreightVnd || 0).toLocaleString('vi-VN')} VNĐ</small>
             </div>
             <div className="form-group">
               <label>SL thực tế</label>
