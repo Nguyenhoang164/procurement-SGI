@@ -135,6 +135,7 @@ function WaybillNew() {
         unitPrice: String(item.unitPrice || ''),
         currency: item.currency || 'CNY',
         exchangeRate: String(item.exchangeRate || '3520'),
+        shippingMethod: item.shippingMethod || '',
         totalAmountForeign: item.totalAmountForeign || (Number(item.unitPrice || 0) * Number(item.orderedQty || 0)),
         totalAmountVnd: item.totalAmountVnd || 0,
       }));
