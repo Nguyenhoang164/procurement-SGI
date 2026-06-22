@@ -24,6 +24,7 @@ public class WaybillDTO {
     private LocalDateTime updatedAt;
     private Long paymentRequestId;
     private String products;
+    private String shippingMethod;
     private List<Long> paymentRequestIds;
     private String purchaseOrderIds;
 

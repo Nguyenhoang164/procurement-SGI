@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/waybills")
@@ -58,6 +59,13 @@ public class WaybillController {
     @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
     public ResponseEntity<WaybillDTO> confirmDelivery(@PathVariable Long id) {
         return ResponseEntity.ok(waybillService.confirmDelivery(id));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE', 'PURCHASING')")
+    public ResponseEntity<WaybillDTO> updateWaybillStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String newStatus = body.get("status");
+        return ResponseEntity.ok(waybillService.updateWaybillStatus(id, newStatus));
     }
 
     @DeleteMapping("/{id}")

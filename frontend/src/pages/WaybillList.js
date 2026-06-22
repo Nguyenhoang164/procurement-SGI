@@ -4,11 +4,22 @@ import '../styles/List.css';
 import { waybillAPI } from '../services/api';
 import { canCrudWaybill, getUser } from '../utils/permissions';
 
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Chờ vận chuyển' },
+  { value: 'IN_TRANSIT', label: 'Đang vận chuyển' },
+  { value: 'WAITING_DELIVERY', label: 'Chờ giao hàng' },
+  { value: 'DELIVERED', label: 'Đã giao' },
+  { value: 'CANCELLED', label: 'Đã hủy' },
+];
+
+const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map(s => [s.value, s.label]));
+
 function WaybillList() {
   const [waybills, setWaybills] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [updatingId, setUpdatingId] = useState(null);
   const navigate = useNavigate();
   const userData = getUser();
   const canCrud = canCrudWaybill(userData);
@@ -36,6 +47,18 @@ function WaybillList() {
   }, [fetchWaybills]);
 
   useEffect(() => { fetchWaybills(); }, [fetchWaybills]);
+
+  const handleStatusChange = async (id, newStatus) => {
+    setUpdatingId(id);
+    try {
+      await waybillAPI.updateStatus(id, newStatus);
+      setWaybills(prev => prev.map(w => w.id === id ? { ...w, status: newStatus } : w));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="page-screen">
@@ -82,9 +105,10 @@ function WaybillList() {
                     <th>Mã vận đơn</th>
                     <th>Đơn vị VC</th>
                     <th>DNTT</th>
+                    <th>H.thức VC</th>
                     <th>Trạng thái</th>
-                    <th>SL dự kiến</th>
-                    <th>SL thực tế</th>
+                    <th>Số kiện</th>
+                    <th>Số lượng sản phẩm thực nhận</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>
@@ -94,7 +118,25 @@ function WaybillList() {
                       <td><a href={`/waybills/${wb.id}`} className="link">{wb.waybillCode}</a></td>
                       <td>{wb.carrier || '-'}</td>
                       <td>{wb.paymentRequestId ? <a href={`/payments/${wb.paymentRequestId}`} className="link">DNTT-{wb.paymentRequestId}</a> : '-'}</td>
-                      <td><span className={`badge badge-${(wb.status || '').toLowerCase()}`}>{wb.status || '-'}</span></td>
+                      <td>{wb.shippingMethod || '-'}</td>
+                      <td>
+                        {updatingId === wb.id ? (
+                          <span style={{ fontSize: 12, color: '#6b7280' }}>Đang cập nhật...</span>
+                        ) : (
+                          <select
+                            value={wb.status || ''}
+                            onChange={e => handleStatusChange(wb.id, e.target.value)}
+                            style={{
+                              padding: '4px 6px', borderRadius: 4, border: '1px solid #d1d5db',
+                              fontSize: 13, background: '#fff', cursor: 'pointer', minWidth: 130
+                            }}
+                          >
+                            {STATUS_OPTIONS.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        )}
+                      </td>
                       <td>{wb.expectedQty != null ? wb.expectedQty : '-'}</td>
                       <td>{wb.actualQty != null ? wb.actualQty : '-'}</td>
                       <td>

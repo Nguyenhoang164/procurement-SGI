@@ -279,6 +279,7 @@ function WaybillNew() {
               <select name="status" value={form.status} onChange={handleChange}>
                 <option value="PENDING">Chờ vận chuyển</option>
                 <option value="IN_TRANSIT">Đang vận chuyển</option>
+                <option value="WAITING_DELIVERY">Chờ giao hàng</option>
                 <option value="DELIVERED">Đã giao</option>
                 <option value="CANCELLED">Đã hủy</option>
               </select>

@@ -1,12 +1,16 @@
 package com.sgiprocurement.service;
 
 import com.sgiprocurement.model.Waybill;
+import com.sgiprocurement.model.PaymentRequest;
 import com.sgiprocurement.model.PaymentRequestWaybill;
+import com.sgiprocurement.model.PurchaseOrder;
+import com.sgiprocurement.model.PaymentRequestPurchaseOrder;
 import com.sgiprocurement.dto.WaybillDTO;
 import com.sgiprocurement.repository.WaybillRepository;
 import com.sgiprocurement.repository.PurchaseOrderRepository;
 import com.sgiprocurement.repository.PaymentRequestRepository;
 import com.sgiprocurement.repository.PaymentRequestWaybillRepository;
+import com.sgiprocurement.repository.PaymentRequestPurchaseOrderRepository;
 import com.sgiprocurement.exception.ResourceNotFoundException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 
@@ -34,6 +39,9 @@ public class WaybillService {
 
     @Autowired
     private PaymentRequestWaybillRepository paymentRequestWaybillRepository;
+
+    @Autowired
+    private PaymentRequestPurchaseOrderRepository paymentRequestPurchaseOrderRepository;
 
     @Autowired
     private WarehouseReceiptService warehouseReceiptService;
@@ -155,19 +163,33 @@ public class WaybillService {
         return convertToDTO(savedWaybill);
     }
 
+    public WaybillDTO updateWaybillStatus(Long id, String newStatus) {
+        Waybill waybill = waybillRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Waybill not found with id: " + id));
+        waybill.setStatus(newStatus);
+        return convertToDTO(waybillRepository.save(waybill));
+    }
+
     private void updatePoStatusIfLinked(Waybill waybill) {
-        if (waybill.getPaymentRequestId() != null) {
-            paymentRequestRepository.findById(waybill.getPaymentRequestId()).ifPresent(pr -> {
-                purchaseOrderRepository.findById(pr.getPoId()).ifPresent(po -> {
-                    // Nếu PO đang ở trạng thái APPROVED hoặc PENDING_SHIPPING, chuyển sang SHIPPING
-                    if ("APPROVED".equals(po.getStatus()) || "PENDING_SHIPPING".equals(po.getStatus()) || "PAID".equals(po.getStatus()) || "IN_TRANSIT".equals(po.getStatus())) {
-                        if (!"COMPLETED".equals(po.getStatus()) && !"SHIPPING".equals(po.getStatus())) {
-                            po.setStatus("SHIPPING");
-                            purchaseOrderRepository.save(po);
-                        }
-                    }
-                });
-            });
+        if (waybill.getPaymentRequestId() == null) return;
+        PaymentRequest pr = paymentRequestRepository.findById(waybill.getPaymentRequestId()).orElse(null);
+        if (pr == null) return;
+
+        Set<Long> poIds = new HashSet<>();
+        poIds.add(pr.getPoId());
+        List<PaymentRequestPurchaseOrder> links = paymentRequestPurchaseOrderRepository
+                .findByPaymentRequestId(pr.getId());
+        for (PaymentRequestPurchaseOrder link : links) {
+            poIds.add(link.getPoId());
+        }
+
+        for (Long poId : poIds) {
+            if (poId == null) continue;
+            PurchaseOrder po = purchaseOrderRepository.findById(poId).orElse(null);
+            if (po != null && "IN_TRANSIT".equals(po.getStatus())) {
+                po.setStatus("SHIPPING");
+                purchaseOrderRepository.save(po);
+            }
         }
     }
 
@@ -179,17 +201,26 @@ public class WaybillService {
         }
 
         String poIds = null;
+        String shippingMethod = null;
         if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
             try {
                 List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
                 Set<String> poIdSet = new java.util.LinkedHashSet<>();
+                Set<String> shippingMethods = new java.util.LinkedHashSet<>();
                 for (Map<String, Object> p : productList) {
                     if (p.containsKey("poId")) {
                         poIdSet.add(String.valueOf(p.get("poId")));
                     }
+                    if (p.containsKey("shippingMethod") && p.get("shippingMethod") != null
+                            && !((String) p.get("shippingMethod")).isBlank()) {
+                        shippingMethods.add((String) p.get("shippingMethod"));
+                    }
                 }
                 if (!poIdSet.isEmpty()) {
                     poIds = String.join(",", poIdSet);
+                }
+                if (!shippingMethods.isEmpty()) {
+                    shippingMethod = String.join(", ", shippingMethods);
                 }
             } catch (Exception e) {
                 // ignore parse errors
@@ -210,6 +241,7 @@ public class WaybillService {
                 waybill.getUpdatedAt(),
                 waybill.getPaymentRequestId(),
                 waybill.getProducts(),
+                shippingMethod,
                 prIds,
                 poIds
         );

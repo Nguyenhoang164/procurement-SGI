@@ -412,6 +412,9 @@ export const waybillAPI = {
   update: async (id, data) => requestJson(`${API_BASE_URL}/waybills/${id}`, {
     method: 'PUT', headers: getHeaders(), body: JSON.stringify(data)
   }),
+  updateStatus: async (id, status) => requestJson(`${API_BASE_URL}/waybills/${id}/status`, {
+    method: 'PATCH', headers: getHeaders(), body: JSON.stringify({ status })
+  }),
   confirmDelivery: async (id) => requestJson(`${API_BASE_URL}/waybills/${id}/confirm`, {
     method: 'PUT', headers: getHeaders()
   }),
