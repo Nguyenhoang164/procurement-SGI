@@ -51,7 +51,7 @@ export function suggestAmountForType(type, order) {
 }
 
 export function canCreatePayment(user) {
-  return ['ADMIN', 'ACCOUNTANT', 'CHIEF_ACCOUNTANT', 'SALES', 'SALES_MANAGER', 'PURCHASING'].includes(user?.role);
+  return ['ADMIN', 'PURCHASING'].includes(user?.role);
 }
 
 export function isPaymentEligibleOrder(order) {
