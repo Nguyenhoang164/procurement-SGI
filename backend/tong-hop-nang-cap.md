@@ -8,7 +8,7 @@
 - Tự động tạo sản phẩm vào danh sách giá vốn khi import
 - Lookup posCode từ productName
 - Detect header động (dòng 1 hoặc 2), xử lý ô FORMULA/ngày tháng
-- Mặc định: status `COMPLETED`, paymentStatus `PAID`, createdBy `unkown`, spec `pcs`
+- Mặc định: status `COMPLETED`, reloadreloadpaymentStatus `PAID`, createdBy `unkown`, spec `pcs`
 
 ### 2. Quản lý người dùng & phân quyền (RBAC)
 - 9 vai trò: ADMIN, CEO, WAREHOUSE, ACCOUNTANT, CHIEF_ACCOUNTANT, SALES, SALES_MANAGER, MANAGER, USER, PENDING

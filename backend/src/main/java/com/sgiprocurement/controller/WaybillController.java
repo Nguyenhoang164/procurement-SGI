@@ -62,7 +62,7 @@ public class WaybillController {
     }
 
 @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PURCHASING')")
     public ResponseEntity<WaybillDTO> updateWaybillStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String newStatus = body.get("status");
         return ResponseEntity.ok(waybillService.updateWaybillStatus(id, newStatus));
