@@ -1,0 +1,51 @@
+HUONG DAN DEPLOY THU CONG
+============================
+
+Do môi trường Windows khong co SSH client san, vui long thuc hien cac buoc sau:
+
+CACH 1: SU DUNG GIT BASH (NEU CO CAI DAT)
+-------------------------------------------
+1. Mo Git Bash
+2. Chay lenh sau:
+
+ssh root@103.90.225.141
+# Nhap mat khau: YOnOT1YRqfEIp6ZUuU1T
+
+3. Sau khi SSH thanh cong, chay cac lenh sau:
+
+cd /opt
+git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
+cd /opt/procurement
+bash deploy.sh
+
+CACH 2: SU DUNG PUTTY
+---------------------
+1. Mo PuTTY
+2. Host: 103.90.225.141
+3. User: root
+4. Password: YOnOT1YRqfEIp6ZUuU1T
+5. Sau khi ket noi, chay:
+
+cd /opt
+git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
+cd /opt/procurement
+bash deploy.sh
+
+CACH 3: SU DUNG WINDOWS TERMINAL + WSL
+-----------------------------------------
+1. Mo Windows Terminal
+2. Chay: wsl
+3. Sau do chay cac lenh nhu Cach 1
+
+SAU KHI DEPLOY THANH CONG
+---------------------------
+1. Tro DNS procurement.sgiholding.com.vn den 103.90.225.141
+2. Cho 5-10 phut
+3. Truy cap: https://procurement.sgiholding.com.vn
+
+THONG TIN DEPLOY
+----------------
+- Branch: deploy
+- VPS: 103.90.225.141
+- Repository: https://github.com/Nguyenhoang164/procurement-SGI.git
+- Thay doi moi: Ap dung phan quyen cho cot trang thai van don

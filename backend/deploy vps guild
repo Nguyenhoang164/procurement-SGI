@@ -49,6 +49,8 @@ Mật khẩu: **YOnOT1YRqfEIp6ZUuU1T**
 cd /opt
 git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
 cd /opt/procurement
+git pull origin deploy
+docker compose up -d --build --force-recreate
 bash deploy.sh
 ```
 
