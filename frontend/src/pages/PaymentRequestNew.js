@@ -57,6 +57,16 @@ function PaymentRequestNew() {
   const [selectedWaybill, setSelectedWaybill] = useState(null);
   const [waybillProducts, setWaybillProducts] = useState([]);
   const [waybillTotalFreight, setWaybillTotalFreight] = useState(0);
+  const [orderItemManualTotals, setOrderItemManualTotals] = useState({});
+  const [shipmentItemManualTotals, setShipmentItemManualTotals] = useState({});
+
+  const updateOrderItemTotal = (itemId, value) => {
+    setOrderItemManualTotals(prev => ({ ...prev, [itemId]: value }));
+  };
+
+  const updateShipmentItemTotal = (key, value) => {
+    setShipmentItemManualTotals(prev => ({ ...prev, [key]: value }));
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -173,21 +183,30 @@ function PaymentRequestNew() {
   const suggestTotalAmount = useMemo(() => {
     if (formData.type === 'VAN_CHUYEN') {
       if (selectedWaybill) return waybillTotalFreight;
-      return 0;
+      return shipmentItems.reduce((sum, item) => {
+        const rate = Number(item.exchangeRate) || 0;
+        const sub = shipmentItemManualTotals[item.key] !== undefined 
+          ? Number(shipmentItemManualTotals[item.key] || 0) 
+          : (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
+        return sum + Math.round(sub * rate);
+      }, 0);
     }
     if (selectedOrders.length === 0) return 0;
     if (isEdit && formData.amountVnd) return Number(formData.amountVnd);
     return selectedOrders.reduce((sum, order) => {
       if (order.items) {
         const orderTotal = order.items.reduce((s, item) => {
-          const itemTotal = item.manualTotal !== undefined ? Number(item.manualTotal || 0) : (Number(item.unitPrice || 0) * Number(item.orderedQty || 0));
+          const manualKey = `order-${order.id}-item-${item.id}`;
+          const itemTotal = orderItemManualTotals[manualKey] !== undefined 
+            ? Number(orderItemManualTotals[manualKey] || 0) 
+            : (Number(item.unitPrice || 0) * Number(item.orderedQty || 0));
           return s + itemTotal;
         }, 0);
         return sum + orderTotal;
       }
       return sum + suggestAmountForType(formData.type, order);
     }, 0);
-  }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight]);
+  }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight, orderItemManualTotals, shipmentItemManualTotals]);
 
   useEffect(() => {
     if (suggestTotalAmount > 0) {
@@ -550,6 +569,7 @@ function PaymentRequestNew() {
                       setWaybillProducts([]);
                       setShipmentItems([]);
                       setWaybillTotalFreight(0);
+                      setShipmentItemManualTotals({});
                       return;
                     }
                     try {
@@ -709,7 +729,8 @@ function PaymentRequestNew() {
                           {shipmentItems.map((item, idx) => {
                             const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
                             const rate = Number(item.exchangeRate) || 0;
-                            const vnd = Math.round(sub * rate);
+                            const manualTotal = shipmentItemManualTotals[item.key] !== undefined ? Number(shipmentItemManualTotals[item.key] || 0) : sub;
+                            const vnd = Math.round(manualTotal * rate);
                             return (
                               <tr key={item.key}>
                                 <td>{idx + 1}</td>
@@ -719,7 +740,11 @@ function PaymentRequestNew() {
                                 <td>{item.packageCount || item.orderedQty || '-'}</td>
                                 <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
                                 <td style={{ fontSize: 11 }}>1 {item.currency || 'CNY'} = {rate.toLocaleString()} VND</td>
-                                <td>{sub.toLocaleString()} {item.currency || 'CNY'}</td>
+                                <td>
+                                  <input type="number" step="0.01" value={manualTotal || ''}
+                                    onChange={e => updateShipmentItemTotal(item.key, e.target.value)}
+                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                                </td>
                                 <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
                                 <td>
                                   <button type="button" onClick={() => removeShipmentItem(item.key)}
@@ -1018,7 +1043,13 @@ function PaymentRequestNew() {
                             <td style={{ padding: '2px', fontSize: 10, color: '#64748b' }}>{!hasVariants ? (item.spec || '-') : itemVariants.filter(v => v.name).map(v => `${v.name} (${v.qty || 0})`).join(', ')}</td>
                             <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
                             <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.unitPrice || 0).toLocaleString('vi-VN')} {item.currency || '₫'}</td>
-                            <td style={{ textAlign: 'right', padding: '2px', whiteSpace: 'nowrap' }}>{subForeign.toLocaleString('vi-VN')} {item.currency || '₫'}</td>
+                            <td style={{ textAlign: 'right', padding: '2px', whiteSpace: 'nowrap' }}>
+                              <input type="number" step="0.01" value={orderItemManualTotals[`order-${order.id}-item-${item.id}`] !== undefined 
+                                ? orderItemManualTotals[`order-${order.id}-item-${item.id}`] 
+                                : subForeign.toLocaleString('vi-VN')}
+                                onChange={e => updateOrderItemTotal(`order-${order.id}-item-${item.id}`, e.target.value)}
+                                style={{ width: '100%', textAlign: 'right', border: '1px solid #e2e8f0', borderRadius: 4, padding: '2px', fontSize: 12 }} />
+                            </td>
                             <td style={{ textAlign: 'center', padding: '2px', fontSize: 10, color: '#64748b' }}>{rate > 0 ? rate.toLocaleString('vi-VN') : '-'}</td>
                             <td style={{ textAlign: 'right', padding: '2px', whiteSpace: 'nowrap' }}>{subVnd.toLocaleString('vi-VN')} ₫</td>
                           </tr>
@@ -1033,7 +1064,7 @@ function PaymentRequestNew() {
                                     <span style={{ color: '#94a3b8', marginRight: 4 }}>└</span> {v.name}
                                     {v.qty ? <span style={{ marginLeft: 4, color: '#64748b' }}>({v.qty})</span> : null}
                                   </td>
-                                  <td colSpan={6}></td>
+                                  <td colSpan={7}></td>
                                 </tr>
                               );
                             });

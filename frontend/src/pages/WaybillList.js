@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/List.css';
 import { waybillAPI } from '../services/api';
-import { canCrudWaybill, getUser } from '../utils/permissions';
+import { canCrudWaybill, canUpdateWaybillStatus, getUser } from '../utils/permissions';
 
 const STATUS_OPTIONS = [
   { value: 'PENDING', label: 'Chờ vận chuyển' },
@@ -23,6 +23,7 @@ function WaybillList() {
   const navigate = useNavigate();
   const userData = getUser();
   const canCrud = canCrudWaybill(userData);
+  const canUpdateStatus = canUpdateWaybillStatus(userData);
 
   const fetchWaybills = useCallback(async () => {
     setLoading(true);
@@ -49,6 +50,7 @@ function WaybillList() {
   useEffect(() => { fetchWaybills(); }, [fetchWaybills]);
 
   const handleStatusChange = async (id, newStatus) => {
+    if (!canUpdateStatus) return;
     setUpdatingId(id);
     try {
       await waybillAPI.updateStatus(id, newStatus);
@@ -136,7 +138,7 @@ function WaybillList() {
                       <td>
                         {updatingId === wb.id ? (
                           <span style={{ fontSize: 12, color: '#6b7280' }}>Đang cập nhật...</span>
-                        ) : (
+                        ) : canUpdateStatus ? (
                           <select
                             value={wb.status || ''}
                             onChange={e => handleStatusChange(wb.id, e.target.value)}
@@ -149,6 +151,10 @@ function WaybillList() {
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
+                        ) : (
+                          <span className={`badge badge-${(wb.status || '').toLowerCase()}`}>
+                            {STATUS_MAP[wb.status] || wb.status || '-'}
+                          </span>
                         )}
                       </td>
                       <td>{wb.expectedQty != null ? wb.expectedQty : '-'}</td>

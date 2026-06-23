@@ -62,7 +62,8 @@ export function canUpdateExchangeRates(user) { return hasRole(user, ROLES.ADMIN,
 export function canAddCostComment(user) { return hasRole(user, ROLES.ADMIN, ROLES.ACCOUNTANT, ROLES.CHIEF_ACCOUNTANT, ROLES.SALES_MANAGER, ROLES.PURCHASING); }
 
 // Waybills
-export function canCrudWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.CEO); }
+export function canCrudWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
+export function canUpdateWaybillStatus(user) { return hasRole(user, ROLES.ADMIN, ROLES.PURCHASING); }
 export function canConfirmWaybill(user) { return hasRole(user, ROLES.ADMIN, ROLES.CEO); }
 
 // Warehouse Receipts

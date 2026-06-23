@@ -1,0 +1,129 @@
+# HƯỚNG DẪN DEPLOY procurement.sgiholding.com.vn
+
+## 📌 Yêu cầu
+- **Tuyệt đối không ảnh hưởng** đến web chính `sgiholding.com.vn`
+- Chạy hoàn toàn riêng biệt, có rollback nếu lỗi
+
+---
+
+## 🏗 Kiến trúc
+
+```
+Subdomain: procurement.sgiholding.com.vn
+                    │
+            Apache (VirtualHost mới)
+                    │
+        ┌───────────┴───────────┐
+        │    localhost:3000     │
+        │  (Docker Frontend)    │
+        │         │             │
+        │  localhost:8080       │
+        │  (Docker Backend)     │
+        │         │             │
+        │  localhost:3306       │
+        │  (Docker MySQL)       │
+        └───────────────────────┘
+```
+
+- **Docker** chạy 3 container RIÊNG BIỆT (không đụng đến MariaDB/web chính)
+- **Apache** chỉ thêm 1 VirtualHost MỚI (không sửa config web chính)
+- **Backup + Rollback** đầy đủ
+
+---
+
+## 🚀 DEPLOY (Tự động - 1 câu lệnh)
+
+### Bước 1: SSH vào VPS
+
+Mở Terminal/PowerShell, gõ:
+
+```bash
+ssh root@103.90.225.141
+```
+
+Mật khẩu: **YOnOT1YRqfEIp6ZUuU1T**
+
+### Bước 2: Chạy script deploy
+
+```bash
+cd /opt
+git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
+cd /opt/procurement
+bash deploy.sh
+```
+
+Script sẽ tự động:
+1. ✅ Backup Apache config vào `/root/apache-backup-*`
+2. ✅ Cài Docker (nếu chưa có)
+3. ✅ Clone code mới nhất
+4. ✅ Build & chạy 3 containers (MySQL + Backend + Frontend)
+5. ✅ Thêm VirtualHost cho subdomain
+6. ✅ Cấp SSL Let's Encrypt
+
+### Bước 3: Trỏ DNS
+
+Vào trang quản lý DNS, thêm bản ghi:
+
+| Loại | Tên | Giá trị | TTL |
+|------|-----|---------|-----|
+| A | `procurement` | **103.90.225.141** | 300 |
+
+Sau 5-10 phút, vào `https://procurement.sgiholding.com.vn`
+
+---
+
+## 🔄 ROLLBACK (Nếu lỗi)
+
+```bash
+cd /opt/procurement
+bash rollback.sh /root/apache-backup-20240101_120000
+```
+
+(Thay đường dẫn bằng thư mục backup thực tế - xem khi chạy deploy)
+
+Hoặc làm thủ công:
+```bash
+# Ngừng Docker
+docker compose down
+
+# Xóa VirtualHost
+a2dissite procurement.sgiholding.com.vn.conf
+rm /etc/apache2/sites-available/procurement.sgiholding.com.vn.conf
+systemctl reload apache2
+```
+
+---
+
+## 📋 CÁC LỆNH KIỂM TRA
+
+```bash
+# Docker
+docker compose ps                          # Trạng thái container
+docker compose logs -f backend            # Log backend
+docker compose logs -f frontend           # Log frontend
+docker compose restart                     # Khởi động lại
+
+# Apache
+curl -I http://localhost:3000             # Test frontend
+systemctl status apache2                  # Trạng thái Apache
+apache2ctl -S                             # Danh sách VirtualHost
+
+# Log subdomain
+tail -f /var/log/apache2/procurement-error.log
+tail -f /var/log/apache2/procurement-access.log
+```
+
+---
+
+## ☁️ PHƯƠNG ÁN THAY THẾ: Cloudflare Tunnel
+
+Nếu bạn KHÔNG muốn thêm VirtualHost vào Apache (cách ly 100%), dùng **Cloudflare Tunnel**:
+
+1. Đăng ký Cloudflare, thêm domain `sgiholding.com.vn` vào Cloudflare
+2. Trỏ NS về Cloudflare
+3. Cài cloudflared trên VPS (`apt install cloudflared`)
+4. Chạy: `cloudflared tunnel create procurement`
+5. Cấu hình tunnel trỏ đến `localhost:3000`
+6. DNS: `procurement.sgiholding.com.vn` → Cloudflare proxy
+
+**Ưu điểm:** Không cần mở port, không đụng Apache, SSL free, bảo vệ DDoS.

@@ -417,64 +417,68 @@ function WaybillNew() {
                 <div style={{ overflowX: 'auto' }}>
                   <table className="table" style={{ fontSize: 12, minWidth: 900 }}>
                     <thead>
-                      <tr>
-                        <th style={{ width: 28 }}>#</th>
-                        <th>PO</th>
-                        <th style={{ minWidth: 120 }}>Sản phẩm</th>
-                        <th>SL</th>
-                        <th style={{ width: 80 }}>Tỷ giá</th>
-                        <th style={{ width: 85 }}>Đơn giá VC</th>
-                        <th style={{ width: 90 }}>Tổng cước</th>
-                        <th style={{ width: 70 }}>KL/T.tích</th>
-                        <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
-                        <th style={{ width: 100 }}>Số kiện</th>
-                        <th style={{ width: 35 }}></th>
-                      </tr>
+<tr>
+                         <th style={{ textAlign: 'left', padding: '2px' }}>STT</th>
+                         <th style={{ textAlign: 'left', padding: '2px' }}>Sản phẩm</th>
+                         <th style={{ textAlign: 'left', padding: '2px' }}>Chi tiết</th>
+                         <th style={{ textAlign: 'center', padding: '2px', width: 30 }}>Số lượng</th>
+                         <th style={{ textAlign: 'right', padding: '2px' }}>Tổng cước</th>
+                         <th style={{ textAlign: 'center', padding: '2px' }}>Tỷ giá</th>
+                         <th style={{ textAlign: 'right', padding: '2px' }}>Đơn giá VC</th>
+                         <th style={{ textAlign: 'right', padding: '2px' }}>Thành tiền</th>
+                         <th style={{ textAlign: 'center', padding: '2px' }}>KL/T.tích</th>
+                         <th style={{ textAlign: 'right', padding: '2px' }}>Cước VC (VNĐ)</th>
+                         <th style={{ textAlign: 'right', padding: '2px' }}>Quy đổi VNĐ</th>
+                         <th style={{ width: 35 }}></th>
+                       </tr>
                     </thead>
-                    <tbody>
-                      {products.map((p, idx) => {
-                        const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                        const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 3520));
-                        return (
-                          <tr key={idx}>
-                            <td>{idx + 1}</td>
-                            <td style={{ fontSize: 11 }}>{p.poCode}</td>
-                            <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
-                            <td>{p.orderedQty}</td>
-                            <td>
-                              <input type="number" step="1" value={p.exchangeRate || ''}
-                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td>
-                              <input type="number" step="0.01" value={p.unitPriceVC || ''}
-                                onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td>
-                              <input type="number" step="0.01" value={(p.manualTotalCny !== undefined ? p.manualTotalCny : totalCny) || ''}
-                                onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td>
-                              <input type="number" step="0.01" value={p.volume || ''}
-                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
-                            <td>
-                              <input type="number" value={p.packageCount || ''}
-                                onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td>
-                              <button type="button" onClick={() => removeProduct(idx)}
-                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
+<tbody>
+                       {products.map((p, idx) => {
+                         const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+                         const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 3520));
+                         const manualTotalCny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : totalCny;
+                         return (
+                           <tr key={idx}>
+                             <td>{idx + 1}</td>
+                             <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
+                             <td style={{ fontSize: 10, color: '#64748b' }}>{p.spec || '-'}</td>
+                             <td>{p.orderedQty}</td>
+                             <td>
+                               <input type="number" step="0.01" value={manualTotalCny || ''}
+                                 onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
+                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                             </td>
+                             <td>
+                               <input type="number" step="1" value={p.exchangeRate || ''}
+                                 onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                             </td>
+                             <td>
+                               <input type="number" step="0.01" value={p.unitPriceVC || ''}
+                                 onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
+                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                             </td>
+                             <td style={{ fontWeight: 600, textAlign: 'right' }}>{manualTotalCny.toLocaleString('vi-VN')}</td>
+                             <td>
+                               <input type="number" step="0.01" value={p.volume || ''}
+                                 onChange={e => updateProductField(idx, 'volume', e.target.value)}
+                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                             </td>
+                             <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                             <td style={{ fontWeight: 600, textAlign: 'right' }}>{manualTotalCny.toLocaleString('vi-VN')} ₫</td>
+                             <td>
+                               <input type="number" value={p.packageCount || ''}
+                                 onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
+                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
+                             </td>
+                             <td>
+                               <button type="button" onClick={() => removeProduct(idx)}
+                                 style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                             </td>
+                           </tr>
+                         );
+                       })}
+                     </tbody>
                   </table>
                 </div>
                 {products.length > 0 && (

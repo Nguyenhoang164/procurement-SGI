@@ -27,7 +27,6 @@ import org.springframework.data.domain.Sort;
 @Service
 @Transactional
 public class PaymentRequestService {
-
     @Autowired
     private PaymentRequestRepository paymentRequestRepository;
 
