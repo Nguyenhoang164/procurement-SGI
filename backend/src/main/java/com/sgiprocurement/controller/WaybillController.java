@@ -44,13 +44,15 @@ public class WaybillController {
     }
 
 @PostMapping
-    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
+    // Allow ADMIN, CEO and PURCHASING to create waybills so procurement staff can set freightVnd when creating
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'PURCHASING')")
     public ResponseEntity<WaybillDTO> createWaybill(@Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(waybillService.createWaybill(dto));
     }
 
 @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
+    // Allow ADMIN, CEO and PURCHASING to update waybills so procurement staff can edit freightVnd
+    @PreAuthorize("hasAnyRole('ADMIN', 'CEO', 'PURCHASING')")
     public ResponseEntity<WaybillDTO> updateWaybill(@PathVariable Long id, @Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.ok(waybillService.updateWaybill(id, dto));
     }
