@@ -22,6 +22,8 @@ fi
 
 echo -e "${YELLOW}[2/3] Build & chạy containers...${NC}"
 cd /opt/procurement
+git fetch origin deploy 2>/dev/null
+git reset --hard origin/deploy 2>/dev/null
 docker system prune -f --volumes
 sleep 2
 docker compose down
