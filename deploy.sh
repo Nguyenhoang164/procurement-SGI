@@ -22,7 +22,8 @@ fi
 
 echo -e "${YELLOW}[2/3] Build & chạy containers...${NC}"
 cd /opt/procurement
-docker compose up -d --build
+docker compose down
+docker compose up -d --build --no-cache
 echo -e "${GREEN}  => Docker containers đã chạy${NC}"
 
 sleep 5
