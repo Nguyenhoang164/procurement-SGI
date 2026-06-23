@@ -125,8 +125,22 @@ function WaybillNew() {
         });
         if (data.products) {
           try {
-            const parsed = typeof data.products === 'string' ? JSON.parse(data.products) : data.products;
-            if (Array.isArray(parsed)) setProducts(parsed);
+            let parsed = typeof data.products === 'string' ? JSON.parse(data.products) : data.products;
+            if (Array.isArray(parsed)) {
+              const productsWithMissingShipping = parsed.filter(p => !p.shippingMethod && p.poId);
+              const poIds = [...new Set(productsWithMissingShipping.map(p => p.poId))];
+              if (poIds.length > 0) {
+                const poPromises = poIds.map(poId => purchaseOrderAPI.getById(poId).catch(() => null));
+                const poResults = await Promise.all(poPromises);
+                const poShippingMap = {};
+                poResults.filter(Boolean).forEach(po => { poShippingMap[po.id] = po.shippingMethod || ''; });
+                parsed = parsed.map(p => ({
+                  ...p,
+                  shippingMethod: p.shippingMethod || poShippingMap[p.poId] || ''
+                }));
+              }
+              setProducts(parsed);
+            }
           } catch {}
         }
       } catch (err) { toast.error(err.message); }
