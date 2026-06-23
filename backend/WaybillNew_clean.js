@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { waybillAPI, purchaseOrderAPI } from '../services/api';
@@ -54,8 +54,7 @@ function WaybillNew() {
   const computedFreightVnd = useMemo(() => {
     return products.reduce((sum, p) => {
       const rate = Number(p.exchangeRate || 3520);
-      const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-      return sum + Math.round(cny * rate);
+      return sum + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
     }, 0);
   }, [products]);
 
@@ -82,7 +81,6 @@ function WaybillNew() {
         packageCount: item.packageCount || String(item.orderedQty || ''),
         shippingMethod: item.shippingMethod || '',
         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
-        manualTotalCny: undefined,
       }));
       setProducts(mapped);
     }
@@ -128,7 +126,7 @@ function WaybillNew() {
     return (
       <div className="page-screen">
         <div className="page-content">
-          <div className="error-message">Bạn không có quyền tạo hoặc sửa vận đơn.</div>
+          <div className="error-message">Báº¡n khĂ´ng cĂ³ quyá»n táº¡o hoáº·c sá»­a váº­n Ä‘Æ¡n.</div>
         </div>
       </div>
     );
@@ -202,7 +200,6 @@ function WaybillNew() {
           unitPriceVC: '',
           packageCount: item.orderedQty,
           shippingMethod: item.shippingMethod || '',
-          manualTotalCny: undefined,
         });
       }
     });
@@ -234,7 +231,7 @@ function WaybillNew() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (products.length === 0) {
-      toast.error('Vui lòng chọn ít nhất một sản phẩm từ đơn hàng.');
+      toast.error('Vui lĂ²ng chá»n Ă­t nháº¥t má»™t sáº£n pháº©m tá»« Ä‘Æ¡n hĂ ng.');
       return;
     }
     setLoading(true);
@@ -251,7 +248,6 @@ function WaybillNew() {
       exchangeRate: p.exchangeRate,
       volume: p.volume || '',
       unitPriceVC: p.unitPriceVC || '',
-      manualTotalCny: p.manualTotalCny,
       packageCount: p.packageCount || '',
       shippingMethod: p.shippingMethod || '',
       purchaseOrderItemId: p.purchaseOrderItemId || null,
@@ -277,15 +273,15 @@ function WaybillNew() {
 
   const orderOptions = orders.map(order => ({
     value: String(order.id),
-    label: `${order.poCode || 'PO-' + order.id} · ${order.supplierName || order.posCode || 'N/A'}`
+    label: `${order.poCode || 'PO-' + order.id} Â· ${order.supplierName || order.posCode || 'N/A'}`
   }));
 
   return (
     <div className="page-screen">
       <div className="page-topbar">
         <div className="page-title-group">
-          <h1 className="page-title">{isEdit ? 'Cập nhật vận đơn' : 'Tạo vận đơn mới'}</h1>
-          <p className="page-subtitle">Waybill — chọn sản phẩm từ nhiều đơn hàng để gộp vào một vận đơn</p>
+          <h1 className="page-title">{isEdit ? 'Cáº­p nháº­t váº­n Ä‘Æ¡n' : 'Táº¡o váº­n Ä‘Æ¡n má»›i'}</h1>
+          <p className="page-subtitle">Waybill â€” chá»n sáº£n pháº©m tá»« nhiá»u Ä‘Æ¡n hĂ ng Ä‘á»ƒ gá»™p vĂ o má»™t váº­n Ä‘Æ¡n</p>
         </div>
       </div>
 
@@ -295,63 +291,63 @@ function WaybillNew() {
         <form className="app-form" onSubmit={handleSubmit} style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div className="form-row">
             <div className="form-group">
-              <label>Mã vận đơn <span className="required">*</span></label>
-              <input name="waybillCode" value={form.waybillCode} onChange={handleChange} placeholder="Nhập mã vận đơn..." required />
+              <label>MĂ£ váº­n Ä‘Æ¡n <span className="required">*</span></label>
+              <input name="waybillCode" value={form.waybillCode} onChange={handleChange} placeholder="Nháº­p mĂ£ váº­n Ä‘Æ¡n..." required />
             </div>
             <div className="form-group">
-              <label>Đơn vị vận chuyển <span className="required">*</span></label>
+              <label>ÄÆ¡n vá»‹ váº­n chuyá»ƒn <span className="required">*</span></label>
               <input name="carrier" value={form.carrier} onChange={handleChange} placeholder="VD: DHL, FedEx" required />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Trạng thái</label>
+              <label>Tráº¡ng thĂ¡i</label>
               <select name="status" value={form.status} onChange={handleChange}>
-                <option value="PENDING">Chờ vận chuyển</option>
-                <option value="IN_TRANSIT">Đang vận chuyển</option>
-                <option value="WAITING_DELIVERY">Chờ giao hàng</option>
-                <option value="DELIVERED">Đã giao</option>
-                <option value="CANCELLED">Đã hủy</option>
+                <option value="PENDING">Chá» váº­n chuyá»ƒn</option>
+                <option value="IN_TRANSIT">Äang váº­n chuyá»ƒn</option>
+                <option value="WAITING_DELIVERY">Chá» giao hĂ ng</option>
+                <option value="DELIVERED">ÄĂ£ giao</option>
+                <option value="CANCELLED">ÄĂ£ há»§y</option>
               </select>
             </div>
             <div className="form-group">
-              <label>Địa chỉ gửi</label>
+              <label>Äá»‹a chá»‰ gá»­i</label>
               <input name="origin" value={form.origin} onChange={handleChange} />
             </div>
             <div className="form-group">
-              <label>Địa chỉ nhận</label>
+              <label>Äá»‹a chá»‰ nháº­n</label>
               <input name="destination" value={form.destination} onChange={handleChange} />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label>Tổng số kiện <span className="required">*</span></label>
+              <label>Tá»•ng sá»‘ kiá»‡n <span className="required">*</span></label>
               <input type="number" value={computedExpectedQty || ''} readOnly
                 style={{ background: '#f1f5f9', cursor: 'not-allowed' }} required />
             </div>
             <div className="form-group">
-              <label>Tổng cước VC (VNĐ)</label>
+              <label>Tá»•ng cÆ°á»›c VC (VNÄ)</label>
               <input type="number" name="freightVnd" value={freightVndValue} onChange={handleChange}
-                min="0" step="1" placeholder="Nhập tổng cước vận chuyển" />
-              <small className="muted-copy">Gợi ý tự tính: {(computedFreightVnd || 0).toLocaleString('vi-VN')} VNĐ</small>
+                min="0" step="1" placeholder="Nháº­p tá»•ng cÆ°á»›c váº­n chuyá»ƒn" />
+              <small className="muted-copy">Gá»£i Ă½ tá»± tĂ­nh: {(computedFreightVnd || 0).toLocaleString('vi-VN')} VNÄ</small>
             </div>
             <div className="form-group">
-              <label>SL thực tế</label>
+              <label>SL thá»±c táº¿</label>
               <input type="number" name="actualQty" value={form.actualQty} onChange={handleChange} placeholder="0" />
             </div>
           </div>
 
           <fieldset style={{ marginTop: 20 }}>
-            <legend>Chọn đơn hàng (PO) và sản phẩm</legend>
+            <legend>Chá»n Ä‘Æ¡n hĂ ng (PO) vĂ  sáº£n pháº©m</legend>
 
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
               <select
                 style={{ flex: 1, padding: '10px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 14 }}
                 value="" onChange={e => addPO(e.target.value)}
               >
-                <option value="">-- Chọn đơn hàng --</option>
+                <option value="">-- Chá»n Ä‘Æ¡n hĂ ng --</option>
                 {orderOptions
                   .filter(opt => !selectedPOs.some(o => String(o.id) === opt.value))
                   .map(opt => (
@@ -371,9 +367,9 @@ function WaybillNew() {
                           else setSelectedItemIds(new Set(availableItems.map(i => i.id)));
                         }} /></th>
                       <th>PO</th>
-                      <th>Mã POS</th>
-                      <th>Sản phẩm</th>
-                      <th>Chi tiết</th>
+                      <th>MĂ£ POS</th>
+                      <th>Sáº£n pháº©m</th>
+                      <th>Chi tiáº¿t</th>
                       <th style={{ width: 50 }}>SL</th>
                       <th style={{ width: 50 }}></th>
                     </tr>
@@ -390,7 +386,7 @@ function WaybillNew() {
                         <td>
                           <button type="button" onClick={() => removePO(item.poId)}
                             style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16, padding: '2px 6px' }}
-                            title="Xóa PO này">✕</button>
+                            title="XĂ³a PO nĂ y">âœ•</button>
                         </td>
                       </tr>
                     ))}
@@ -401,16 +397,16 @@ function WaybillNew() {
 
             <button type="button" className="btn btn-primary" onClick={addSelectedItems}
               disabled={selectedItemIds.size === 0}>
-              ADD ({selectedItemIds.size}) sản phẩm vào vận đơn
+              ADD ({selectedItemIds.size}) sáº£n pháº©m vĂ o váº­n Ä‘Æ¡n
             </button>
           </fieldset>
 
           <fieldset style={{ marginTop: 12 }}>
-            <legend>Danh sách sản phẩm trong vận đơn ({products.length})</legend>
+            <legend>Danh sĂ¡ch sáº£n pháº©m trong váº­n Ä‘Æ¡n ({products.length})</legend>
 
             {products.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#94a3b8', padding: 20, fontSize: 13 }}>
-                Chưa có sản phẩm. Chọn đơn hàng và tích sản phẩm phía trên.
+                ChÆ°a cĂ³ sáº£n pháº©m. Chá»n Ä‘Æ¡n hĂ ng vĂ  tĂ­ch sáº£n pháº©m phĂ­a trĂªn.
               </div>
             ) : (
               <div className="table-wrapper">
@@ -420,14 +416,14 @@ function WaybillNew() {
                       <tr>
                         <th style={{ width: 28 }}>#</th>
                         <th>PO</th>
-                        <th style={{ minWidth: 120 }}>Sản phẩm</th>
+                        <th style={{ minWidth: 120 }}>Sáº£n pháº©m</th>
                         <th>SL</th>
-                        <th style={{ width: 80 }}>Tỷ giá</th>
-                        <th style={{ width: 85 }}>Đơn giá VC</th>
-                        <th style={{ width: 90 }}>Tổng cước</th>
-                        <th style={{ width: 70 }}>KL/T.tích</th>
-                        <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
-                        <th style={{ width: 100 }}>Số kiện</th>
+                        <th style={{ width: 70 }}>KL/T.tĂ­ch</th>
+                        <th style={{ width: 85 }}>ÄÆ¡n giĂ¡ VC</th>
+                        <th style={{ width: 80 }}>Tá»· giĂ¡</th>
+                        <th style={{ width: 90 }}>Tá»•ng cÆ°á»›c</th>
+                        <th style={{ width: 100 }}>CÆ°á»›c VC (VNÄ)</th>
+                        <th style={{ width: 100 }}>Sá»‘ kiá»‡n</th>
                         <th style={{ width: 35 }}></th>
                       </tr>
                     </thead>
@@ -442,8 +438,8 @@ function WaybillNew() {
                             <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
                             <td>{p.orderedQty}</td>
                             <td>
-                              <input type="number" step="1" value={p.exchangeRate || ''}
-                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+                              <input type="number" step="0.01" value={p.volume || ''}
+                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
                             <td>
@@ -452,16 +448,12 @@ function WaybillNew() {
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
                             <td>
-                              <input type="number" step="0.01" value={(p.manualTotalCny !== undefined ? p.manualTotalCny : totalCny) || ''}
-                                onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
+                              <input type="number" step="1" value={p.exchangeRate || ''}
+                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
-                            <td>
-                              <input type="number" step="0.01" value={p.volume || ''}
-                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
-                            <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
+                            <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} â‚«</td>
                             <td>
                               <input type="number" value={p.packageCount || ''}
                                 onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
@@ -469,7 +461,7 @@ function WaybillNew() {
                             </td>
                             <td>
                               <button type="button" onClick={() => removeProduct(idx)}
-                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>âœ•</button>
                             </td>
                           </tr>
                         );
@@ -481,21 +473,20 @@ function WaybillNew() {
                   <div style={{ marginTop: 8, fontSize: 13, textAlign: 'right', lineHeight: 1.8 }}>
                     {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
                       const items = products.filter(p => (p.currency || 'CNY') === currency);
-                      const totalForeign = items.reduce((s, p) => s + (p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0))), 0);
+                      const totalForeign = items.reduce((s, p) => s + (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0), 0);
                       const rate = items[0]?.exchangeRate || '3520';
                       const totalVnd = Math.round(totalForeign * Number(rate));
                       return (
                         <div key={currency}>
-                          Tổng cước ({currency}): <strong>{totalForeign.toLocaleString('vi-VN')} {currency}</strong>
-                          {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                          Tá»•ng cÆ°á»›c ({currency}): <strong>{totalForeign.toLocaleString('vi-VN')} {currency}</strong>
+                          {' Ă— '} {Number(rate).toLocaleString()} (tá»· giĂ¡) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
                         </div>
                       );
                     })}
                     <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
-                      Tổng cước VC: {products.reduce((s, p) => {
+                      Tá»•ng cÆ°á»›c VC: {products.reduce((s, p) => {
                         const rate = Number(p.exchangeRate || 3520);
-                        const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-                        return s + Math.round(cny * rate);
+                        return s + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
                       }, 0).toLocaleString('vi-VN')} VND
                     </div>
                   </div>
@@ -505,14 +496,14 @@ function WaybillNew() {
           </fieldset>
 
           <div className="form-group" style={{ marginTop: 12 }}>
-            <label>Ghi chú</label>
+            <label>Ghi chĂº</label>
             <textarea name="note" rows={3} value={form.note} onChange={handleChange} />
           </div>
 
           <div className="form-actions" style={{ marginTop: 20 }}>
-            <button type="button" className="btn btn-secondary" onClick={() => navigate('/waybills')}>Hủy</button>
+            <button type="button" className="btn btn-secondary" onClick={() => navigate('/waybills')}>Há»§y</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Đang lưu...' : isEdit ? 'Cập nhật' : 'Tạo vận đơn'}
+              {loading ? 'Äang lÆ°u...' : isEdit ? 'Cáº­p nháº­t' : 'Táº¡o váº­n Ä‘Æ¡n'}
             </button>
           </div>
         </form>

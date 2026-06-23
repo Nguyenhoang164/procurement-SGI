@@ -139,6 +139,7 @@ function PaymentRequestNew() {
                     currency: item.currency,
                     totalAmountForeign: item.totalAmountForeign,
                     totalAmountVnd: item.totalAmountVnd,
+                    manualTotal: undefined,
                     spec: item.spec,
                   });
                 });
@@ -177,6 +178,13 @@ function PaymentRequestNew() {
     if (selectedOrders.length === 0) return 0;
     if (isEdit && formData.amountVnd) return Number(formData.amountVnd);
     return selectedOrders.reduce((sum, order) => {
+      if (order.items) {
+        const orderTotal = order.items.reduce((s, item) => {
+          const itemTotal = item.manualTotal !== undefined ? Number(item.manualTotal || 0) : (Number(item.unitPrice || 0) * Number(item.orderedQty || 0));
+          return s + itemTotal;
+        }, 0);
+        return sum + orderTotal;
+      }
       return sum + suggestAmountForType(formData.type, order);
     }, 0);
   }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight]);
@@ -1077,7 +1085,15 @@ function PaymentRequestNew() {
                         <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
                         <td style={{ textAlign: 'center', padding: '2px' }}>{item.packageCount || item.orderedQty || '-'}</td>
                         <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.unitPrice || 0).toLocaleString('vi-VN')}</td>
-                        <td style={{ textAlign: 'right', padding: '2px' }}>{sub.toLocaleString('vi-VN')}</td>
+                        <td style={{ textAlign: 'right', padding: '2px' }}>
+                          <input type="number" step="0.01" value={item.manualTotal !== undefined ? item.manualTotal : sub || ''}
+                            onChange={e => {
+                              const newItems = [...shipmentItems];
+                              newItems[idx] = { ...newItems[idx], manualTotal: e.target.value };
+                              setShipmentItems(newItems);
+                            }}
+                            style={{ width: '100%', padding: '2px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+                        </td>
                         <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{vnd.toLocaleString('vi-VN')} ₫</td>
                       </tr>
                     );

@@ -54,8 +54,7 @@ function WaybillNew() {
   const computedFreightVnd = useMemo(() => {
     return products.reduce((sum, p) => {
       const rate = Number(p.exchangeRate || 3520);
-      const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-      return sum + Math.round(cny * rate);
+      return sum + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
     }, 0);
   }, [products]);
 
@@ -82,7 +81,6 @@ function WaybillNew() {
         packageCount: item.packageCount || String(item.orderedQty || ''),
         shippingMethod: item.shippingMethod || '',
         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
-        manualTotalCny: undefined,
       }));
       setProducts(mapped);
     }
@@ -202,7 +200,6 @@ function WaybillNew() {
           unitPriceVC: '',
           packageCount: item.orderedQty,
           shippingMethod: item.shippingMethod || '',
-          manualTotalCny: undefined,
         });
       }
     });
@@ -251,7 +248,6 @@ function WaybillNew() {
       exchangeRate: p.exchangeRate,
       volume: p.volume || '',
       unitPriceVC: p.unitPriceVC || '',
-      manualTotalCny: p.manualTotalCny,
       packageCount: p.packageCount || '',
       shippingMethod: p.shippingMethod || '',
       purchaseOrderItemId: p.purchaseOrderItemId || null,
@@ -422,10 +418,10 @@ function WaybillNew() {
                         <th>PO</th>
                         <th style={{ minWidth: 120 }}>Sản phẩm</th>
                         <th>SL</th>
-                        <th style={{ width: 80 }}>Tỷ giá</th>
-                        <th style={{ width: 85 }}>Đơn giá VC</th>
-                        <th style={{ width: 90 }}>Tổng cước</th>
                         <th style={{ width: 70 }}>KL/T.tích</th>
+                        <th style={{ width: 85 }}>Đơn giá VC</th>
+                        <th style={{ width: 80 }}>Tỷ giá</th>
+                        <th style={{ width: 90 }}>Tổng cước</th>
                         <th style={{ width: 100 }}>Cước VC (VNĐ)</th>
                         <th style={{ width: 100 }}>Số kiện</th>
                         <th style={{ width: 35 }}></th>
@@ -442,8 +438,8 @@ function WaybillNew() {
                             <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
                             <td>{p.orderedQty}</td>
                             <td>
-                              <input type="number" step="1" value={p.exchangeRate || ''}
-                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+                              <input type="number" step="0.01" value={p.volume || ''}
+                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
                             <td>
@@ -452,15 +448,11 @@ function WaybillNew() {
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
                             <td>
-                              <input type="number" step="0.01" value={(p.manualTotalCny !== undefined ? p.manualTotalCny : totalCny) || ''}
-                                onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
+                              <input type="number" step="1" value={p.exchangeRate || ''}
+                                onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                             </td>
-                            <td>
-                              <input type="number" step="0.01" value={p.volume || ''}
-                                onChange={e => updateProductField(idx, 'volume', e.target.value)}
-                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                            </td>
+                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
                             <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
                             <td>
                               <input type="number" value={p.packageCount || ''}
@@ -481,7 +473,7 @@ function WaybillNew() {
                   <div style={{ marginTop: 8, fontSize: 13, textAlign: 'right', lineHeight: 1.8 }}>
                     {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
                       const items = products.filter(p => (p.currency || 'CNY') === currency);
-                      const totalForeign = items.reduce((s, p) => s + (p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0))), 0);
+                      const totalForeign = items.reduce((s, p) => s + (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0), 0);
                       const rate = items[0]?.exchangeRate || '3520';
                       const totalVnd = Math.round(totalForeign * Number(rate));
                       return (
@@ -494,8 +486,7 @@ function WaybillNew() {
                     <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
                       Tổng cước VC: {products.reduce((s, p) => {
                         const rate = Number(p.exchangeRate || 3520);
-                        const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-                        return s + Math.round(cny * rate);
+                        return s + Math.round((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * rate);
                       }, 0).toLocaleString('vi-VN')} VND
                     </div>
                   </div>
