@@ -3,7 +3,17 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { waybillAPI, purchaseOrderAPI } from '../services/api';
 import { useToast } from '../components/Toast';
-import { canCrudWaybill, getUser } from '../utils/permissions';
+import { canCrudWaybill, canUpdateWaybillStatus, getUser } from '../utils/permissions';
+
+const STATUS_OPTIONS = [
+  { value: 'PENDING', label: 'Chờ vận chuyển' },
+  { value: 'IN_TRANSIT', label: 'Đang vận chuyển' },
+  { value: 'WAITING_DELIVERY', label: 'Chờ giao hàng' },
+  { value: 'DELIVERED', label: 'Đã giao' },
+  { value: 'CANCELLED', label: 'Đã hủy' },
+];
+
+const STATUS_MAP = Object.fromEntries(STATUS_OPTIONS.map(s => [s.value, s.label]));
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -30,6 +40,7 @@ function WaybillNew() {
   const toast = useToast();
   const userData = getUser();
   const canCrud = canCrudWaybill(userData);
+  const canUpdateStatus = canUpdateWaybillStatus(userData);
 
   const [orders, setOrders] = useState([]);
   const [selectedPOs, setSelectedPOs] = useState([]);
@@ -307,13 +318,19 @@ function WaybillNew() {
           <div className="form-row">
             <div className="form-group">
               <label>Trạng thái</label>
-              <select name="status" value={form.status} onChange={handleChange}>
-                <option value="PENDING">Chờ vận chuyển</option>
-                <option value="IN_TRANSIT">Đang vận chuyển</option>
-                <option value="WAITING_DELIVERY">Chờ giao hàng</option>
-                <option value="DELIVERED">Đã giao</option>
-                <option value="CANCELLED">Đã hủy</option>
-              </select>
+              {canUpdateStatus ? (
+                <select name="status" value={form.status} onChange={handleChange}>
+                  <option value="PENDING">Chờ vận chuyển</option>
+                  <option value="IN_TRANSIT">Đang vận chuyển</option>
+                  <option value="WAITING_DELIVERY">Chờ giao hàng</option>
+                  <option value="DELIVERED">Đã giao</option>
+                  <option value="CANCELLED">Đã hủy</option>
+                </select>
+              ) : (
+                <div className={`badge badge-${(form.status || '').toLowerCase()}`}>
+                  {STATUS_MAP[form.status] || form.status || '-'}
+                </div>
+              )}
             </div>
             <div className="form-group">
               <label>Địa chỉ gửi</label>
