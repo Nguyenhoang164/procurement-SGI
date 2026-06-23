@@ -175,7 +175,7 @@ function WaybillDetail() {
                     <tbody>
                       {items.flatMap((p, idx) => {
                         const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                        const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 3520));
+                        const totalVnd = Math.round(Number(totalCny) * Number(p.exchangeRate || 3520));
                         const rows = [];
                         rows.push(
                           <tr key={idx}>
@@ -194,7 +194,7 @@ function WaybillDetail() {
                             <td>{Number(p.unitPriceVC || 0).toLocaleString('vi-VN')}</td>
                             <td style={{ fontSize: 11 }}>1 {p.currency || 'CNY'} = {Number(p.exchangeRate || 3520).toLocaleString()} VND</td>
                             <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString('vi-VN')} {p.currency || 'CNY'}</td>
-                            <td style={{ fontWeight: 600 }} className="money">{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                            <td style={{ fontWeight: 600 }} className="money">{Number(totalVnd).toLocaleString('vi-VN')} ₫</td>
                             <td>{p.packageCount || p.orderedQty || '-'}</td>
                             <td>{p.shippingMethod || poShippingMap[p.poId] || '-'}</td>
                           </tr>
