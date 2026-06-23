@@ -56,7 +56,12 @@ function PurchaseOrderList() {
             orderedQty: String(item.orderedQty || ''),
             unitPrice: String(item.unitPrice || ''),
             currency: item.currency || 'CNY',
-            exchangeRate: String(item.exchangeRate || '3520')
+            exchangeRate: String(item.exchangeRate || '3520'),
+            volume: item.volume || '',
+            unitPriceVC: item.unitPriceVC || '',
+            packageCount: item.packageCount || String(item.orderedQty || ''),
+            shippingMethod: item.shippingMethod || '',
+            purchaseOrderItemId: item.id || null
           });
         }
       });
