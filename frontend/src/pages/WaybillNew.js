@@ -31,16 +31,6 @@ function WaybillNew() {
   const userData = getUser();
   const canCrud = canCrudWaybill(userData);
 
-  if (!canCrud) {
-    return (
-      <div className="page-screen">
-        <div className="page-content">
-          <div className="error-message">Bạn không có quyền tạo hoặc sửa vận đơn.</div>
-        </div>
-      </div>
-    );
-  }
-
   const [orders, setOrders] = useState([]);
   const [selectedPOs, setSelectedPOs] = useState([]);
   const [availableItems, setAvailableItems] = useState([]);
@@ -131,6 +121,16 @@ function WaybillNew() {
     };
     load();
   }, [id]);
+
+  if (!canCrud) {
+    return (
+      <div className="page-screen">
+        <div className="page-content">
+          <div className="error-message">Bạn không có quyền tạo hoặc sửa vận đơn.</div>
+        </div>
+      </div>
+    );
+  }
 
   const addPO = (poId) => {
     if (!poId) return;
