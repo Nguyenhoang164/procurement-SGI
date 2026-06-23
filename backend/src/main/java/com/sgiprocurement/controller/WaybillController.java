@@ -43,33 +43,33 @@ public class WaybillController {
         return ResponseEntity.ok(waybillService.getWaybillById(id));
     }
 
-    @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE', 'PURCHASING')")
+@PostMapping
+    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
     public ResponseEntity<WaybillDTO> createWaybill(@Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(waybillService.createWaybill(dto));
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE', 'PURCHASING')")
+@PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
     public ResponseEntity<WaybillDTO> updateWaybill(@PathVariable Long id, @Valid @RequestBody WaybillDTO dto) {
         return ResponseEntity.ok(waybillService.updateWaybill(id, dto));
     }
 
-    @PutMapping("/{id}/confirm")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE')")
+@PutMapping("/{id}/confirm")
+    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
     public ResponseEntity<WaybillDTO> confirmDelivery(@PathVariable Long id) {
         return ResponseEntity.ok(waybillService.confirmDelivery(id));
     }
 
-    @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'WAREHOUSE', 'PURCHASING')")
+@PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
     public ResponseEntity<WaybillDTO> updateWaybillStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String newStatus = body.get("status");
         return ResponseEntity.ok(waybillService.updateWaybillStatus(id, newStatus));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+@DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole(\'ADMIN\', \'CEO\')")
     public ResponseEntity<Void> deleteWaybill(@PathVariable Long id) {
         waybillService.deleteWaybill(id);
         return ResponseEntity.noContent().build();

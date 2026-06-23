@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Form.css';
 import { waybillAPI, purchaseOrderAPI } from '../services/api';
 import { useToast } from '../components/Toast';
+import { canCrudWaybill, getUser } from '../utils/permissions';
 
 const parseVariants = (spec) => {
   if (!spec) return [{ name: '', qty: '' }];
@@ -27,6 +28,18 @@ function WaybillNew() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const toast = useToast();
+  const userData = getUser();
+  const canCrud = canCrudWaybill(userData);
+
+  if (!canCrud) {
+    return (
+      <div className="page-screen">
+        <div className="page-content">
+          <div className="error-message">Bạn không có quyền tạo hoặc sửa vận đơn.</div>
+        </div>
+      </div>
+    );
+  }
 
   const [orders, setOrders] = useState([]);
   const [selectedPOs, setSelectedPOs] = useState([]);
