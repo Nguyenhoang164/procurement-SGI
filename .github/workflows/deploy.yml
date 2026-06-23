@@ -1,0 +1,58 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - deploy
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        env:
+          VPS_IP: ${{ secrets.VPS_IP }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $VPS_IP >> ~/.ssh/known_hosts 2>/dev/null || true
+          
+          # Create deploy script
+          cat > /tmp/deploy.sh <<'DEPLOY'
+          #!/bin/bash
+          set -e
+          
+          cd /opt
+          if [ ! -d "procurement" ]; then
+              git clone -b deploy https://github.com/Nguyenhoang164/procurement-SGI.git procurement
+          fi
+          
+          cd /opt/procurement
+          git config --global user.email "deploy@procurement.local" 2>/dev/null || true
+          git config --global user.name "Deploy Bot" 2>/dev/null || true
+          git reset --hard HEAD
+          git clean -fd
+          git pull origin deploy -X theirs
+          
+          bash backend/deploy_safe.sh
+          DEPLOY
+          
+          chmod +x /tmp/deploy.sh
+          
+          # Send script via SSH and execute
+          cat /tmp/deploy.sh | sshpass -p "$VPS_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $VPS_USER@$VPS_IP /bin/bash
+
+      - name: Deployment Success
+        if: success()
+        run: echo "✅ Deployment completed successfully"
+
+      - name: Deployment Failed
+        if: failure()
+        run: echo "❌ Deployment failed"
+
