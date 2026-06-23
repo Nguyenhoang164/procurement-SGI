@@ -91,7 +91,7 @@ function WaybillNew() {
         volume: item.volume || '',
         unitPriceVC: item.unitPriceVC || '',
         packageCount: item.packageCount || String(item.orderedQty || ''),
-        shippingMethod: item.shippingMethod || 'AIR PHI',
+        shippingMethod: item.shippingMethod || '',
         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
         manualTotalCny: undefined,
       }));
@@ -164,7 +164,7 @@ function WaybillNew() {
         unitPrice: String(item.unitPrice || ''),
         currency: item.currency || 'CNY',
         exchangeRate: String(item.exchangeRate || '3520'),
-        shippingMethod: item.shippingMethod || 'AIR PHI',
+        shippingMethod: item.shippingMethod || '',
         totalAmountForeign: item.totalAmountForeign || (Number(item.unitPrice || 0) * Number(item.orderedQty || 0)),
         totalAmountVnd: item.totalAmountVnd || 0,
       }));
@@ -212,7 +212,7 @@ function WaybillNew() {
           volume: '',
           unitPriceVC: '',
           packageCount: item.orderedQty,
-          shippingMethod: item.shippingMethod || 'AIR PHI',
+          shippingMethod: item.shippingMethod || '',
           manualTotalCny: undefined,
         });
       }
@@ -484,7 +484,7 @@ function WaybillNew() {
                                  onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
                                  style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
                              </td>
-                             <td>{p.shippingMethod || 'AIR PHI'}</td>
+                             <td>{p.shippingMethod || ''}</td>
                              <td>
                                <button type="button" onClick={() => removeProduct(idx)}
                                  style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
