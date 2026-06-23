@@ -105,5 +105,15 @@
 
 ---
 
-*Cập nhật lần cuối: 14/06/2026*
-*Tổng số commit: 30+ | Controllers: 15 | Services: 17 | Entities: 22 | Migrations: 44*
+*Cập nhật lần cuối: 23/06/2026*
+*Tổng số commit: 32+ | Controllers: 15 | Services: 17 | Entities: 22 | Migrations: 44*
+
+## 🔄 Cập nhật mới nhất (23/06/2026)
+
+### Phân quyền
+- ✅ Sửa quyền update trạng thái vận đơn: chỉ ADMIN và PURCHASING có quyền sửa (PATCH /v1/waybills/{id}/status)
+
+### UI/UX Cải tiến
+- ✅ **WaybillNew:** Cột "Tổng cước" có thể sửa tay, đổi vị trí cột Tỷ giá/Đơn giá VC/Tổng cước lên trước KL/T.tích
+- ✅ **PaymentRequestNew:** Cột "Thành tiền" có thể sửa tay
+- ✅ Tính toán tự động dùng giá trị manual nếu có, ngược lại dùng công thức
