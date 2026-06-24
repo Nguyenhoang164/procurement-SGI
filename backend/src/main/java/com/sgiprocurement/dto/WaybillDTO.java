@@ -28,5 +28,6 @@ public class WaybillDTO {
     private List<Long> paymentRequestIds;
     private String purchaseOrderIds;
     private Long freightVnd;
+    public String getFreightVndFormatted() { return freightVnd != null ? String.format("%,d", freightVnd).replace(",", ".") : ""; }
 
 }
