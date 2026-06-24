@@ -884,7 +884,6 @@ public class PurchaseOrderService {
             java.math.BigDecimal rate = item.getExchangeRate() != null ? item.getExchangeRate() : java.math.BigDecimal.ONE;
             item.setTotalAmountVnd(amountForeign.multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
         }
-        }
     }
 
     private void fetchExchangeRate(PurchaseOrder po) {
