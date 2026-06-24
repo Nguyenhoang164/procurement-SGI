@@ -882,10 +882,8 @@ public class PurchaseOrderService {
                 item.setTotalAmountForeign(amountForeign);
             }
             java.math.BigDecimal rate = item.getExchangeRate() != null ? item.getExchangeRate() : java.math.BigDecimal.ONE;
-            // Always recalculate VND amount based on foreign amount and exchange rate
-item.setTotalAmountVnd(amountForeign.multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
-                item.setTotalAmountVnd(amountForeign.multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
-            }
+            item.setTotalAmountVnd(amountForeign.multiply(rate).setScale(0, java.math.RoundingMode.HALF_UP));
+        }
         }
     }
 
