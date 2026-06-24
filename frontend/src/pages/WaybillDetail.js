@@ -175,7 +175,8 @@ function WaybillDetail() {
                     <tbody>
                       {items.flatMap((p, idx) => {
                         const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                        const totalVnd = Math.round(Number(totalCny) * Number(p.exchangeRate || 3520));
+                        const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
+                        const totalVnd = Math.round(Number(manualTotalCny) * Number(p.exchangeRate || 3520));
                         const rows = [];
                         rows.push(
                           <tr key={idx}>

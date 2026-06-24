@@ -30,6 +30,11 @@ const calcTotalQty = (variants) => {
   return variants.reduce((sum, v) => sum + (Number(v.qty) || 0), 0);
 };
 
+const formatRoundedThousands = (value) => {
+  if (value === null || value === undefined || isNaN(value)) return 0;
+  return Math.round(value / 1000) * 1000;
+};
+
 function WaybillNew() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -63,11 +68,11 @@ function WaybillNew() {
   }, [products]);
 
   const computedFreightVnd = useMemo(() => {
-    return products.reduce((sum, p) => {
+    return formatRoundedThousands(products.reduce((sum, p) => {
       const rate = Number(p.exchangeRate || 3520);
       const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-      return sum + Math.round(cny * rate);
-    }, 0);
+      return sum + (cny * rate);
+    }, 0));
   }, [products]);
 
   const updateProductField = (idx, field, value) => {
@@ -459,12 +464,12 @@ function WaybillNew() {
                        </tr>
                     </thead>
 <tbody>
-                       {products.map((p, idx) => {
-                         const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                         const totalVnd = Math.round(totalCny * (Number(p.exchangeRate) || 3520));
-                         const manualTotalCny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : totalCny;
-                         return (
-                           <tr key={idx}>
+{products.map((p, idx) => {
+                          const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+                          const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
+                          const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
+                          return (
+                            <tr key={idx}>
                              <td>{idx + 1}</td>
                              <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
                              <td>{p.orderedQty}</td>
@@ -477,7 +482,7 @@ function WaybillNew() {
 <span style={{ width: '100%', display: 'block', padding: '3px 4px', fontSize: 12, textAlign: 'right' }}>{p.unitPriceVC || ''}</span>
                              </td>
                              <td>
-                               <input type="number" step="0.01" value={manualTotalCny || ''}
+                               <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
                                  onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
                                  style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                              </td>
