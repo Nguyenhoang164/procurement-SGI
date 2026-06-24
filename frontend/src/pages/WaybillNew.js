@@ -491,7 +491,7 @@ function WaybillNew() {
                                  onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
                                  style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                              </td>
-                             <td style={{ fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                             <td style={{ fontWeight: 600, textAlign: 'right' }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
                              <td>
                                <input type="number" value={p.packageCount || ''}
                                  onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
