@@ -27,7 +27,7 @@ git reset --hard origin/deploy 2>/dev/null
 docker system prune -f --volumes
 sleep 2
 docker compose down
-docker compose up -d --build --no-cache
+docker compose build --no-cache && docker compose up -d
 echo -e "${GREEN}  => Docker containers đã chạy${NC}"
 
 sleep 5

@@ -361,9 +361,7 @@ function WaybillNew() {
             </div>
             <div className="form-group">
               <label>Tổng cước VC (VNĐ)</label>
-              <input type="number" name="freightVnd" value={freightVndValue} readOnly
-                min="0" step="1" placeholder="Nhập tổng cước vận chuyển"
-                style={{ background: '#f8fafc', cursor: 'not-allowed', textAlign: 'right' }} />
+<span style={{ display: 'block', padding: '3px 4px', background: '#f8fafc', textAlign: 'right' }}>{(freightVndValue || 0).toLocaleString('vi-VN')} VND</span>
               <small className="muted-copy">Gợi ý tự tính: {(computedFreightVnd || 0).toLocaleString('vi-VN')} VNĐ</small>
             </div>
             <div className="form-group">
@@ -476,9 +474,7 @@ function WaybillNew() {
                                  style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                              </td>
                              <td>
-                               <input type="number" step="0.01" value={p.unitPriceVC || ''}
-                                 onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
-                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+<span style={{ width: '100%', display: 'block', padding: '3px 4px', fontSize: 12, textAlign: 'right' }}>{p.unitPriceVC || ''}</span>
                              </td>
                              <td>
                                <input type="number" step="0.01" value={manualTotalCny || ''}
