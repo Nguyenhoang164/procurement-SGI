@@ -63,22 +63,27 @@ const [form, setForm] = useState({
      freightVnd: ''
    });
 
-   // Keep form freightVnd in sync with computed value
-   useEffect(() => {
-     setForm(prev => ({ ...prev, freightVnd: computedFreightVnd || '' }));
-   }, [computedFreightVnd]);
+// Keep form freightVnd in sync with computed value
+    useEffect(() => {
+      const newFreightVnd = computedFreightVnd !== undefined && !Number.isNaN(computedFreightVnd) && computedFreightVnd > 0
+        ? computedFreightVnd
+        : form.freightVnd;
+      if (newFreightVnd !== form.freightVnd) {
+        setForm(prev => ({ ...prev, freightVnd: newFreightVnd }));
+      }
+    }, [computedFreightVnd, form.freightVnd]);
 
   const computedExpectedQty = useMemo(() => {
     return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
   }, [products]);
 
-  const computedFreightVnd = useMemo(() => {
-    return formatRoundedThousands(products.reduce((sum, p) => {
-      const rate = Number(p.exchangeRate || 3520);
-      const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-      return sum + (cny * rate);
-    }, 0));
-  }, [products]);
+const computedFreightVnd = useMemo(() => {
+     return products.reduce((sum, p) => {
+       const rate = Number(p.exchangeRate || 3520);
+       const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
+       return sum + (cny * rate);
+     }, 0);
+   }, [products]);
 
   const updateProductField = (idx, field, value) => {
     setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
@@ -251,15 +256,70 @@ const [form, setForm] = useState({
     setProducts(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const handleVolumeChange = (idx, newVal) => {
+  const calculateProductFreight = (p) => {
+     const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+     const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
+     const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
+     return { totalCny, manualTotalCny, totalVnd };
+   };
+
+const handleVolumeChange = (idx, newVal) => {
     const num = Number(newVal);
     if (isNaN(num)) return;
-    // Updated the products array immutably with the new volume value
-    setProducts(prev =>
-      prev.map((p, i) =>
-        i === idx ? { ...p, volume: newVal } : p
-      )
-    );
+
+    setProducts(prev => {
+      const updatedProducts = prev.map((p, i) => {
+        if (i === idx) {
+          const updatedP = { ...p, volume: newVal };
+          const { totalVnd } = calculateProductFreight(updatedP);
+          return { ...updatedP, totalVnd };
+        }
+        return p;
+      });
+      return updatedProducts;
+    });
+  };
+
+  const handleUnitPriceVCChange = (idx, newVal) => {
+    setProducts(prev => {
+      const updatedProducts = prev.map((p, i) => {
+        if (i === idx) {
+          const updatedP = { ...p, unitPriceVC: newVal };
+          const { totalVnd } = calculateProductFreight(updatedP);
+          return { ...updatedP, totalVnd };
+        }
+        return p;
+      });
+      return updatedProducts;
+    });
+  };
+
+  const handleManualTotalCnyChange = (idx, newVal) => {
+    setProducts(prev => {
+      const updatedProducts = prev.map((p, i) => {
+        if (i === idx) {
+          const updatedP = { ...p, manualTotalCny: newVal };
+          const { totalVnd } = calculateProductFreight(updatedP);
+          return { ...updatedP, totalVnd };
+        }
+        return p;
+      });
+      return updatedProducts;
+    });
+  };
+
+  const handleExchangeRateChange = (idx, newVal) => {
+    setProducts(prev => {
+      const updatedProducts = prev.map((p, i) => {
+        if (i === idx) {
+          const updatedP = { ...p, exchangeRate: newVal };
+          const { totalVnd } = calculateProductFreight(updatedP);
+          return { ...updatedP, totalVnd };
+        }
+        return p;
+      });
+      return updatedProducts;
+    });
   };
 
   const handleChange = (e) => {
@@ -529,17 +589,17 @@ const [form, setForm] = useState({
      </td>
 <td>
                               <input type="number" step="0.01" value={p.unitPriceVC || ''}
-                                onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
+                                onChange={e => handleUnitPriceVCChange(idx, e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                               </td>
      <td>
        <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
-         onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
+         onChange={e => handleManualTotalCnyChange(idx, e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
      </td>
      <td>
        <input type="number" step="1" value={p.exchangeRate || ''}
-         onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+         onChange={e => handleExchangeRateChange(idx, e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
      </td>
      <td style={{ fontWeight: 600, textAlign: 'right' }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
