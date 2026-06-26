@@ -128,10 +128,10 @@ public class WaybillService {
                 for (Map<String, Object> item : productList) {
                     BigDecimal measurement = BigDecimal.ZERO;
                     BigDecimal unitPriceVC = BigDecimal.ZERO;
-                    
+
                     String weightVolume = (String) item.get("weightVolume");
                     String volume = (String) item.get("volume");
-                    
+
                     if (volume != null && !volume.isBlank()) {
                         measurement = extractFirstNumber(volume);
                     } else if (weightVolume != null && !weightVolume.isBlank()) {
@@ -139,15 +139,15 @@ public class WaybillService {
                     } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
                         measurement = extractFirstNumber(packageMeasurement);
                     }
-                    
+
                     String unitPriceVCStr = (String) item.get("unitPriceVC");
                     if (unitPriceVCStr != null && !unitPriceVCStr.isBlank()) {
                         unitPriceVC = new BigDecimal(unitPriceVCStr);
                     } else {
                         unitPriceVC = poIntlShippingUnitPrice;
                     }
-                    
-                    if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
+
+                    if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 &&
                         unitPriceVC.compareTo(BigDecimal.ZERO) > 0) {
                         BigDecimal productFreight = unitPriceVC.multiply(measurement);
                         item.put("freightVnd", productFreight.longValue());
@@ -159,6 +159,7 @@ public class WaybillService {
                 productsJson = objectMapper.writeValueAsString(productList);
                 waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
                 waybill.setProducts(productsJson);
+                System.out.println("[WaybillService] createWaybill - shippingMethod in products: " + dto.getShippingMethod());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -381,6 +382,7 @@ String poIds = null;
                     } else if (waybill.getCarrier() != null && !waybill.getCarrier().isBlank()) {
                         shippingMethod = waybill.getCarrier();
                     }
+                    System.out.println("[WaybillService] convertToDTO - shippingMethod from products/carrier: " + shippingMethod);
 
                 BigDecimal totalFreight = BigDecimal.ZERO;
                 for (Map<String, Object> p : productList) {
