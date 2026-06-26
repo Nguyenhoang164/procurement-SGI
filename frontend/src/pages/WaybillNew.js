@@ -633,11 +633,11 @@ const handleVolumeChange = (idx, newVal) => {
                                 onChange={e => handleUnitPriceVCChange(idx, e.target.value)}
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                               </td>
-     <td>
-       <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
-         onChange={e => handleManualTotalCnyChange(idx, e.target.value)}
-         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-     </td>
+<td>
+        <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (values.totalCny || '')}
+          onChange={e => handleManualTotalCnyChange(idx, e.target.value)}
+          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+      </td>
      <td>
        <input type="number" step="1" value={p.exchangeRate || ''}
          onChange={e => handleExchangeRateChange(idx, e.target.value)}
