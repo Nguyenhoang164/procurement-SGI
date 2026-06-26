@@ -33,8 +33,3 @@ public class WaybillDTO {
         return freightVnd != null ? String.format("%,d", freightVnd).replace(",", ".") : "";
     }
 }
-    public String getInternationalShippingUnitPriceVndFormatted() {
-        return internationalShippingUnitPriceVnd != null ? String.format("%,d", internationalShippingUnitPriceVnd).replace(",", ".") : "";
-    }
-
-}
