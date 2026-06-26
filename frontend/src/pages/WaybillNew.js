@@ -465,47 +465,48 @@ function WaybillNew() {
                     </thead>
 <tbody>
 {products.map((p, idx) => {
-                          const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-                          const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
-                          const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
-                          return (
-                            <tr key={idx}>
-                             <td>{idx + 1}</td>
-                             <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
-                             <td>{p.orderedQty}</td>
-                             <td>
-                               <input type="number" step="0.01" value={p.volume || ''}
-                                 onChange={e => updateProductField(idx, 'volume', e.target.value)}
-                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-                             </td>
-                             <td>
+  const productKey = p._itemId || p.id || `product-${idx}`;
+  const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+  const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
+  const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
+  return (
+    <tr key={productKey}>
+     <td>{idx + 1}</td>
+     <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
+     <td>{p.orderedQty}</td>
+     <td>
+       <input type="number" step="0.01" value={p.volume || ''}
+         onChange={e => updateProductField(idx, 'volume', e.target.value)}
+         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+     </td>
+     <td>
 <span style={{ width: '100%', display: 'block', padding: '3px 4px', fontSize: 12, textAlign: 'right' }}>{p.unitPriceVC || ''}</span>
-                             </td>
-                             <td>
-                               <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
-                                 onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
-                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-                             </td>
-                             <td>
-                               <input type="number" step="1" value={p.exchangeRate || ''}
-                                 onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
-                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-                             </td>
-                             <td style={{ fontWeight: 600, textAlign: 'right' }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
-                             <td>
-                               <input type="number" value={p.packageCount || ''}
-                                 onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
-                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-                             </td>
-                             <td>{p.shippingMethod || ''}</td>
-                             <td>
-                               <button type="button" onClick={() => removeProduct(idx)}
-                                 style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
-                             </td>
-                           </tr>
-                         );
-                       })}
-                     </tbody>
+     </td>
+     <td>
+       <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
+         onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
+         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+     </td>
+     <td>
+       <input type="number" step="1" value={p.exchangeRate || ''}
+         onChange={e => updateProductField(idx, 'exchangeRate', e.target.value)}
+         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+     </td>
+     <td style={{ fontWeight: 600, textAlign: 'right' }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+     <td>
+       <input type="number" value={p.packageCount || ''}
+         onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
+         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+     </td>
+     <td>{p.shippingMethod || ''}</td>
+     <td>
+       <button type="button" onClick={() => removeProduct(idx)}
+         style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+     </td>
+   </tr>
+   );
+ })}
+</tbody>
                   </table>
                 </div>
                 {products.length > 0 && (
