@@ -246,6 +246,17 @@ function WaybillNew() {
     setProducts(prev => prev.filter((_, i) => i !== idx));
   };
 
+  const handleVolumeChange = (idx, newVal) => {
+    const num = Number(newVal);
+    if (isNaN(num)) return;
+    // Updated the products array immutably with the new volume value
+    setProducts(prev =>
+      prev.map((p, i) =>
+        i === idx ? { ...p, volume: newVal } : p
+      )
+    );
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
@@ -297,31 +308,37 @@ function WaybillNew() {
       } else {
         const created = await waybillAPI.create(payload);
         console.log('[WaybillNew] Created waybill response:', created);
-        // Update products with freightVnd from backend response
-        if (created.products) {
+        // Calculate freightVnd for each product and update UI
+        if (created.products && created.freightVnd) {
           try {
             const parsedProducts = typeof created.products === 'string' ? JSON.parse(created.products) : created.products;
             console.log('[WaybillNew] Parsed products from backend:', parsedProducts);
-            if (Array.isArray(parsedProducts) && created.freightVnd) {
-              const totalFreight = created.freightVnd;
-              console.log('[WaybillNew] Total freight from backend:', totalFreight);
-              // Assign freightVnd from backend to each product based on ratio
-              setProducts(prev => prev.map((p, idx) => {
-                const parsedP = parsedProducts[idx];
-                console.log(`[WaybillNew] Product ${idx} (${p.productName || 'N/A'}):`, { parsedP, current: p });
-                if (parsedP && parsedP.freightVnd) {
-                  const newP = { ...p, freightVnd: parsedP.freightVnd };
-                  console.log(`[WaybillNew] Updating product ${idx} to freightVnd: ${parsedP.freightVnd}`);
-                  return newP;
-                }
-                return p;
-              }));
-              console.log('[WaybillNew] Products updated with freightVnd from backend');
-            }
+            
+            // Backend đã tính freightVnd cho mỗi product, áp dụng vào products
+            const totalFreight = created.freightVnd;
+            console.log('[WaybillNew] Total freight from backend:', totalFreight);
+            
+            setProducts(prev => prev.map((p, idx) => {
+              const parsedP = parsedProducts[idx];
+              console.log(`[WaybillNew] Product ${idx} (${p.productName || 'N/A'}):`, { parsedP, current: p });
+              
+              if (Array.isArray(parsedProducts) && parsedP) {
+                // Always update with freightVnd from backend (even if 0)
+                const newP = { 
+                  ...p, 
+                  freightVnd: parsedP.freightVnd !== undefined ? parsedP.freightVnd : null 
+                };
+                console.log(`[WaybillNew] Updating product ${idx} to freightVnd: ${newP.freightVnd}`);
+                return newP;
+              }
+              return p;
+            }));
+            console.log('[WaybillNew] Products updated with freightVnd from backend');
           } catch (err) {
             console.error('[WaybillNew] Failed to update products with freightVnd:', err);
           }
         }
+        
         navigate(`/waybills/${created.id}`);
       }
     } catch (err) { toast.error(err.message); }
@@ -502,7 +519,7 @@ function WaybillNew() {
      <td>{p.orderedQty}</td>
      <td>
        <input type="number" step="0.01" value={p.volume || ''}
-         onChange={e => updateProductField(idx, 'volume', e.target.value)}
+         onChange={e => handleVolumeChange(idx, e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
      </td>
 <td>
