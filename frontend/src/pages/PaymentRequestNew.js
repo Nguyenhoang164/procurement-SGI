@@ -591,18 +591,17 @@ function PaymentRequestNew() {
                           productName: p.productName || '',
                           spec: p.spec || '',
                           orderedQty: p.orderedQty || 0,
-                          unitPrice: Number(p.unitPrice) || 0,
-                          exchangeRate: p.exchangeRate || '3520',
-                          currency: p.currency || 'CNY',
+                          weightOrVolume: Number(p.weightOrVolume) || Number(p.volume) || 0,
+                          shippingRate: Number(p.shippingFee) || Number(p.unitPrice) || 0,
+                          totalFee: (Number(p.orderedQty) || 0) * (Number(p.shippingFee) || Number(p.unitPrice) || 0),
+                          trackingNumber: p.trackingNumber || '',
+                          doorToDoorStatus: p.doorToDoorStatus || '',
                           packageCount: p.packageCount || '',
+                          exchangeRate: Number(p.exchangeRate) || 1,
                         }));
                         setShipmentItems(items);
-                        const totalFreight = items.reduce((s, item) => {
-                          const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
-                          const r = Number(item.exchangeRate) || 1;
-                          return s + Math.round(sub * r);
-                        }, 0);
-                        setWaybillTotalFreight(totalFreight);
+                        const totalFees = items.reduce((s, item) => s + (Number(item.totalFee) || 0), 0);
+                        setWaybillTotalFreight(totalFees);
                       }
                     } catch (err) {
                       toast.error('Lỗi tải vận đơn: ' + err.message);
