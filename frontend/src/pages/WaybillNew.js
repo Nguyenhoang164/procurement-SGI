@@ -63,7 +63,15 @@ const [form, setForm] = useState({
      freightVnd: ''
    });
 
-// Keep form freightVnd in sync with computed value
+const computedFreightVnd = useMemo(() => {
+     return products.reduce((sum, p) => {
+       const rate = Number(p.exchangeRate || 3520);
+       const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
+       return sum + (cny * rate);
+     }, 0);
+   }, [products]);
+
+   // Keep form freightVnd in sync with computed value
     useEffect(() => {
       const newFreightVnd = computedFreightVnd !== undefined && !Number.isNaN(computedFreightVnd) && computedFreightVnd > 0
         ? computedFreightVnd
@@ -73,16 +81,8 @@ const [form, setForm] = useState({
       }
     }, [computedFreightVnd, form.freightVnd]);
 
-  const computedExpectedQty = useMemo(() => {
-    return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
-  }, [products]);
-
-const computedFreightVnd = useMemo(() => {
-     return products.reduce((sum, p) => {
-       const rate = Number(p.exchangeRate || 3520);
-       const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-       return sum + (cny * rate);
-     }, 0);
+   const computedExpectedQty = useMemo(() => {
+     return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
    }, [products]);
 
   const updateProductField = (idx, field, value) => {
