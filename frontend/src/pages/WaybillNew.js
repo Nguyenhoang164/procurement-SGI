@@ -278,7 +278,7 @@ function WaybillNew() {
       exchangeRate: p.exchangeRate,
       volume: p.volume || '',
       unitPriceVC: p.unitPriceVC || '',
-      manualTotalCny: p.manualTotalCny,
+      manualTotalCny: undefined, // Don't send manualTotalCny, let backend calculate
       packageCount: p.packageCount || '',
       shippingMethod: p.shippingMethod || '',
       purchaseOrderItemId: p.purchaseOrderItemId || null,
@@ -296,6 +296,25 @@ function WaybillNew() {
         navigate(`/waybills/${id}`);
       } else {
         const created = await waybillAPI.create(payload);
+        // Update products with freightVnd from backend response
+        if (created.products) {
+          try {
+            const parsedProducts = typeof created.products === 'string' ? JSON.parse(created.products) : created.products;
+            if (Array.isArray(parsedProducts) && created.freightVnd) {
+              const totalFreight = created.freightVnd;
+              // Assign freightVnd from backend to each product based on ratio
+              setProducts(prev => prev.map((p, idx) => {
+                const parsedP = parsedProducts[idx];
+                if (parsedP && parsedP.freightVnd) {
+                  return { ...p, freightVnd: parsedP.freightVnd };
+                }
+                return p;
+              }));
+            }
+          } catch (err) {
+            console.error('Failed to update products with freightVnd:', err);
+          }
+        }
         navigate(`/waybills/${created.id}`);
       }
     } catch (err) { toast.error(err.message); }
