@@ -441,8 +441,7 @@ String poIds = null;
                 shippingMethod,
                 prIds,
                 poIds,
-                waybill.getFreightVnd(),
-                waybill.getFreightVnd() != null ? String.format("%,d", waybill.getFreightVnd()).replace(",", ".") : ""
+                waybill.getFreightVnd()
         );
     }
 
