@@ -630,12 +630,10 @@ const handleVolumeChange = (idx, newVal) => {
           onChange={e => handleManualTotalCnyChange(idx, e.target.value)}
           style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
       </td>
-     <td>
-       <input type="number" step="1" value={p.exchangeRate || ''}
-         onChange={e => handleExchangeRateChange(idx, e.target.value)}
-         style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-     </td>
-     <td style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalVnd.toLocaleString('vi-VN')} ₫</td>
+<td>
+        <span style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalCny.toLocaleString()} <small>CNY</small></span>
+      </td>
+      <td style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalVnd.toLocaleString('vi-VN')} ₫</td>
      <td>
        <input type="number" value={p.packageCount || ''}
          onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
