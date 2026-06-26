@@ -135,16 +135,37 @@ public class WaybillService {
         waybill.setNote(dto.getNote());
         Long oldPaymentRequestId = waybill.getPaymentRequestId();
         waybill.setPaymentRequestId(dto.getPaymentRequestId());
-        waybill.setProducts(dto.getProducts());
 
-        Long newFreightVnd = dto.getFreightVnd();
-        if (newFreightVnd == null || newFreightVnd < 0) {
-            BigDecimal poIntlShippingUnitPrice = waybill.getPaymentRequestId() != null ?
-                getPoIntlShippingUnitPrice(waybill.getPaymentRequestId()) : BigDecimal.ZERO;
-            BigDecimal calculatedFreight = calculateFreightFromWeightVolume(dto.getProducts(), poIntlShippingUnitPrice);
-            newFreightVnd = calculatedFreight != null ? calculatedFreight.longValue() : 0L;
+        BigDecimal poIntlShippingUnitPrice = waybill.getPaymentRequestId() != null ?
+            getPoIntlShippingUnitPrice(waybill.getPaymentRequestId()) : BigDecimal.ZERO;
+
+        String productsJson = dto.getProducts();
+        if (productsJson != null && !productsJson.isBlank()) {
+            try {
+                List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
+                BigDecimal totalFreight = BigDecimal.ZERO;
+                for (Map<String, Object> item : productList) {
+                    String weightVolume = (String) item.get("weightVolume");
+                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null) {
+                        BigDecimal measurement = extractFirstNumber(weightVolume);
+                        if (measurement != null) {
+                            BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                            item.put("freightVnd", productFreight.longValue());
+                            totalFreight = totalFreight.add(productFreight);
+                        } else {
+                            item.put("freightVnd", 0L);
+                        }
+                    } else {
+                        item.put("freightVnd", 0L);
+                    }
+                }
+                productsJson = objectMapper.writeValueAsString(productList);
+                waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
+            } catch (Exception e) {
+                productsJson = dto.getProducts();
+            }
         }
-        waybill.setFreightVnd(newFreightVnd);
+        waybill.setProducts(productsJson);
         Waybill saved = waybillRepository.save(waybill);
 
         if (oldPaymentRequestId != null && !oldPaymentRequestId.equals(dto.getPaymentRequestId())) {
@@ -317,26 +338,6 @@ public class WaybillService {
         PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId()).orElse(null);
         if (po == null) return BigDecimal.ZERO;
         return po.getInternationalShippingUnitPriceVnd() != null ? po.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
-    }
-
-    private BigDecimal calculateFreightFromWeightVolume(String productsJson, BigDecimal intlShippingUnitPriceVnd) {
-        if (productsJson == null || productsJson.isEmpty()) return BigDecimal.ZERO;
-        try {
-            List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
-            BigDecimal totalFreight = BigDecimal.ZERO;
-            for (Map<String, Object> item : productList) {
-                String weightVolume = (String) item.get("weightVolume");
-                if (weightVolume != null && !weightVolume.isBlank() && intlShippingUnitPriceVnd != null) {
-                    BigDecimal measurement = extractFirstNumber(weightVolume);
-                    if (measurement != null) {
-                        totalFreight = totalFreight.add(intlShippingUnitPriceVnd.multiply(measurement));
-                    }
-                }
-            }
-            return totalFreight;
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
-        }
     }
 
     private BigDecimal extractFirstNumber(String value) {

@@ -255,10 +255,8 @@ public class PaymentRequestService {
                 PurchaseOrder purchaseOrder = purchaseOrderRepository.findById(poId).orElse(null);
                 if (purchaseOrder == null) continue;
 
-                List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderId(poId);
-                for (PurchaseOrderItem item : items) {
-                    String productsJson = "[]";
-                    try {
+List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderId(poId);
+                    for (PurchaseOrderItem item : items) {
                         List<Map<String, Object>> productList = new ArrayList<>();
                         Map<String, Object> p = new HashMap<>();
                         p.put("posCode", item.getPosCode());
@@ -268,35 +266,40 @@ public class PaymentRequestService {
                         p.put("unitPrice", item.getUnitPrice());
                         p.put("totalAmountVnd", item.getTotalAmountVnd());
                         productList.add(p);
-                        productsJson = objectMapper.writeValueAsString(productList);
-                    } catch (Exception e) {
-                        productsJson = "[{\"posCode\":\"" + item.getPosCode() + "\",\"productName\":\"" + (item.getProductName() != null ? item.getProductName() : "") + "\"}]";
-                    }
 
-                    Waybill waybill = new Waybill();
-                    waybill.setWaybillCode("WB-" + System.currentTimeMillis() + "-" + poId + "-" + item.getId());
-                    waybill.setCarrier(purchaseOrder.getShippingMethod());
-                    waybill.setOrigin(purchaseOrder.getCountry());
-                    waybill.setExpectedQty(item.getOrderedQty());
-                    waybill.setStatus("PENDING");
-                    waybill.setPaymentRequestId(pr.getId());
-                    waybill.setProducts(productsJson);
-
-                    BigDecimal poIntlShippingUnitPrice = purchaseOrder.getInternationalShippingUnitPriceVnd() != null ?
-                        purchaseOrder.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
-                    String weightVolume = purchaseOrder.getPackageMeasurement();
-                    Long freightVnd = 0L;
-                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null) {
-                        String measurementStr = extractFirstNumber(weightVolume);
-                        if (measurementStr != null) {
-                            BigDecimal measurement = new BigDecimal(measurementStr.replace(",", "."));
-                            BigDecimal calculatedFreight = poIntlShippingUnitPrice.multiply(measurement);
-                            freightVnd = calculatedFreight != null ? calculatedFreight.longValue() : 0L;
+                        BigDecimal poIntlShippingUnitPrice = purchaseOrder.getInternationalShippingUnitPriceVnd() != null ?
+                            purchaseOrder.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
+                        String weightVolume = purchaseOrder.getPackageMeasurement();
+                        BigDecimal totalFreight = BigDecimal.ZERO;
+                        for (Map<String, Object> product : productList) {
+                            String measurementStr = extractFirstNumber(weightVolume);
+                            if (measurementStr != null && !measurementStr.isBlank()) {
+                                BigDecimal measurement = new BigDecimal(measurementStr.replace(",", "."));
+                                BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                                product.put("freightVnd", productFreight.longValue());
+                                totalFreight = totalFreight.add(productFreight);
+                            } else {
+                                product.put("freightVnd", 0L);
+                            }
                         }
-                    }
-                    waybill.setFreightVnd(freightVnd);
+                        String productsJson;
+                        try {
+                            productsJson = objectMapper.writeValueAsString(productList);
+                        } catch (Exception e) {
+                            productsJson = "[{\"posCode\":\"" + item.getPosCode() + "\",\"productName\":\"" + (item.getProductName() != null ? item.getProductName() : "") + "\"}]";
+                        }
 
-                    Waybill saved = waybillRepository.save(waybill);
+                        Waybill waybill = new Waybill();
+                        waybill.setWaybillCode("WB-" + System.currentTimeMillis() + "-" + poId + "-" + item.getId());
+                        waybill.setCarrier(purchaseOrder.getShippingMethod());
+                        waybill.setOrigin(purchaseOrder.getCountry());
+                        waybill.setExpectedQty(item.getOrderedQty());
+                        waybill.setStatus("PENDING");
+                        waybill.setPaymentRequestId(pr.getId());
+                        waybill.setProducts(productsJson);
+                        waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
+
+                        Waybill saved = waybillRepository.save(waybill);
 
                     PaymentRequestWaybill link = new PaymentRequestWaybill();
                     link.setPaymentRequestId(pr.getId());
