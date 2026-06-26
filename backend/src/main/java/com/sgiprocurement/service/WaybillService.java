@@ -461,14 +461,14 @@ private void recalculateFreight(Waybill waybill) {
             BigDecimal totalFreight = BigDecimal.ZERO;
             for (Map<String, Object> item : productList) {
                 BigDecimal measurement = BigDecimal.ZERO;
-                String weightVolume = (String) item.get("weightVolume");
+                String weightVolume = (String) item.get("volume");
                 
                 if (weightVolume != null && !weightVolume.isBlank()) {
                     measurement = extractFirstNumber(weightVolume);
-                    System.out.println("[WaybillService] Product has weightVolume: " + weightVolume + " -> measurement: " + measurement);
+                    System.out.println("[WaybillService] Product has volume: " + weightVolume + " -> measurement: " + measurement);
                 } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
                     measurement = extractFirstNumber(packageMeasurement);
-                    System.out.println("[WaybillService] Product has no weightVolume, using packageMeasurement from PO: " + packageMeasurement + " -> measurement: " + measurement);
+                    System.out.println("[WaybillService] Product has no volume, using packageMeasurement from PO: " + packageMeasurement + " -> measurement: " + measurement);
                 }
                 
                 System.out.println("[WaybillService] Product measurement: " + measurement + ", UnitPrice: " + poIntlShippingUnitPrice + ", Product key: " + (item.containsKey("productName") ? item.get("productName") : "NO_PRODUCT_NAME"));
