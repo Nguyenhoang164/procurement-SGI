@@ -85,31 +85,40 @@ const computedFreightVnd = useMemo(() => {
      return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
    }, [products]);
 
-  const updateProductField = (idx, field, value) => {
-    setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
-  };
+const updateProductField = (idx, field, value) => {
+     if (['volume', 'unitPriceVC', 'exchangeRate', 'manualTotalCny'].includes(field)) {
+       const oldP = products[idx];
+       const updatedP = { ...oldP, [field]: value };
+       const { totalCny, manualTotalCny: newManualTotalCny, totalVnd } = calculateProductFreight(updatedP);
+       setProducts(prev => prev.map((p, i) => i === idx ? { ...updatedP, totalCny, manualTotalCny: newManualTotalCny, totalVnd } : p));
+     } else {
+       setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
+     }
+   };
 
   useEffect(() => {
     const fromPOItems = location.state?.fromPOItems;
     if (fromPOItems && fromPOItems.length > 0) {
-      const mapped = fromPOItems.map((item, i) => ({
-        _itemId: `from-po-${i}`,
-        poId: item.poId,
-        poCode: item.poCode,
-        posCode: item.posCode || '',
-        productName: item.productName || '',
-        spec: item.spec || '',
-        orderedQty: String(item.orderedQty || ''),
-        unitPrice: String(item.unitPrice || ''),
-        currency: item.currency || 'CNY',
-        exchangeRate: String(item.exchangeRate || '3520'),
-        volume: item.volume || '',
-        unitPriceVC: item.unitPriceVC || '',
-        packageCount: item.packageCount || String(item.orderedQty || ''),
-        shippingMethod: item.shippingMethod || '',
-        purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
-        manualTotalCny: undefined,
-      }));
+const mapped = fromPOItems.map((item, i) => ({
+         _itemId: `from-po-${i}`,
+         poId: item.poId,
+         poCode: item.poCode,
+         posCode: item.posCode || '',
+         productName: item.productName || '',
+         spec: item.spec || '',
+         orderedQty: String(item.orderedQty || ''),
+         unitPrice: String(item.unitPrice || ''),
+         currency: item.currency || 'CNY',
+         exchangeRate: String(item.exchangeRate || '3520'),
+         volume: item.volume || '',
+         unitPriceVC: item.unitPriceVC || '',
+         packageCount: item.packageCount || String(item.orderedQty || ''),
+         shippingMethod: item.shippingMethod || '',
+         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
+         manualTotalCny: undefined,
+         totalCny: 0,
+         totalVnd: 0,
+       }));
       setProducts(mapped);
     }
     window.history.replaceState({}, document.title);
@@ -141,21 +150,25 @@ const computedFreightVnd = useMemo(() => {
         if (data.products) {
           try {
             let parsed = typeof data.products === 'string' ? JSON.parse(data.products) : data.products;
-            if (Array.isArray(parsed)) {
-              const productsWithMissingShipping = parsed.filter(p => !p.shippingMethod && p.poId);
-              const poIds = [...new Set(productsWithMissingShipping.map(p => p.poId))];
-              if (poIds.length > 0) {
-                const poPromises = poIds.map(poId => purchaseOrderAPI.getById(poId).catch(() => null));
-                const poResults = await Promise.all(poPromises);
-                const poShippingMap = {};
-                poResults.filter(Boolean).forEach(po => { poShippingMap[po.id] = po.shippingMethod || ''; });
-                parsed = parsed.map(p => ({
-                  ...p,
-                  shippingMethod: p.shippingMethod || poShippingMap[p.poId] || ''
-                }));
-              }
-              setProducts(parsed);
-            }
+if (Array.isArray(parsed)) {
+               const productsWithMissingShipping = parsed.filter(p => !p.shippingMethod && p.poId);
+               const poIds = [...new Set(productsWithMissingShipping.map(p => p.poId))];
+               if (poIds.length > 0) {
+                 const poPromises = poIds.map(poId => purchaseOrderAPI.getById(poId).catch(() => null));
+                 const poResults = await Promise.all(poPromises);
+                 const poShippingMap = {};
+                 poResults.filter(Boolean).forEach(po => { poShippingMap[po.id] = po.shippingMethod || ''; });
+                 parsed = parsed.map(p => ({
+                   ...p,
+                   shippingMethod: p.shippingMethod || poShippingMap[p.poId] || ''
+                 }));
+               }
+               const updatedProducts = parsed.map(p => {
+                 const { totalCny, totalVnd } = calculateProductFreight(p);
+                 return { ...p, totalCny, totalVnd };
+               });
+               setProducts(updatedProducts);
+             }
           } catch {}
         }
       } catch (err) { toast.error(err.message); }
@@ -221,36 +234,45 @@ const computedFreightVnd = useMemo(() => {
     });
   };
 
-  const addSelectedItems = () => {
-    const newProducts = [];
-    selectedItemIds.forEach(id => {
-      const item = availableItems.find(i => i.id === id);
-      if (item && !products.some(p => p._itemId === id)) {
-        newProducts.push({
-          _itemId: id,
-          purchaseOrderItemId: item.purchaseOrderItemId,
-          poId: item.poId,
-          poCode: item.poCode,
-          posCode: item.posCode,
-          productName: item.productName,
-          spec: item.spec,
-          orderedQty: item.orderedQty,
-          unitPrice: item.unitPrice,
-          currency: item.currency,
-          exchangeRate: item.exchangeRate,
-          volume: '',
-          unitPriceVC: '',
-          packageCount: item.orderedQty,
-          shippingMethod: item.shippingMethod || '',
-          manualTotalCny: undefined,
-        });
-      }
-    });
-    if (newProducts.length > 0) {
-      setProducts(prev => [...prev, ...newProducts]);
-    }
-    setSelectedItemIds(new Set());
-  };
+const addSelectedItems = () => {
+     const newProducts = [];
+     selectedItemIds.forEach(id => {
+       const item = availableItems.find(i => i.id === id);
+       if (item && !products.some(p => p._itemId === id)) {
+         newProducts.push({
+           _itemId: id,
+           purchaseOrderItemId: item.purchaseOrderItemId,
+           poId: item.poId,
+           poCode: item.poCode,
+           posCode: item.posCode,
+           productName: item.productName,
+           spec: item.spec,
+           orderedQty: item.orderedQty,
+           unitPrice: item.unitPrice,
+           currency: item.currency,
+           exchangeRate: item.exchangeRate,
+           volume: '',
+           unitPriceVC: '',
+           packageCount: item.orderedQty,
+           shippingMethod: item.shippingMethod || '',
+           manualTotalCny: undefined,
+           totalCny: 0,
+           totalVnd: 0,
+         });
+       }
+     });
+     if (newProducts.length > 0) {
+       setProducts(prev => {
+         const updated = [...prev, ...newProducts];
+         return updated.map(p => ({
+           ...p,
+           totalCny: calculateProductFreight(p).totalCny,
+           totalVnd: calculateProductFreight(p).totalVnd,
+         }));
+       });
+     }
+     setSelectedItemIds(new Set());
+   };
 
   const removeProduct = (idx) => {
     setProducts(prev => prev.filter((_, i) => i !== idx));
@@ -264,63 +286,72 @@ const computedFreightVnd = useMemo(() => {
    };
 
 const handleVolumeChange = (idx, newVal) => {
-    const num = Number(newVal);
-    if (isNaN(num)) return;
+     const num = Number(newVal);
+     if (isNaN(num)) return;
 
-    setProducts(prev => {
-      const updatedProducts = prev.map((p, i) => {
-        if (i === idx) {
-          const updatedP = { ...p, volume: newVal };
-          const { totalVnd } = calculateProductFreight(updatedP);
-          return { ...updatedP, totalVnd };
-        }
-        return p;
-      });
-      return updatedProducts;
-    });
-  };
+     setProducts(prev => {
+       const updatedProducts = prev.map((p, i) => {
+         if (i === idx) {
+           const updatedP = { ...p, volume: newVal };
+           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, volume: newVal, totalCny, manualTotalCny, totalVnd };
+         }
+         return p;
+       });
+       return updatedProducts;
+     });
+   };
 
-  const handleUnitPriceVCChange = (idx, newVal) => {
-    setProducts(prev => {
-      const updatedProducts = prev.map((p, i) => {
-        if (i === idx) {
-          const updatedP = { ...p, unitPriceVC: newVal };
-          const { totalVnd } = calculateProductFreight(updatedP);
-          return { ...updatedP, totalVnd };
-        }
-        return p;
-      });
-      return updatedProducts;
-    });
-  };
+   const handleUnitPriceVCChange = (idx, newVal) => {
+     const num = Number(newVal);
+     if (isNaN(num)) return;
 
-  const handleManualTotalCnyChange = (idx, newVal) => {
-    setProducts(prev => {
-      const updatedProducts = prev.map((p, i) => {
-        if (i === idx) {
-          const updatedP = { ...p, manualTotalCny: newVal };
-          const { totalVnd } = calculateProductFreight(updatedP);
-          return { ...updatedP, totalVnd };
-        }
-        return p;
-      });
-      return updatedProducts;
-    });
-  };
+     setProducts(prev => {
+       const updatedProducts = prev.map((p, i) => {
+         if (i === idx) {
+           const updatedP = { ...p, unitPriceVC: newVal };
+           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, unitPriceVC: newVal, totalCny, manualTotalCny, totalVnd };
+         }
+         return p;
+       });
+       return updatedProducts;
+     });
+   };
 
-  const handleExchangeRateChange = (idx, newVal) => {
-    setProducts(prev => {
-      const updatedProducts = prev.map((p, i) => {
-        if (i === idx) {
-          const updatedP = { ...p, exchangeRate: newVal };
-          const { totalVnd } = calculateProductFreight(updatedP);
-          return { ...updatedP, totalVnd };
-        }
-        return p;
-      });
-      return updatedProducts;
-    });
-  };
+   const handleManualTotalCnyChange = (idx, newVal) => {
+     const num = Number(newVal);
+     if (isNaN(num)) return;
+
+     setProducts(prev => {
+       const updatedProducts = prev.map((p, i) => {
+         if (i === idx) {
+           const updatedP = { ...p, manualTotalCny: newVal };
+           const { totalCny, manualTotalCny: newManualTotalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, manualTotalCny: newVal, totalCny: newManualTotalCny, totalVnd };
+         }
+         return p;
+       });
+       return updatedProducts;
+     });
+   };
+
+   const handleExchangeRateChange = (idx, newVal) => {
+     const num = Number(newVal);
+     if (isNaN(num)) return;
+
+     setProducts(prev => {
+       const updatedProducts = prev.map((p, i) => {
+         if (i === idx) {
+           const updatedP = { ...p, exchangeRate: newVal };
+           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, exchangeRate: newVal, totalCny, manualTotalCny, totalVnd };
+         }
+         return p;
+       });
+       return updatedProducts;
+     });
+   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -573,11 +604,11 @@ const handleVolumeChange = (idx, newVal) => {
                     </thead>
 <tbody>
 {products.map((p, idx) => {
-  const productKey = p._itemId || p.id || `product-${idx}`;
-  const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-  const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
-  const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
-  return (
+   const productKey = p._itemId || p.id || `product-${idx}`;
+   const totalCny = p.totalCny !== undefined ? p.totalCny : (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+   const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+   const totalVnd = p.totalVnd !== undefined ? p.totalVnd : Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
+   return (
     <tr key={productKey}>
      <td>{idx + 1}</td>
      <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
@@ -621,25 +652,28 @@ const handleVolumeChange = (idx, newVal) => {
                 </div>
                 {products.length > 0 && (
                   <div style={{ marginTop: 8, fontSize: 13, textAlign: 'right', lineHeight: 1.8 }}>
-                    {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
-                      const items = products.filter(p => (p.currency || 'CNY') === currency);
-                      const totalForeign = items.reduce((s, p) => s + (p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0))), 0);
-                      const rate = items[0]?.exchangeRate || '3520';
-                      const totalVnd = Math.round(totalForeign * Number(rate));
-                      return (
-                        <div key={currency}>
-                          Tổng cước ({currency}): <strong>{totalForeign.toLocaleString('vi-VN')} {currency}</strong>
-                          {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
-                        </div>
-                      );
-                    })}
-                    <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
-                      Tổng cước VC: {products.reduce((s, p) => {
-                        const rate = Number(p.exchangeRate || 3520);
-                        const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-                        return s + Math.round(cny * rate);
-                      }, 0).toLocaleString('vi-VN')} VND
-                    </div>
+{Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
+                       const items = products.filter(p => (p.currency || 'CNY') === currency);
+                       const totalForeign = items.reduce((s, p) => {
+                         const itemCny = p.totalCny !== undefined ? p.totalCny : (p.manualTotalCny !== undefined ? p.manualTotalCny : (Number(p.volume || 0) * Number(p.unitPriceVC || 0)));
+                         return s + Number(itemCny || 0);
+                       }, 0);
+                       const rate = items[0]?.exchangeRate || '3520';
+                       const totalVnd = Math.round(totalForeign * Number(rate));
+                       return (
+                         <div key={currency}>
+                           Tổng cước ({currency}): <strong>{totalForeign.toLocaleString('vi-VN')} {currency}</strong>
+                           {' × '} {Number(rate).toLocaleString()} (tỷ giá) = <strong style={{ color: '#dc2626' }}>{totalVnd.toLocaleString('vi-VN')} VND</strong>
+                         </div>
+                       );
+                     })}
+                     <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
+                       Tổng cước VC: {products.reduce((s, p) => {
+                         const rate = Number(p.exchangeRate || 3520);
+                         const cny = p.totalCny !== undefined ? p.totalCny : (p.manualTotalCny !== undefined ? p.manualTotalCny : (Number(p.volume || 0) * Number(p.unitPriceVC || 0)));
+                         return s + Math.round(cny * rate);
+                       }, 0).toLocaleString('vi-VN')} VND
+                     </div>
                   </div>
                 )}
               </div>
