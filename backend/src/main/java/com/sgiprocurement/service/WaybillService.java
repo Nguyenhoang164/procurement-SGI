@@ -127,17 +127,29 @@ public class WaybillService {
                 BigDecimal totalFreight = BigDecimal.ZERO;
                 for (Map<String, Object> item : productList) {
                     BigDecimal measurement = BigDecimal.ZERO;
-                    String weightVolume = (String) item.get("weightVolume");
+                    BigDecimal unitPriceVC = BigDecimal.ZERO;
                     
-                    if (weightVolume != null && !weightVolume.isBlank()) {
+                    String weightVolume = (String) item.get("weightVolume");
+                    String volume = (String) item.get("volume");
+                    
+                    if (volume != null && !volume.isBlank()) {
+                        measurement = extractFirstNumber(volume);
+                    } else if (weightVolume != null && !weightVolume.isBlank()) {
                         measurement = extractFirstNumber(weightVolume);
                     } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
                         measurement = extractFirstNumber(packageMeasurement);
                     }
                     
+                    String unitPriceVCStr = (String) item.get("unitPriceVC");
+                    if (unitPriceVCStr != null && !unitPriceVCStr.isBlank()) {
+                        unitPriceVC = new BigDecimal(unitPriceVCStr);
+                    } else {
+                        unitPriceVC = poIntlShippingUnitPrice;
+                    }
+                    
                     if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
-                        poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                        unitPriceVC.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal productFreight = unitPriceVC.multiply(measurement);
                         item.put("freightVnd", productFreight.longValue());
                         totalFreight = totalFreight.add(productFreight);
                     } else {
@@ -321,29 +333,52 @@ waybill.setProducts(productsJson);
             prIds.add(0, waybill.getPaymentRequestId());
         }
 
-        String poIds = null;
-        String shippingMethod = null;
-        String waybillDetails = null;
-        if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
-            try {
-                List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
-                Set<String> poIdSet = new java.util.LinkedHashSet<>();
-                Set<String> shippingMethods = new java.util.LinkedHashSet<>();
-                for (Map<String, Object> p : productList) {
-                    if (p.containsKey("poId")) {
-                        poIdSet.add(String.valueOf(p.get("poId")));
+String poIds = null;
+            String shippingMethod = null;
+            String waybillDetails = null;
+            BigDecimal internationalShippingUnitPriceVnd = BigDecimal.ZERO;
+            if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
+                try {
+                    List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
+                    Set<String> poIdSet = new java.util.LinkedHashSet<>();
+                    Set<String> shippingMethods = new java.util.LinkedHashSet<>();
+                    for (Map<String, Object> p : productList) {
+                        if (p.containsKey("poId")) {
+                            poIdSet.add(String.valueOf(p.get("poId")));
+                        }
+                        if (p.containsKey("shippingMethod") && p.get("shippingMethod") != null
+                                && !((String) p.get("shippingMethod")).isBlank()) {
+                            shippingMethods.add((String) p.get("shippingMethod"));
+                        }
+                        if (p.containsKey("unitPriceVC")) {
+                            Object unitPriceObj = p.get("unitPriceVC");
+                            if (unitPriceObj != null) {
+                                BigDecimal unitPrice = BigDecimal.ZERO;
+                                if (unitPriceObj instanceof BigDecimal) {
+                                    unitPrice = (BigDecimal) unitPriceObj;
+                                } else if (unitPriceObj instanceof Long) {
+                                    unitPrice = BigDecimal.valueOf((Long) unitPriceObj);
+                                } else if (unitPriceObj instanceof Integer) {
+                                    unitPrice = BigDecimal.valueOf((Integer) unitPriceObj);
+                                } else if (unitPriceObj instanceof String) {
+                                    try {
+                                        unitPrice = new BigDecimal((String) unitPriceObj);
+                                    } catch (NumberFormatException e) {
+                                        // ignore
+                                    }
+                                }
+                                if (unitPrice.compareTo(BigDecimal.ZERO) > 0 && unitPrice.compareTo(internationalShippingUnitPriceVnd) > 0) {
+                                    internationalShippingUnitPriceVnd = unitPrice;
+                                }
+                            }
+                        }
                     }
-                    if (p.containsKey("shippingMethod") && p.get("shippingMethod") != null
-                            && !((String) p.get("shippingMethod")).isBlank()) {
-                        shippingMethods.add((String) p.get("shippingMethod"));
+                    if (!poIdSet.isEmpty()) {
+                        poIds = String.join(",", poIdSet);
                     }
-                }
-                if (!poIdSet.isEmpty()) {
-                    poIds = String.join(",", poIdSet);
-                }
-                if (!shippingMethods.isEmpty()) {
-                    shippingMethod = String.join(", ", shippingMethods);
-                }
+                    if (!shippingMethods.isEmpty()) {
+                        shippingMethod = String.join(", ", shippingMethods);
+                    }
 
                 BigDecimal totalFreight = BigDecimal.ZERO;
                 for (Map<String, Object> p : productList) {
@@ -406,7 +441,8 @@ waybill.setProducts(productsJson);
                 shippingMethod,
                 prIds,
                 poIds,
-                waybill.getFreightVnd()
+                waybill.getFreightVnd(),
+                internationalShippingUnitPriceVnd
         );
     }
 
@@ -461,6 +497,8 @@ private void recalculateFreight(Waybill waybill) {
             BigDecimal totalFreight = BigDecimal.ZERO;
             for (Map<String, Object> item : productList) {
                 BigDecimal measurement = BigDecimal.ZERO;
+                BigDecimal unitPriceVC = BigDecimal.ZERO;
+                
                 String weightVolume = (String) item.get("volume");
                 
                 if (weightVolume != null && !weightVolume.isBlank()) {
@@ -471,11 +509,20 @@ private void recalculateFreight(Waybill waybill) {
                     System.out.println("[WaybillService] Product has no volume, using packageMeasurement from PO: " + packageMeasurement + " -> measurement: " + measurement);
                 }
                 
-                System.out.println("[WaybillService] Product measurement: " + measurement + ", UnitPrice: " + poIntlShippingUnitPrice + ", Product key: " + (item.containsKey("productName") ? item.get("productName") : "NO_PRODUCT_NAME"));
+                String unitPriceVCStr = (String) item.get("unitPriceVC");
+                if (unitPriceVCStr != null && !unitPriceVCStr.isBlank()) {
+                    unitPriceVC = new BigDecimal(unitPriceVCStr);
+                    System.out.println("[WaybillService] Product has unitPriceVC from product JSON: " + unitPriceVCStr);
+                } else {
+                    unitPriceVC = poIntlShippingUnitPrice;
+                    System.out.println("[WaybillService] Product has no unitPriceVC in JSON, using PO unitPriceVC: " + poIntlShippingUnitPrice);
+                }
+                
+                System.out.println("[WaybillService] Product measurement: " + measurement + ", UnitPriceVC: " + unitPriceVC + ", Product key: " + (item.containsKey("productName") ? item.get("productName") : "NO_PRODUCT_NAME"));
                 
                 if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
-                    poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                    unitPriceVC.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal productFreight = unitPriceVC.multiply(measurement);
                     item.put("freightVnd", productFreight.longValue());
                     totalFreight = totalFreight.add(productFreight);
                     System.out.println("[WaybillService] Calculated freight for product: " + productFreight);
@@ -483,10 +530,10 @@ private void recalculateFreight(Waybill waybill) {
                     item.put("freightVnd", 0L);
                 }
             }
-            
+        
 waybill.setProducts(objectMapper.writeValueAsString(productList));
-            waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
-            System.out.println("[WaybillService] Total freight calculated: " + waybill.getFreightVnd());
+waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
+System.out.println("[WaybillService] Total freight calculated: " + waybill.getFreightVnd());
         } catch (Exception e) {
             e.printStackTrace();
         }

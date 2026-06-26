@@ -180,33 +180,30 @@ function PaymentRequestNew() {
     setSelectedOrders(prev => prev.filter(o => o.id !== orderId));
   };
 
-  const suggestTotalAmount = useMemo(() => {
-    if (formData.type === 'VAN_CHUYEN') {
-      if (selectedWaybill) return waybillTotalFreight;
-      return shipmentItems.reduce((sum, item) => {
-        const rate = Number(item.exchangeRate) || 0;
-        const sub = shipmentItemManualTotals[item.key] !== undefined 
-          ? Number(shipmentItemManualTotals[item.key] || 0) 
-          : (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
-        return sum + Math.round(sub * rate);
-      }, 0);
-    }
-    if (selectedOrders.length === 0) return 0;
-    if (isEdit && formData.amountVnd) return Number(formData.amountVnd);
-    return selectedOrders.reduce((sum, order) => {
-      if (order.items) {
-        const orderTotal = order.items.reduce((s, item) => {
-          const manualKey = `order-${order.id}-item-${item.id}`;
-          const itemTotal = orderItemManualTotals[manualKey] !== undefined 
-            ? Number(orderItemManualTotals[manualKey] || 0) 
-            : (Number(item.unitPrice || 0) * Number(item.orderedQty || 0));
-          return s + itemTotal;
+const suggestTotalAmount = useMemo(() => {
+      if (formData.type === 'VAN_CHUYEN') {
+        if (selectedWaybill) return waybillTotalFreight;
+        return shipmentItems.reduce((sum, item) => {
+          const totalVnd = Number(item.totalVnd) || 0;
+          return sum + totalVnd;
         }, 0);
-        return sum + orderTotal;
       }
-      return sum + suggestAmountForType(formData.type, order);
-    }, 0);
-  }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight, orderItemManualTotals, shipmentItemManualTotals]);
+      if (selectedOrders.length === 0) return 0;
+      if (isEdit && formData.amountVnd) return Number(formData.amountVnd);
+      return selectedOrders.reduce((sum, order) => {
+        if (order.items) {
+          const orderTotal = order.items.reduce((s, item) => {
+            const manualKey = `order-${order.id}-item-${item.id}`;
+            const itemTotal = orderItemManualTotals[manualKey] !== undefined
+              ? Number(orderItemManualTotals[manualKey] || 0)
+              : (Number(item.unitPrice || 0) * Number(item.orderedQty || 0));
+            return s + itemTotal;
+          }, 0);
+          return sum + orderTotal;
+        }
+        return sum + suggestAmountForType(formData.type, order);
+      }, 0);
+    }, [selectedOrders, formData.type, formData.amountVnd, isEdit, shipmentItems, selectedWaybill, waybillTotalFreight, orderItemManualTotals]);
 
   useEffect(() => {
     if (suggestTotalAmount > 0) {
@@ -591,13 +588,14 @@ function PaymentRequestNew() {
                           productName: p.productName || '',
                           spec: p.spec || '',
                           orderedQty: p.orderedQty || 0,
-                          weightOrVolume: Number(p.weightOrVolume) || Number(p.volume) || 0,
-                          shippingRate: Number(p.shippingFee) || Number(p.unitPrice) || 0,
-                          totalFee: (Number(p.orderedQty) || 0) * (Number(p.shippingFee) || Number(p.unitPrice) || 0),
-                          trackingNumber: p.trackingNumber || '',
-                          doorToDoorStatus: p.doorToDoorStatus || '',
+                          weightOrVolume: Number(p.volume) || 0,
+                          unitPriceVC: Number(p.unitPriceVC) || 0,
+                          totalCny: (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0),
                           packageCount: p.packageCount || '',
                           exchangeRate: Number(p.exchangeRate) || 1,
+                          totalVnd: ((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * Number(p.exchangeRate) || 0),
+                          shippingMethod: p.shippingMethod || '',
+                          trackingNumber: p.trackingNumber || '',
                         }));
                         setShipmentItems(items);
                         const totalFees = items.reduce((s, item) => s + (Number(item.totalFee) || 0), 0);
@@ -702,67 +700,65 @@ function PaymentRequestNew() {
                 </div>
               </details>
 
-              <fieldset>
-                <legend>Danh sách sản phẩm vận chuyển ({shipmentItems.length})</legend>
-                {shipmentItems.length === 0 ? (
-                  <p className="muted-copy">Chưa có sản phẩm nào. Chọn Vận đơn phía trên.</p>
-                ) : (
-                  <div className="table-wrapper">
-                    <div style={{ overflowX: 'auto' }}>
-                      <table className="table" style={{ fontSize: 12, minWidth: 900 }}>
-                        <thead>
-                          <tr>
-                            <th style={{ width: 30 }}>#</th>
-                            <th>Tên SP</th>
-                            <th style={{ width: 100 }}>Mã POS</th>
-                            <th style={{ width: 40 }}>SL</th>
-                            <th style={{ width: 55 }}>Số kiện</th>
-                            <th style={{ width: 100 }}>Đơn giá</th>
-                            <th style={{ width: 110 }}>Tỷ giá → VND</th>
-                            <th style={{ width: 100 }}>Thành tiền</th>
-                            <th style={{ width: 100 }}>Quy đổi VNĐ</th>
-                            <th style={{ width: 35 }}></th>
+<fieldset>
+            <legend>Danh sách sản phẩm vận chuyển ({shipmentItems.length})</legend>
+            {shipmentItems.length === 0 ? (
+              <p className="muted-copy">Chưa có sản phẩm nào. Chọn Vận đơn phía trên.</p>
+            ) : (
+              <div className="table-wrapper">
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="table" style={{ fontSize: 12, minWidth: 1000 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ width: 40 }}>STT</th>
+                        <th>Tên SP</th>
+                        <th style={{ width: 50 }}>SL</th>
+                        <th style={{ width: 80 }}>KL/T.tích</th>
+                        <th style={{ width: 100 }}>Đơn giá VC (CNY)</th>
+                        <th style={{ width: 110 }}>Tổng cước (CNY)</th>
+                        <th style={{ width: 80 }}>Tỷ giá</th>
+                        <th style={{ width: 120 }}>Cước VC (VNĐ)</th>
+                        <th style={{ width: 70 }}>Số kiện</th>
+                        <th style={{ width: 110 }}>H.Thức VC</th>
+                        <th style={{ width: 35 }}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {shipmentItems.map((item, idx) => {
+                        const unitPriceVC = Number(item.unitPriceVC) || 0;
+                        const totalCny = Number(item.totalCny) || 0;
+                        const exchangeRate = Number(item.exchangeRate) || 0;
+                        const totalVnd = Number(item.totalVnd) || 0;
+                        return (
+                          <tr key={item.key}>
+                            <td>{idx + 1}</td>
+                            <td>{item.productName}{item.posCode ? ` (${item.posCode})` : ''}</td>
+                            <td>{item.orderedQty}</td>
+                            <td>{item.weightOrVolume}</td>
+                            <td>{unitPriceVC.toLocaleString()} {item.currency || 'CNY'}</td>
+                            <td style={{ fontWeight: 600 }}>{totalCny.toLocaleString()} {item.currency || 'CNY'}</td>
+                            <td style={{ fontSize: 11 }}>1 {item.currency || 'CNY'} = {exchangeRate.toLocaleString()} VND</td>
+                            <td className="money">{totalVnd.toLocaleString('vi-VN')} ₫</td>
+                            <td>{item.packageCount || '-'}</td>
+                            <td style={{ fontSize: 11 }}>{item.shippingMethod || '-'}</td>
+                            <td>
+                              <button type="button" onClick={() => removeShipmentItem(item.key)}
+                                style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {shipmentItems.map((item, idx) => {
-                            const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
-                            const rate = Number(item.exchangeRate) || 0;
-                            const manualTotal = shipmentItemManualTotals[item.key] !== undefined ? Number(shipmentItemManualTotals[item.key] || 0) : sub;
-                            const vnd = Math.round(manualTotal * rate);
-                            return (
-                              <tr key={item.key}>
-                                <td>{idx + 1}</td>
-                                <td>{item.productName}</td>
-                                <td style={{ fontSize: 11 }}>{item.posCode || '-'}</td>
-                                <td>{item.orderedQty}</td>
-                                <td>{item.packageCount || item.orderedQty || '-'}</td>
-                                <td>{Number(item.unitPrice || 0).toLocaleString()} {item.currency || 'CNY'}</td>
-                                <td style={{ fontSize: 11 }}>1 {item.currency || 'CNY'} = {rate.toLocaleString()} VND</td>
-                                <td>
-                                  <input type="number" step="0.01" value={manualTotal || ''}
-                                    onChange={e => updateShipmentItemTotal(item.key, e.target.value)}
-                                    style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12 }} />
-                                </td>
-                                <td className="money">{vnd.toLocaleString('vi-VN')} ₫</td>
-                                <td>
-                                  <button type="button" onClick={() => removeShipmentItem(item.key)}
-                                    style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: 16 }}>✕</button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    {selectedWaybill && (
-                      <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
-                        Tổng phí vận chuyển: <strong style={{ color: '#dc2626' }}>{waybillTotalFreight.toLocaleString('vi-VN')} ₫</strong>
-                      </div>
-                    )}
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {selectedWaybill && (
+                  <div style={{ marginTop: 8, fontSize: 14, fontWeight: 600, textAlign: 'right' }}>
+                    Tổng phí vận chuyển: <strong style={{ color: '#dc2626' }}>{waybillTotalFreight.toLocaleString('vi-VN')} ₫</strong>
                   </div>
                 )}
-              </fieldset>
+              </div>
+            )}
+          </fieldset>
             </>
           )}
 
