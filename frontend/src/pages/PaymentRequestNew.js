@@ -598,7 +598,7 @@ const suggestTotalAmount = useMemo(() => {
                           trackingNumber: p.trackingNumber || '',
                         }));
                         setShipmentItems(items);
-                        const totalFees = items.reduce((s, item) => s + (Number(item.totalFee) || 0), 0);
+                        const totalFees = items.reduce((s, item) => s + (Number(item.totalVnd) || 0), 0);
                         setWaybillTotalFreight(totalFees);
                       }
                     } catch (err) {
