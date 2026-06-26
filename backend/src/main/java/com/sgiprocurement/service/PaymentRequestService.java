@@ -281,6 +281,21 @@ public class PaymentRequestService {
                     waybill.setStatus("PENDING");
                     waybill.setPaymentRequestId(pr.getId());
                     waybill.setProducts(productsJson);
+
+                    BigDecimal poIntlShippingUnitPrice = purchaseOrder.getInternationalShippingUnitPriceVnd() != null ?
+                        purchaseOrder.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
+                    String weightVolume = purchaseOrder.getPackageMeasurement();
+                    Long freightVnd = 0L;
+                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null) {
+                        String measurementStr = extractFirstNumber(weightVolume);
+                        if (measurementStr != null) {
+                            BigDecimal measurement = new BigDecimal(measurementStr.replace(",", "."));
+                            BigDecimal calculatedFreight = poIntlShippingUnitPrice.multiply(measurement);
+                            freightVnd = calculatedFreight != null ? calculatedFreight.longValue() : 0L;
+                        }
+                    }
+                    waybill.setFreightVnd(freightVnd);
+
                     Waybill saved = waybillRepository.save(waybill);
 
                     PaymentRequestWaybill link = new PaymentRequestWaybill();
@@ -598,6 +613,16 @@ public class PaymentRequestService {
         } catch (IOException e) {
             throw new IllegalStateException("Khong luu duoc danh sach file dinh kem", e);
         }
+    }
+
+    private String extractFirstNumber(String value) {
+        if (value == null || value.isBlank()) return null;
+        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\d+(?:[\\.,]\\d+)?");
+        java.util.regex.Matcher matcher = pattern.matcher(value);
+        if (!matcher.find()) {
+            return null;
+        }
+        return matcher.group().replace(",", ".");
     }
 
 }

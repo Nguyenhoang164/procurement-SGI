@@ -24,6 +24,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.math.BigDecimal;
 
 @Service
 @Transactional
@@ -43,9 +46,6 @@ public class WaybillService {
 
     @Autowired
     private PaymentRequestPurchaseOrderRepository paymentRequestPurchaseOrderRepository;
-
-    @Autowired
-    private WarehouseReceiptService warehouseReceiptService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -136,7 +136,15 @@ public class WaybillService {
         Long oldPaymentRequestId = waybill.getPaymentRequestId();
         waybill.setPaymentRequestId(dto.getPaymentRequestId());
         waybill.setProducts(dto.getProducts());
-        waybill.setFreightVnd(dto.getFreightVnd());
+
+        Long newFreightVnd = dto.getFreightVnd();
+        if (newFreightVnd == null || newFreightVnd < 0) {
+            BigDecimal poIntlShippingUnitPrice = waybill.getPaymentRequestId() != null ?
+                getPoIntlShippingUnitPrice(waybill.getPaymentRequestId()) : BigDecimal.ZERO;
+            BigDecimal calculatedFreight = calculateFreightFromWeightVolume(dto.getProducts(), poIntlShippingUnitPrice);
+            newFreightVnd = calculatedFreight != null ? calculatedFreight.longValue() : 0L;
+        }
+        waybill.setFreightVnd(newFreightVnd);
         Waybill saved = waybillRepository.save(waybill);
 
         if (oldPaymentRequestId != null && !oldPaymentRequestId.equals(dto.getPaymentRequestId())) {
@@ -184,22 +192,20 @@ public class WaybillService {
     public WaybillDTO confirmDelivery(Long id) {
         Waybill waybill = waybillRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Waybill not found with id: " + id));
-        
+
         waybill.setStatus("DELIVERED");
         Waybill savedWaybill = waybillRepository.save(waybill);
-        
-        // Khi xác nhận giao hàng, cập nhật trạng thái PO sang SHIPPING nếu đang ở trạng thái trước đó
+
         if (savedWaybill.getPaymentRequestId() != null) {
             updatePoStatusIfLinked(savedWaybill);
         }
 
-        // Tự động tạo phiếu nhập kho trạng thái PENDING để thủ kho xác nhận thủ công
         try {
             warehouseReceiptService.createFromWaybill(savedWaybill);
         } catch (Exception e) {
             System.err.println("Khong the tao phieu nhap kho pending cho waybill " + savedWaybill.getWaybillCode() + ": " + e.getMessage());
         }
-        
+
         return convertToDTO(savedWaybill);
     }
 
@@ -303,4 +309,46 @@ public class WaybillService {
         waybill.setFreightVnd(dto.getFreightVnd());
         return waybill;
     }
+
+    private BigDecimal getPoIntlShippingUnitPrice(Long paymentRequestId) {
+        if (paymentRequestId == null) return BigDecimal.ZERO;
+        PaymentRequest pr = paymentRequestRepository.findById(paymentRequestId).orElse(null);
+        if (pr == null || pr.getPoId() == null) return BigDecimal.ZERO;
+        PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId()).orElse(null);
+        if (po == null) return BigDecimal.ZERO;
+        return po.getInternationalShippingUnitPriceVnd() != null ? po.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
+    }
+
+    private BigDecimal calculateFreightFromWeightVolume(String productsJson, BigDecimal intlShippingUnitPriceVnd) {
+        if (productsJson == null || productsJson.isEmpty()) return BigDecimal.ZERO;
+        try {
+            List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
+            BigDecimal totalFreight = BigDecimal.ZERO;
+            for (Map<String, Object> item : productList) {
+                String weightVolume = (String) item.get("weightVolume");
+                if (weightVolume != null && !weightVolume.isBlank() && intlShippingUnitPriceVnd != null) {
+                    BigDecimal measurement = extractFirstNumber(weightVolume);
+                    if (measurement != null) {
+                        totalFreight = totalFreight.add(intlShippingUnitPriceVnd.multiply(measurement));
+                    }
+                }
+            }
+            return totalFreight;
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+    private BigDecimal extractFirstNumber(String value) {
+        if (value == null || value.isBlank()) return BigDecimal.ZERO;
+        Matcher matcher = Pattern.compile("\\d+(?:[\\.,]\\d+)?").matcher(value);
+        if (!matcher.find()) {
+            return BigDecimal.ZERO;
+        }
+        return new BigDecimal(matcher.group().replace(",", "."));
+    }
+
+    @Autowired
+    private WarehouseReceiptService warehouseReceiptService;
+
 }
