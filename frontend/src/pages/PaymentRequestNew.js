@@ -1095,11 +1095,14 @@ function PaymentRequestNew() {
                     <th style={{ textAlign: 'left', padding: '2px' }}>STT</th>
                     <th style={{ textAlign: 'left', padding: '2px' }}>Tên SP</th>
                     <th style={{ textAlign: 'left', padding: '2px' }}>Mã POS</th>
-                    <th style={{ textAlign: 'center', padding: '2px', width: 30 }}>SL</th>
+                    <th style={{ textAlign: 'center', padding: '2px' }}>Số lượng</th>
+                    <th style={{ textAlign: 'center', padding: '2px' }}>KL/T.tích</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Đơn giá VC</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Tổng cước (CNY)</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Tỷ giá</th>
+                    <th style={{ textAlign: 'right', padding: '2px' }}>Cước VC(VNĐ)</th>
                     <th style={{ textAlign: 'center', padding: '2px' }}>Số kiện</th>
-                    <th style={{ textAlign: 'right', padding: '2px' }}>Đơn giá</th>
-                    <th style={{ textAlign: 'right', padding: '2px' }}>Thành tiền</th>
-                    <th style={{ textAlign: 'right', padding: '2px' }}>Quy đổi VNĐ</th>
+                    <th style={{ textAlign: 'left', padding: '2px' }}>H.Thức VC</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1109,23 +1112,18 @@ function PaymentRequestNew() {
                     const vnd = Math.round(sub * rate);
                     return (
                       <tr key={item.key} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                        <td style={{ padding: '2px' }}>{idx + 1}</td>
-                        <td style={{ padding: '2px' }}>{item.productName || '-'}</td>
-                        <td style={{ padding: '2px', fontSize: 11 }}>{item.posCode || '-'}</td>
-                        <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
-                        <td style={{ textAlign: 'center', padding: '2px' }}>{item.packageCount || item.orderedQty || '-'}</td>
-                        <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.unitPrice || 0).toLocaleString('vi-VN')}</td>
-                        <td style={{ textAlign: 'right', padding: '2px' }}>
-                          <input type="number" step="0.01" value={item.manualTotal !== undefined ? item.manualTotal : sub || ''}
-                            onChange={e => {
-                              const newItems = [...shipmentItems];
-                              newItems[idx] = { ...newItems[idx], manualTotal: e.target.value };
-                              setShipmentItems(newItems);
-                            }}
-                            style={{ width: '100%', padding: '2px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-                        </td>
-                        <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{vnd.toLocaleString('vi-VN')} ₫</td>
-                      </tr>
+                            <td style={{ padding: '2px' }}>{idx + 1}</td>
+                            <td style={{ padding: '2px' }}>{item.productName || '-'}</td>
+                            <td style={{ padding: '2px', fontSize: 11 }}>{item.posCode || '-'}</td>
+                            <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
+                            <td style={{ textAlign: 'center', padding: '2px' }}>{item.weightOrVolume ?? '-'}</td>
+                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.shippingRate || 0).toLocaleString('vi-VN')}</td>
+                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.totalFee || 0).toLocaleString('vi-VN')}</td>
+                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.exchangeRate || 1).toLocaleString('vi-VN')}</td>
+                            <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{Math.round((item.totalFee || 0) * (item.exchangeRate || 1)).toLocaleString('vi-VN')} ₫</td>
+                            <td style={{ textAlign: 'center', padding: '2px' }}>{item.packageCount || item.orderedQty || '-'}</td>
+                            <td style={{ padding: '2px' }}>{selectedWaybill?.carrier || '-'}</td>
+                          </tr>
                     );
                   })}
                 </tbody>
