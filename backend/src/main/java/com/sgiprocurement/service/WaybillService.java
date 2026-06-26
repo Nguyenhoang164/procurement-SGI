@@ -441,8 +441,7 @@ String poIds = null;
                 shippingMethod,
                 prIds,
                 poIds,
-                waybill.getFreightVnd(),
-                internationalShippingUnitPriceVnd
+                waybill.getFreightVnd()
         );
     }
 
