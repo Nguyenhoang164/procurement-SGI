@@ -401,7 +401,7 @@ public class PurchaseOrderService {
             int colPaymentMethod = findCol(colMap, "phươngthứcthanhtoán", "phương thức thanh toán", "phuongthucthanhtoan", "payment_method", "paymentmethod");
             int colDepositVnd = findCol(colMap, "đãcọc", "đã cọc(vnđ)", "dacocvnd", "deposit_vnd", "depositvnd");
             int colRemainingPaymentVnd = findCol(colMap, "cònphảitt", "còn phải tt(vnđ)", "conphaitivnd", "remaining_payment_vnd", "remainingpaymentvnd");
-            int colPackageMeasurement = findCol(colMap, "khốilượng/thểtích", "khối lượng / thể tích", "khoiluongthetich", "package_measurement", "packagemeasurement");
+            int colPackageMeasurement = findCol(colMap, "khốilượng/thểtích", "khối lượng / thể tích", "khối lượng/thể tích", "khoiluongthetich", "package_measurement", "packagemeasurement");
 
             List<PurchaseOrderDTO> orders = new ArrayList<>();
             int rowCount = 0;
