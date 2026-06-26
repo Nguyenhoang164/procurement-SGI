@@ -86,7 +86,7 @@ const computedFreightVnd = useMemo(() => {
    }, [products]);
 
 const updateProductField = (idx, field, value) => {
-     if (['volume', 'unitPriceVC', 'exchangeRate', 'manualTotalCny'].includes(field)) {
+     if (['volume', 'unitPriceVC', 'exchangeRate'].includes(field)) {
        const oldP = products[idx];
        const updatedP = { ...oldP, [field]: value };
        const { totalCny, totalVnd } = calculateProductFreight(updatedP);
@@ -114,11 +114,10 @@ const mapped = fromPOItems.map((item, i) => ({
          unitPriceVC: item.unitPriceVC || '',
          packageCount: item.packageCount || String(item.orderedQty || ''),
          shippingMethod: item.shippingMethod || '',
-         purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
-         manualTotalCny: undefined,
-         totalCny: 0,
-         totalVnd: 0,
-       }));
+purchaseOrderItemId: item.purchaseOrderItemId || item.id || null,
+          totalCny: 0,
+          totalVnd: 0,
+        }));
       setProducts(mapped);
     }
     window.history.replaceState({}, document.title);
@@ -626,15 +625,15 @@ const handleVolumeChange = (idx, newVal) => {
                                 style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
                               </td>
 <td>
-        <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (values.totalCny || '')}
-          onChange={e => handleManualTotalCnyChange(idx, e.target.value)}
-          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
-      </td>
-<td>
         <span style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalCny.toLocaleString()} <small>CNY</small></span>
       </td>
+      <td>
+        <input type="number" step="1" value={p.exchangeRate || ''}
+          onChange={e => handleExchangeRateChange(idx, e.target.value)}
+          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+      </td>
       <td style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalVnd.toLocaleString('vi-VN')} ₫</td>
-     <td>
+      <td>
        <input type="number" value={p.packageCount || ''}
          onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
