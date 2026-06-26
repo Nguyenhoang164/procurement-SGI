@@ -1103,9 +1103,10 @@ const suggestTotalAmount = useMemo(() => {
                 </thead>
                 <tbody>
                   {shipmentItems.map((item, idx) => {
-                    const sub = (Number(item.unitPrice) || 0) * (Number(item.orderedQty) || 0);
-                    const rate = Number(item.exchangeRate) || 0;
-                    const vnd = Math.round(sub * rate);
+                    const unitPriceVC = Number(item.unitPriceVC) || 0;
+                    const totalCny = Number(item.totalCny) || 0;
+                    const exchangeRate = Number(item.exchangeRate) || 0;
+                    const totalVnd = Number(item.totalVnd) || 0;
                     return (
                       <tr key={item.key} style={{ borderBottom: '1px solid #f1f5f9' }}>
                             <td style={{ padding: '2px' }}>{idx + 1}</td>
@@ -1113,12 +1114,12 @@ const suggestTotalAmount = useMemo(() => {
                             <td style={{ padding: '2px', fontSize: 11 }}>{item.posCode || '-'}</td>
                             <td style={{ textAlign: 'center', padding: '2px' }}>{item.orderedQty ?? '-'}</td>
                             <td style={{ textAlign: 'center', padding: '2px' }}>{item.weightOrVolume ?? '-'}</td>
-                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.shippingRate || 0).toLocaleString('vi-VN')}</td>
-                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.totalFee || 0).toLocaleString('vi-VN')}</td>
-                            <td style={{ textAlign: 'right', padding: '2px' }}>{Number(item.exchangeRate || 1).toLocaleString('vi-VN')}</td>
-                            <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{Math.round((item.totalFee || 0) * (item.exchangeRate || 1)).toLocaleString('vi-VN')} ₫</td>
+                            <td style={{ textAlign: 'right', padding: '2px' }}>{unitPriceVC.toLocaleString('vi-VN')} {item.currency || 'CNY'}</td>
+                            <td style={{ textAlign: 'right', padding: '2px' }}>{totalCny.toLocaleString('vi-VN')} {item.currency || 'CNY'}</td>
+                            <td style={{ textAlign: 'right', padding: '2px', fontSize: 10, color: '#64748b' }}>{exchangeRate.toLocaleString('vi-VN')}</td>
+                            <td style={{ textAlign: 'right', padding: '2px', fontWeight: 600 }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
                             <td style={{ textAlign: 'center', padding: '2px' }}>{item.packageCount || item.orderedQty || '-'}</td>
-                            <td style={{ padding: '2px' }}>{selectedWaybill?.carrier || '-'}</td>
+                            <td style={{ padding: '2px' }}>{item.shippingMethod || '-'}</td>
                           </tr>
                     );
                   })}
