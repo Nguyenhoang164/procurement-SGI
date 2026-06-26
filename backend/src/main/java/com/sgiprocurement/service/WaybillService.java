@@ -378,6 +378,8 @@ String poIds = null;
                     }
                     if (!shippingMethods.isEmpty()) {
                         shippingMethod = String.join(", ", shippingMethods);
+                    } else if (waybill.getCarrier() != null && !waybill.getCarrier().isBlank()) {
+                        shippingMethod = waybill.getCarrier();
                     }
 
                 BigDecimal totalFreight = BigDecimal.ZERO;
