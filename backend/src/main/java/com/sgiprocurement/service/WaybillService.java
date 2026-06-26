@@ -144,11 +144,13 @@ public class WaybillService {
             try {
                 List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
                 BigDecimal totalFreight = BigDecimal.ZERO;
+                
+                // Always recalculate freight for all products to fix position-dependent calculation
                 for (Map<String, Object> item : productList) {
                     String weightVolume = (String) item.get("weightVolume");
-                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null) {
+                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
                         BigDecimal measurement = extractFirstNumber(weightVolume);
-                        if (measurement != null) {
+                        if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0) {
                             BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
                             item.put("freightVnd", productFreight.longValue());
                             totalFreight = totalFreight.add(productFreight);
