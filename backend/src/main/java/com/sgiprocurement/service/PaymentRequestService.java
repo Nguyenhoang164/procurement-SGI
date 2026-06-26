@@ -516,11 +516,14 @@ List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderI
                     try {
                         List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
                         BigDecimal totalFreight = BigDecimal.ZERO;
+                        
+                        // Add product header only once if we have products
+                        if (!productList.isEmpty()) {
+                            if (waybillDetails.length() > 0) waybillDetails.append("\n");
+                            waybillDetails.append("Danh sách sản phẩm:\n");
+                        }
+                        
                         for (Map<String, Object> p : productList) {
-                            if (p.containsKey("productName")) {
-                                if (waybillDetails.length() > 0) waybillDetails.append("\n");
-                                waybillDetails.append("Danh sách sản phẩm:\n");
-                            }
                             if (p.containsKey("productName")) {
                                 waybillDetails.append("- Tên sản phẩm: ").append(p.get("productName")).append("\n");
                             }
@@ -540,9 +543,9 @@ List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderI
                                 }
                             }
                         }
+                        
                         if (totalFreight.compareTo(BigDecimal.ZERO) > 0) {
-                            if (waybillDetails.length() > 0) waybillDetails.append("\n");
-                            waybillDetails.append("Tổng cước vận chuyển: ").append(String.format("%,d", totalFreight).replace(",", ".")).append("\n");
+                            waybillDetails.append("- Tổng cước vận chuyển: ").append(String.format("%,d", totalFreight).replace(",", ".")).append("\n");
                         }
                     } catch (Exception e) {
                         waybillDetails.append("- Lỗi hiển thị chi tiết sản phẩm\n");
