@@ -110,6 +110,48 @@ public class WaybillService {
             long next = waybillRepository.count() + 1;
             waybill.setWaybillCode("WB-" + String.format("%04d", next));
         }
+        
+        String productsJson = dto.getProducts();
+        if (productsJson != null && !productsJson.isBlank()) {
+            try {
+                List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
+                
+                BigDecimal poIntlShippingUnitPrice = dto.getPaymentRequestId() != null ?
+                    getPoIntlShippingUnitPrice(dto.getPaymentRequestId()) : BigDecimal.ZERO;
+                
+                String packageMeasurement = null;
+                if (dto.getPaymentRequestId() != null) {
+                    packageMeasurement = getPoPackageMeasurement(dto.getPaymentRequestId());
+                }
+                
+                BigDecimal totalFreight = BigDecimal.ZERO;
+                for (Map<String, Object> item : productList) {
+                    BigDecimal measurement = BigDecimal.ZERO;
+                    String weightVolume = (String) item.get("weightVolume");
+                    
+                    if (weightVolume != null && !weightVolume.isBlank()) {
+                        measurement = extractFirstNumber(weightVolume);
+                    } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
+                        measurement = extractFirstNumber(packageMeasurement);
+                    }
+                    
+                    if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
+                        poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                        item.put("freightVnd", productFreight.longValue());
+                        totalFreight = totalFreight.add(productFreight);
+                    } else {
+                        item.put("freightVnd", 0L);
+                    }
+                }
+                productsJson = objectMapper.writeValueAsString(productList);
+                waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
+                waybill.setProducts(productsJson);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
         Waybill saved = waybillRepository.save(waybill);
 
         if (saved.getPaymentRequestId() != null) {
@@ -143,20 +185,31 @@ public class WaybillService {
         if (productsJson != null && !productsJson.isBlank()) {
             try {
                 List<Map<String, Object>> productList = objectMapper.readValue(productsJson, List.class);
-                BigDecimal totalFreight = BigDecimal.ZERO;
                 
-                // Always recalculate freight for all products to fix position-dependent calculation
+                BigDecimal poIntlShippingUnitPrice = waybill.getPaymentRequestId() != null ?
+                    getPoIntlShippingUnitPrice(waybill.getPaymentRequestId()) : BigDecimal.ZERO;
+                
+                String packageMeasurement = null;
+                if (waybill.getPaymentRequestId() != null) {
+                    packageMeasurement = getPoPackageMeasurement(waybill.getPaymentRequestId());
+                }
+                
+                BigDecimal totalFreight = BigDecimal.ZERO;
                 for (Map<String, Object> item : productList) {
+                    BigDecimal measurement = BigDecimal.ZERO;
                     String weightVolume = (String) item.get("weightVolume");
-                    if (weightVolume != null && !weightVolume.isBlank() && poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal measurement = extractFirstNumber(weightVolume);
-                        if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0) {
-                            BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
-                            item.put("freightVnd", productFreight.longValue());
-                            totalFreight = totalFreight.add(productFreight);
-                        } else {
-                            item.put("freightVnd", 0L);
-                        }
+                    
+                    if (weightVolume != null && !weightVolume.isBlank()) {
+                        measurement = extractFirstNumber(weightVolume);
+                    } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
+                        measurement = extractFirstNumber(packageMeasurement);
+                    }
+                    
+                    if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
+                        poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
+                        item.put("freightVnd", productFreight.longValue());
+                        totalFreight = totalFreight.add(productFreight);
                     } else {
                         item.put("freightVnd", 0L);
                     }
@@ -164,7 +217,7 @@ public class WaybillService {
                 productsJson = objectMapper.writeValueAsString(productList);
                 waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
             } catch (Exception e) {
-                productsJson = dto.getProducts();
+                e.printStackTrace();
             }
         }
         waybill.setProducts(productsJson);
@@ -236,6 +289,7 @@ public class WaybillService {
         Waybill waybill = waybillRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Waybill not found with id: " + id));
         waybill.setStatus(newStatus);
+        recalculateFreight(waybill);
         return convertToDTO(waybillRepository.save(waybill));
     }
 
@@ -381,6 +435,15 @@ public class WaybillService {
         PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId()).orElse(null);
         if (po == null) return BigDecimal.ZERO;
         return po.getInternationalShippingUnitPriceVnd() != null ? po.getInternationalShippingUnitPriceVnd() : BigDecimal.ZERO;
+    }
+
+    private String getPoPackageMeasurement(Long paymentRequestId) {
+        if (paymentRequestId == null) return null;
+        PaymentRequest pr = paymentRequestRepository.findById(paymentRequestId).orElse(null);
+        if (pr == null || pr.getPoId() == null) return null;
+        PurchaseOrder po = purchaseOrderRepository.findById(pr.getPoId()).orElse(null);
+        if (po == null) return null;
+        return po.getPackageMeasurement();
     }
 
     private BigDecimal extractFirstNumber(String value) {
