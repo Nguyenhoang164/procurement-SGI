@@ -296,23 +296,30 @@ function WaybillNew() {
         navigate(`/waybills/${id}`);
       } else {
         const created = await waybillAPI.create(payload);
+        console.log('[WaybillNew] Created waybill response:', created);
         // Update products with freightVnd from backend response
         if (created.products) {
           try {
             const parsedProducts = typeof created.products === 'string' ? JSON.parse(created.products) : created.products;
+            console.log('[WaybillNew] Parsed products from backend:', parsedProducts);
             if (Array.isArray(parsedProducts) && created.freightVnd) {
               const totalFreight = created.freightVnd;
+              console.log('[WaybillNew] Total freight from backend:', totalFreight);
               // Assign freightVnd from backend to each product based on ratio
               setProducts(prev => prev.map((p, idx) => {
                 const parsedP = parsedProducts[idx];
+                console.log(`[WaybillNew] Product ${idx} (${p.productName || 'N/A'}):`, { parsedP, current: p });
                 if (parsedP && parsedP.freightVnd) {
-                  return { ...p, freightVnd: parsedP.freightVnd };
+                  const newP = { ...p, freightVnd: parsedP.freightVnd };
+                  console.log(`[WaybillNew] Updating product ${idx} to freightVnd: ${parsedP.freightVnd}`);
+                  return newP;
                 }
                 return p;
               }));
+              console.log('[WaybillNew] Products updated with freightVnd from backend');
             }
           } catch (err) {
-            console.error('Failed to update products with freightVnd:', err);
+            console.error('[WaybillNew] Failed to update products with freightVnd:', err);
           }
         }
         navigate(`/waybills/${created.id}`);
