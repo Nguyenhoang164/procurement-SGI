@@ -65,9 +65,9 @@ const [form, setForm] = useState({
 
 const computedFreightVnd = useMemo(() => {
      return products.reduce((sum, p) => {
-       const rate = Number(p.exchangeRate || 3520);
-       const cny = p.manualTotalCny !== undefined ? Number(p.manualTotalCny || 0) : (Number(p.volume || 0) * Number(p.unitPriceVC || 0));
-       return sum + (cny * rate);
+       const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+       const exchangeRate = Number(p.exchangeRate || 3520);
+       return sum + (totalCny * exchangeRate);
      }, 0);
    }, [products]);
 
@@ -89,8 +89,8 @@ const updateProductField = (idx, field, value) => {
      if (['volume', 'unitPriceVC', 'exchangeRate', 'manualTotalCny'].includes(field)) {
        const oldP = products[idx];
        const updatedP = { ...oldP, [field]: value };
-       const { totalCny, manualTotalCny: newManualTotalCny, totalVnd } = calculateProductFreight(updatedP);
-       setProducts(prev => prev.map((p, i) => i === idx ? { ...updatedP, totalCny, manualTotalCny: newManualTotalCny, totalVnd } : p));
+       const { totalCny, totalVnd } = calculateProductFreight(updatedP);
+       setProducts(prev => prev.map((p, i) => i === idx ? { ...updatedP, totalCny, totalVnd } : p));
      } else {
        setProducts(prev => prev.map((p, i) => i === idx ? { ...p, [field]: value } : p));
      }
@@ -255,7 +255,6 @@ const addSelectedItems = () => {
            unitPriceVC: '',
            packageCount: item.orderedQty,
            shippingMethod: item.shippingMethod || '',
-           manualTotalCny: undefined,
            totalCny: 0,
            totalVnd: 0,
          });
@@ -278,12 +277,12 @@ const addSelectedItems = () => {
     setProducts(prev => prev.filter((_, i) => i !== idx));
   };
 
-  const calculateProductFreight = (p) => {
-     const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-     const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : totalCny;
-     const totalVnd = Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
-     return { totalCny, manualTotalCny, totalVnd };
-   };
+const calculateProductFreight = (p) => {
+      const totalCny = (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
+      const exchangeRateVal = Number(p.exchangeRate) || 3520;
+      const totalVnd = Math.round(totalCny * exchangeRateVal);
+      return { totalCny, totalVnd };
+    };
 
 const handleVolumeChange = (idx, newVal) => {
      const num = Number(newVal);
@@ -293,8 +292,8 @@ const handleVolumeChange = (idx, newVal) => {
        const updatedProducts = prev.map((p, i) => {
          if (i === idx) {
            const updatedP = { ...p, volume: newVal };
-           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
-           return { ...updatedP, volume: newVal, totalCny, manualTotalCny, totalVnd };
+           const { totalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, volume: newVal, totalCny, totalVnd };
          }
          return p;
        });
@@ -310,8 +309,8 @@ const handleVolumeChange = (idx, newVal) => {
        const updatedProducts = prev.map((p, i) => {
          if (i === idx) {
            const updatedP = { ...p, unitPriceVC: newVal };
-           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
-           return { ...updatedP, unitPriceVC: newVal, totalCny, manualTotalCny, totalVnd };
+           const { totalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, unitPriceVC: newVal, totalCny, totalVnd };
          }
          return p;
        });
@@ -320,15 +319,11 @@ const handleVolumeChange = (idx, newVal) => {
    };
 
    const handleManualTotalCnyChange = (idx, newVal) => {
-     const num = Number(newVal);
-     if (isNaN(num)) return;
-
      setProducts(prev => {
        const updatedProducts = prev.map((p, i) => {
          if (i === idx) {
            const updatedP = { ...p, manualTotalCny: newVal };
-           const { totalCny, manualTotalCny: newManualTotalCny, totalVnd } = calculateProductFreight(updatedP);
-           return { ...updatedP, manualTotalCny: newVal, totalCny: newManualTotalCny, totalVnd };
+           return { ...updatedP };
          }
          return p;
        });
@@ -344,8 +339,8 @@ const handleVolumeChange = (idx, newVal) => {
        const updatedProducts = prev.map((p, i) => {
          if (i === idx) {
            const updatedP = { ...p, exchangeRate: newVal };
-           const { totalCny, manualTotalCny, totalVnd } = calculateProductFreight(updatedP);
-           return { ...updatedP, exchangeRate: newVal, totalCny, manualTotalCny, totalVnd };
+           const { totalCny, totalVnd } = calculateProductFreight(updatedP);
+           return { ...updatedP, exchangeRate: newVal, totalCny, totalVnd };
          }
          return p;
        });
@@ -608,13 +603,10 @@ const handleVolumeChange = (idx, newVal) => {
     const calculateValues = () => {
       const volumeVal = Number(p.volume) || 0;
       const unitPriceVCVal = Number(p.unitPriceVC) || 0;
-      const manualTotalCnyVal = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : (volumeVal * unitPriceVCVal);
       const exchangeRateVal = Number(p.exchangeRate) || 3520;
-      return {
-        totalCny: volumeVal * unitPriceVCVal,
-        manualTotalCny: manualTotalCnyVal,
-        totalVnd: Math.round(manualTotalCnyVal * exchangeRateVal)
-      };
+      const totalCny = volumeVal * unitPriceVCVal;
+      const totalVnd = Math.round(totalCny * exchangeRateVal);
+      return { totalCny, totalVnd };
     };
     
     const values = calculateValues();
