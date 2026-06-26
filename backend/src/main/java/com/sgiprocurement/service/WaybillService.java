@@ -443,8 +443,7 @@ waybill.setProducts(productsJson);
         if (po == null) return null;
         return po.getPackageMeasurement();
     }
-
-    private void recalculateFreight(Waybill waybill) {
+private void recalculateFreight(Waybill waybill) {
         String productsJson = waybill.getProducts();
         if (productsJson == null || productsJson.isBlank()) {
             waybill.setFreightVnd(0L);
@@ -466,21 +465,28 @@ waybill.setProducts(productsJson);
                 
                 if (weightVolume != null && !weightVolume.isBlank()) {
                     measurement = extractFirstNumber(weightVolume);
+                    System.out.println("[WaybillService] Product has weightVolume: " + weightVolume + " -> measurement: " + measurement);
                 } else if (packageMeasurement != null && !packageMeasurement.isBlank()) {
                     measurement = extractFirstNumber(packageMeasurement);
+                    System.out.println("[WaybillService] Product has no weightVolume, using packageMeasurement from PO: " + packageMeasurement + " -> measurement: " + measurement);
                 }
+                
+                System.out.println("[WaybillService] Product measurement: " + measurement + ", UnitPrice: " + poIntlShippingUnitPrice + ", Product key: " + (item.containsKey("productName") ? item.get("productName") : "NO_PRODUCT_NAME"));
                 
                 if (measurement != null && measurement.compareTo(BigDecimal.ZERO) > 0 && 
                     poIntlShippingUnitPrice != null && poIntlShippingUnitPrice.compareTo(BigDecimal.ZERO) > 0) {
                     BigDecimal productFreight = poIntlShippingUnitPrice.multiply(measurement);
                     item.put("freightVnd", productFreight.longValue());
                     totalFreight = totalFreight.add(productFreight);
+                    System.out.println("[WaybillService] Calculated freight for product: " + productFreight);
                 } else {
                     item.put("freightVnd", 0L);
                 }
             }
-            waybill.setProducts(objectMapper.writeValueAsString(productList));
+            
+waybill.setProducts(objectMapper.writeValueAsString(productList));
             waybill.setFreightVnd(totalFreight != null ? totalFreight.longValue() : 0L);
+            System.out.println("[WaybillService] Total freight calculated: " + waybill.getFreightVnd());
         } catch (Exception e) {
             e.printStackTrace();
         }
