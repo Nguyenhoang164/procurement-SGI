@@ -77,5 +77,5 @@ public class PaymentRequestDTO {
     private String department;
 
     private String initiatorDepartment;
-
+    private String waybillDetails;
 }

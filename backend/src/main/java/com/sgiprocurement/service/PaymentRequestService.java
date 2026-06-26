@@ -498,6 +498,60 @@ List<PurchaseOrderItem> items = purchaseOrderItemRepository.findByPurchaseOrderI
         }
         dto.setWaybillIds(allWaybillIds);
 
+        StringBuilder waybillDetails = new StringBuilder();
+        for (Long wbId : allWaybillIds) {
+            if (waybillDetails.length() > 0) waybillDetails.append("\n\n---\n\n");
+            com.sgiprocurement.model.Waybill waybill = waybillRepository.findById(wbId).orElse(null);
+            if (waybill != null) {
+                if (waybill.getWaybillCode() != null) {
+                    waybillDetails.append("Mã vận đơn: ").append(waybill.getWaybillCode()).append("\n");
+                }
+                if (waybill.getCarrier() != null) {
+                    waybillDetails.append("Chủ hàng: ").append(waybill.getCarrier()).append("\n");
+                }
+                if (waybill.getOrigin() != null && waybill.getDestination() != null) {
+                    waybillDetails.append("Địa điểm: ").append(waybill.getOrigin()).append(" - ").append(waybill.getDestination()).append("\n");
+                }
+                if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
+                    try {
+                        List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
+                        BigDecimal totalFreight = BigDecimal.ZERO;
+                        for (Map<String, Object> p : productList) {
+                            if (p.containsKey("productName")) {
+                                if (waybillDetails.length() > 0) waybillDetails.append("\n");
+                                waybillDetails.append("Danh sách sản phẩm:\n");
+                            }
+                            if (p.containsKey("productName")) {
+                                waybillDetails.append("- Tên sản phẩm: ").append(p.get("productName")).append("\n");
+                            }
+                            if (p.containsKey("orderedQty")) {
+                                waybillDetails.append("- Số lượng: ").append(p.get("orderedQty")).append("\n");
+                            }
+                            if (p.containsKey("freightVnd")) {
+                                Object freightObj = p.get("freightVnd");
+                                if (freightObj != null) {
+                                    if (freightObj instanceof Long) {
+                                        totalFreight = totalFreight.add(new BigDecimal((Long) freightObj));
+                                        waybillDetails.append("- Cước vận chuyển hàng: ").append(String.format("%,d", (Long) freightObj).replace(",", ".")).append("\n");
+                                    } else if (freightObj instanceof BigDecimal) {
+                                        totalFreight = totalFreight.add((BigDecimal) freightObj);
+                                        waybillDetails.append("- Cước vận chuyển hàng: ").append(((BigDecimal) freightObj).toString()).append("\n");
+                                    }
+                                }
+                            }
+                        }
+                        if (totalFreight.compareTo(BigDecimal.ZERO) > 0) {
+                            if (waybillDetails.length() > 0) waybillDetails.append("\n");
+                            waybillDetails.append("Tổng cước vận chuyển: ").append(String.format("%,d", totalFreight).replace(",", ".")).append("\n");
+                        }
+                    } catch (Exception e) {
+                        waybillDetails.append("- Lỗi hiển thị chi tiết sản phẩm\n");
+                    }
+                }
+            }
+        }
+        dto.setWaybillDetails(waybillDetails.toString());
+
         List<CustomFee> fees = customFeeRepository.findByPaymentRequestId(pr.getId());
         dto.setCustomFees(fees.stream().map(fee -> new CustomFeeDTO(fee.getId(), fee.getFeeName(), fee.getFeeAmount()))
                 .collect(Collectors.toList()));

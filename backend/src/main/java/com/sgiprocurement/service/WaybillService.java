@@ -269,6 +269,7 @@ public class WaybillService {
 
         String poIds = null;
         String shippingMethod = null;
+        String waybillDetails = null;
         if (waybill.getProducts() != null && !waybill.getProducts().isBlank()) {
             try {
                 List<Map<String, Object>> productList = objectMapper.readValue(waybill.getProducts(), List.class);
@@ -289,6 +290,46 @@ public class WaybillService {
                 if (!shippingMethods.isEmpty()) {
                     shippingMethod = String.join(", ", shippingMethods);
                 }
+
+                BigDecimal totalFreight = BigDecimal.ZERO;
+                for (Map<String, Object> p : productList) {
+                    if (p.containsKey("freightVnd")) {
+                        Object freightObj = p.get("freightVnd");
+                        if (freightObj != null) {
+                            if (freightObj instanceof Long) {
+                                totalFreight = totalFreight.add(new BigDecimal((Long) freightObj));
+                            } else if (freightObj instanceof BigDecimal) {
+                                totalFreight = totalFreight.add((BigDecimal) freightObj);
+                            }
+                        }
+                    }
+                }
+
+                StringBuilder details = new StringBuilder();
+                for (Map<String, Object> p : productList) {
+                    if (p.containsKey("productName")) {
+                        if (details.length() > 0) details.append("\n");
+                        details.append("Tên sản phẩm: ").append(p.get("productName"));
+                    }
+                    if (p.containsKey("orderedQty")) {
+                        if (details.length() > 0) details.append("\n");
+                        details.append("Số lượng: ").append(p.get("orderedQty"));
+                    }
+                    if (p.containsKey("freightVnd")) {
+                        if (details.length() > 0) details.append("\n");
+                        Object freightObj = p.get("freightVnd");
+                        if (freightObj != null) {
+                            if (freightObj instanceof Long) {
+                                details.append("Cước vận chuyển hàng: ").append(String.format("%,d", (Long) freightObj).replace(",", "."));
+                            } else if (freightObj instanceof BigDecimal) {
+                                details.append("Cước vận chuyển hàng: ").append(((BigDecimal) freightObj).toString());
+                            } else {
+                                details.append("Cước vận chuyển hàng: ").append(freightObj);
+                            }
+                        }
+                    }
+                }
+                waybillDetails = details.toString();
             } catch (Exception e) {
                 // ignore parse errors
             }
