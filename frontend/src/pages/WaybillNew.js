@@ -505,9 +505,11 @@ function WaybillNew() {
          onChange={e => updateProductField(idx, 'volume', e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
      </td>
-     <td>
-<span style={{ width: '100%', display: 'block', padding: '3px 4px', fontSize: 12, textAlign: 'right' }}>{p.unitPriceVC || ''}</span>
-     </td>
+<td>
+                              <input type="number" step="0.01" value={p.unitPriceVC || ''}
+                                onChange={e => updateProductField(idx, 'unitPriceVC', e.target.value)}
+                                style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
+                              </td>
      <td>
        <input type="number" step="0.01" value={p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (totalCny || '')}
          onChange={e => updateProductField(idx, 'manualTotalCny', e.target.value)}
