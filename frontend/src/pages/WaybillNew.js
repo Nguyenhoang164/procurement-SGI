@@ -604,11 +604,21 @@ const handleVolumeChange = (idx, newVal) => {
                     </thead>
 <tbody>
 {products.map((p, idx) => {
-   const productKey = p._itemId || p.id || `product-${idx}`;
-   const totalCny = p.totalCny !== undefined ? p.totalCny : (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-   const manualTotalCny = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? p.manualTotalCny : (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0);
-   const totalVnd = p.totalVnd !== undefined ? p.totalVnd : Math.round(manualTotalCny * (Number(p.exchangeRate) || 3520));
-   return (
+    const productKey = p._itemId || p.id || `product-${idx}`;
+    const calculateValues = () => {
+      const volumeVal = Number(p.volume) || 0;
+      const unitPriceVCVal = Number(p.unitPriceVC) || 0;
+      const manualTotalCnyVal = p.manualTotalCny !== undefined && p.manualTotalCny !== '' ? Number(p.manualTotalCny || 0) : (volumeVal * unitPriceVCVal);
+      const exchangeRateVal = Number(p.exchangeRate) || 3520;
+      return {
+        totalCny: volumeVal * unitPriceVCVal,
+        manualTotalCny: manualTotalCnyVal,
+        totalVnd: Math.round(manualTotalCnyVal * exchangeRateVal)
+      };
+    };
+    
+    const values = calculateValues();
+    return (
     <tr key={productKey}>
      <td>{idx + 1}</td>
      <td>{p.productName}{p.posCode ? ` (${p.posCode})` : ''}</td>
@@ -633,7 +643,7 @@ const handleVolumeChange = (idx, newVal) => {
          onChange={e => handleExchangeRateChange(idx, e.target.value)}
          style={{ width: '100%', padding: '3px 4px', border: '1px solid #e2e8f0', borderRadius: 4, fontSize: 12, textAlign: 'right' }} />
      </td>
-     <td style={{ fontWeight: 600, textAlign: 'right' }}>{totalVnd.toLocaleString('vi-VN')} ₫</td>
+     <td style={{ fontWeight: 600, textAlign: 'right' }}>{values.totalVnd.toLocaleString('vi-VN')} ₫</td>
      <td>
        <input type="number" value={p.packageCount || ''}
          onChange={e => updateProductField(idx, 'packageCount', e.target.value)}
@@ -655,7 +665,7 @@ const handleVolumeChange = (idx, newVal) => {
 {Array.from(new Set(products.map(p => p.currency || 'CNY'))).sort().map(currency => {
                        const items = products.filter(p => (p.currency || 'CNY') === currency);
                        const totalForeign = items.reduce((s, p) => {
-                         const itemCny = p.totalCny !== undefined ? p.totalCny : (p.manualTotalCny !== undefined ? p.manualTotalCny : (Number(p.volume || 0) * Number(p.unitPriceVC || 0)));
+                         const itemCny = calculateProductFreight(p).totalCny;
                          return s + Number(itemCny || 0);
                        }, 0);
                        const rate = items[0]?.exchangeRate || '3520';
@@ -669,9 +679,7 @@ const handleVolumeChange = (idx, newVal) => {
                      })}
                      <div style={{ fontWeight: 600, fontSize: 14, marginTop: 4, paddingTop: 6, borderTop: '1px solid #e2e8f0' }}>
                        Tổng cước VC: {products.reduce((s, p) => {
-                         const rate = Number(p.exchangeRate || 3520);
-                         const cny = p.totalCny !== undefined ? p.totalCny : (p.manualTotalCny !== undefined ? p.manualTotalCny : (Number(p.volume || 0) * Number(p.unitPriceVC || 0)));
-                         return s + Math.round(cny * rate);
+                         return s + calculateProductFreight(p).totalVnd;
                        }, 0).toLocaleString('vi-VN')} VND
                      </div>
                   </div>
