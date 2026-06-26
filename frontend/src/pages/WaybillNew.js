@@ -55,13 +55,18 @@ function WaybillNew() {
   const [searchTerm, setSearchTerm] = useState('');
 
 
-  const [form, setForm] = useState({
-    waybillCode: '', carrier: '', status: 'IN_TRANSIT',
-    origin: '', destination: '',
-    actualQty: '',
-    note: '',
-    freightVnd: ''
-  });
+const [form, setForm] = useState({
+     waybillCode: '', carrier: '', status: 'IN_TRANSIT',
+     origin: '', destination: '',
+     actualQty: '',
+     note: '',
+     freightVnd: ''
+   });
+
+   // Keep form freightVnd in sync with computed value
+   useEffect(() => {
+     setForm(prev => ({ ...prev, freightVnd: computedFreightVnd || '' }));
+   }, [computedFreightVnd]);
 
   const computedExpectedQty = useMemo(() => {
     return products.reduce((sum, p) => sum + (Number(p.packageCount) || 0), 0);
