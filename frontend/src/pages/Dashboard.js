@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { dashboardAPI, globalSearchAPI } from '../services/api';
+import '../styles/Dashboard.css';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, CartesianGrid
@@ -8,10 +9,34 @@ import {
 
 const COLORS = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626', '#0891b2', '#db2777', '#65a30d'];
 
+const PERIOD_OPTIONS = [
+  { value: 'day', label: 'Ngày' },
+  { value: 'week', label: 'Tuần' },
+  { value: 'month', label: 'Tháng' },
+  { value: 'year', label: 'Năm' },
+];
+
+const CHART_PERIOD_SUFFIX = {
+  day: '7 ngày gần nhất',
+  week: '4 tuần gần nhất',
+  month: '6 tháng gần nhất',
+  year: '12 tháng gần nhất',
+};
+
+const todayStr = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 function Dashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [period, setPeriod] = useState('month');
+  const [selectedDate, setSelectedDate] = useState(todayStr);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState(null);
   const [searching, setSearching] = useState(false);
@@ -20,11 +45,15 @@ function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dashboardAPI.getKpi()
-      .then(setData)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    dashboardAPI.getKpi(period, selectedDate)
+      .then((res) => { if (!cancelled) setData(res); })
+      .catch((err) => { if (!cancelled) setError(err.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [period, selectedDate]);
 
   useEffect(() => {
     const handler = (e) => { if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearch(false); };
@@ -50,7 +79,7 @@ function Dashboard() {
     debounceRef.current = setTimeout(() => doSearch(kw), 300);
   };
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="page-screen">
         <div className="page-content" style={{ textAlign: 'center', padding: '60px' }}>
@@ -60,7 +89,7 @@ function Dashboard() {
     );
   }
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="page-screen">
         <div className="page-content" style={{ textAlign: 'center', padding: '60px' }}>
@@ -71,6 +100,9 @@ function Dashboard() {
   }
 
   if (!data) return null;
+
+  const chartSuffix = CHART_PERIOD_SUFFIX[period] || CHART_PERIOD_SUFFIX.month;
+  const selectedPeriodLabel = PERIOD_OPTIONS.find((p) => p.value === period)?.label?.toLowerCase() || 'tháng';
 
   const { statCards, recentOrders, weeklyTrend, planTrend, paymentTrend, sourceBreakdown, topProducts } = data;
 
@@ -107,11 +139,56 @@ function Dashboard() {
       <div className="page-topbar">
         <div className="page-title-group">
           <h1 className="page-title">Bảng điều khiển tổng quan</h1>
-          <p className="page-subtitle">Thông tin tổng quan hệ thống</p>
+          <p className="page-subtitle">
+            Thông tin tổng quan hệ thống
+            {loading ? ' · Đang cập nhật...' : ` · Theo ${selectedPeriodLabel}, ngày ${selectedDate.split('-').reverse().join('/')}`}
+          </p>
+        </div>
+        <div className="page-actions dashboard-period-filter">
+          <span className="dashboard-filter-label">Xem theo:</span>
+          <div className="dashboard-period-group">
+            {PERIOD_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`dashboard-period-btn${period === opt.value ? ' active' : ''}`}
+                onClick={() => setPeriod(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <span className="dashboard-filter-label">Ngày:</span>
+          <input
+            type="date"
+            className="dashboard-date-input"
+            value={selectedDate}
+            max={todayStr()}
+            onChange={(e) => {
+              if (e.target.value) setSelectedDate(e.target.value);
+            }}
+          />
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ padding: '6px 12px', fontSize: 12 }}
+            onClick={() => {
+              setPeriod('month');
+              setSelectedDate(todayStr());
+            }}
+          >
+            Hôm nay
+          </button>
         </div>
       </div>
 
-      <div className="page-content">
+      <div className={`page-content${loading ? ' dashboard-refreshing' : ''}`}>
+        {error && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: '#fef2f2', color: '#dc2626', fontSize: 13 }}>
+            Lỗi tải dữ liệu: {error}
+          </div>
+        )}
+
         <div ref={searchRef} style={{ position: 'relative', marginBottom: 16 }}>
           <input type="text" placeholder="Tìm kiếm nâng cao (PO, sản phẩm, vận đơn, đề nghị TT...)" value={searchKeyword}
             onChange={(e) => handleSearch(e.target.value)}
@@ -190,7 +267,7 @@ function Dashboard() {
           <div className="chart-grid" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
             {trendData.length > 0 && (
               <div className="chart-card">
-                <div className="surface-title">Đơn hàng theo tháng</div>
+                <div className="surface-title">Đơn hàng ({chartSuffix})</div>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={trendData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -205,7 +282,7 @@ function Dashboard() {
 
             {planData.length > 0 && (
               <div className="chart-card">
-                <div className="surface-title">KH tuần theo tháng</div>
+                <div className="surface-title">KH tuần ({chartSuffix})</div>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={planData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -220,7 +297,7 @@ function Dashboard() {
 
             {paymentData.length > 0 && (
               <div className="chart-card">
-                <div className="surface-title">DNTT theo tháng</div>
+                <div className="surface-title">DNTT ({chartSuffix})</div>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={paymentData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

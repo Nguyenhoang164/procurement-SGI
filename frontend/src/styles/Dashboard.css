@@ -1,1 +1,85 @@
-/* Dashboard uses shared shell styles from App.css */
+.dashboard-period-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dashboard-period-group {
+  display: inline-flex;
+  align-items: center;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.dashboard-period-btn {
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dashboard-period-btn:hover {
+  color: #111827;
+}
+
+.dashboard-period-btn.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-date-input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #111827;
+  background: #fff;
+  min-width: 140px;
+}
+
+.dashboard-date-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.dashboard-filter-label {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.dashboard-refreshing {
+  opacity: 0.55;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+@media (max-width: 768px) {
+  .dashboard-period-filter {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dashboard-period-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dashboard-period-btn {
+    flex: 1;
+    text-align: center;
+    padding: 6px 8px;
+  }
+}

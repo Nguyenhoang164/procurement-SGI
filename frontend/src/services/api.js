@@ -513,5 +513,11 @@ export const noteAPI = {
 };
 
 export const dashboardAPI = {
-  getKpi: async () => requestJson(`${API_BASE_URL}/dashboard`, { headers: getHeaders() })
+  getKpi: async (period, date) => {
+    const params = new URLSearchParams();
+    if (period) params.set('period', period);
+    if (date) params.set('date', date);
+    const qs = params.toString();
+    return requestJson(`${API_BASE_URL}/dashboard${qs ? `?${qs}` : ''}`, { headers: getHeaders() });
+  }
 };
