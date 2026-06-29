@@ -15,7 +15,6 @@ import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
@@ -50,110 +49,181 @@ public class DashboardService {
         "#dc2626", "#0891b2", "#db2777", "#65a30d"
     );
 
-    public DashboardKpiResponse getDashboard() {
+    public DashboardKpiResponse getDashboard(String period, String date) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String role = auth.getAuthorities().stream()
                 .findFirst()
                 .map(a -> a.getAuthority().replace("ROLE_", ""))
                 .orElse("");
 
-        LocalDate now = LocalDate.now();
-        LocalDateTime startOfMonth = now.withDayOfMonth(1).atStartOfDay();
-        LocalDateTime startOfNextMonth = now.plusMonths(1).withDayOfMonth(1).atStartOfDay();
+        String periodType = normalizePeriod(period);
+        LocalDate targetDate = parseTargetDate(date);
 
-        LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+        LocalDateTime periodStart = getPeriodStart(periodType, targetDate);
+        LocalDateTime periodEnd = getPeriodEnd(periodType, targetDate);
+        String periodLabel = getPeriodLabel(periodType);
+
+        LocalDateTime startOfWeek = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
         LocalDateTime endOfWeek = startOfWeek.plusDays(7);
 
         long totalProducts = productRepository.countActiveProducts();
-        long poThisMonth = purchaseOrderRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long poInPeriod = purchaseOrderRepository.countByCreatedAtBetween(periodStart, periodEnd);
         long poPendingApproval = purchaseOrderRepository.countByStatus("PENDING_L1");
         long totalPO = purchaseOrderRepository.count();
         long prPendingL1 = paymentRequestRepository.countByStatus("PENDING_L1");
         long prAccountingCheck = paymentRequestRepository.countByStatus("ACCOUNTING_CHECK");
         long prPendingL2 = paymentRequestRepository.countByStatus("PENDING_L2");
         long prApproved = paymentRequestRepository.countByStatus("APPROVED");
-        long prThisMonth = paymentRequestRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long prInPeriod = paymentRequestRepository.countByCreatedAtBetween(periodStart, periodEnd);
         long waybillsInTransit = waybillRepository.countByStatusNot("DELIVERED");
-        long waybillsThisMonth = waybillRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long waybillsInPeriod = waybillRepository.countByCreatedAtBetween(periodStart, periodEnd);
         long totalWarehouseReceipts = warehouseReceiptRepository.count();
         long wpPendingApproval = weeklyPlanRepository.countByStatus("PENDING_L1");
-        long wpThisMonth = weeklyPlanRepository.countByCreatedAtBetween(startOfMonth, startOfNextMonth);
+        long wpInPeriod = weeklyPlanRepository.countByCreatedAtBetween(periodStart, periodEnd);
 
         BigDecimal totalGoodsCost = purchaseOrderRepository.sumTotalGoodsCostVnd();
-        BigDecimal totalGoodsCostThisMonth = purchaseOrderRepository.sumTotalGoodsCostVndBetween(startOfMonth, startOfNextMonth);
-        BigDecimal totalPaymentAmount = paymentRequestRepository.sumTotalAmountVnd();
+        BigDecimal totalGoodsCostInPeriod = purchaseOrderRepository.sumTotalGoodsCostVndBetween(periodStart, periodEnd);
+        BigDecimal totalPaymentAmount = paymentRequestRepository.sumTotalAmountVndBetween(periodStart, periodEnd);
 
         long totalPendingApproval = poPendingApproval + prPendingL1;
 
         List<PurchaseOrder> recentPOs = purchaseOrderRepository.findTop5ByOrderByCreatedAtDesc();
 
-        List<StatCard> statCards = buildStatCards(role, poThisMonth, waybillsInTransit,
+        List<StatCard> statCards = buildStatCards(role, periodLabel, poInPeriod, waybillsInTransit,
                 totalGoodsCost, totalPendingApproval, totalProducts, totalPO,
                 prPendingL1, prAccountingCheck, prPendingL2, prApproved,
-                prThisMonth, totalGoodsCostThisMonth, totalPaymentAmount,
-                waybillsThisMonth, totalWarehouseReceipts, wpPendingApproval, wpThisMonth,
+                prInPeriod, totalGoodsCostInPeriod, totalPaymentAmount,
+                waybillsInPeriod, totalWarehouseReceipts, wpPendingApproval, wpInPeriod,
                 poPendingApproval, startOfWeek, endOfWeek);
 
         List<RecentOrder> recentOrders = recentPOs.stream()
                 .map(this::toRecentOrder)
                 .collect(Collectors.toList());
 
-        List<WeeklyTrend> weeklyTrend = buildMonthlyTrend();
-        List<WeeklyTrend> planTrend = buildMonthlyPlanTrend();
-        List<WeeklyTrend> paymentTrend = buildMonthlyPaymentTrend();
+        List<WeeklyTrend> weeklyTrend = buildTrendByPeriod("purchaseOrder", periodType, targetDate);
+        List<WeeklyTrend> planTrend = buildTrendByPeriod("weeklyPlan", periodType, targetDate);
+        List<WeeklyTrend> paymentTrend = buildTrendByPeriod("paymentRequest", periodType, targetDate);
         List<SourceData> sourceBreakdown = buildSourceBreakdown();
         List<ProductTrend> topProducts = buildTopProducts();
 
         return new DashboardKpiResponse(role, statCards, recentOrders, weeklyTrend, planTrend, paymentTrend, sourceBreakdown, topProducts);
     }
 
-    private List<StatCard> buildStatCards(String role,
-            long poThisMonth, long waybillsInTransit, BigDecimal totalGoodsCost,
+    private String normalizePeriod(String period) {
+        if (period == null || period.isBlank()) {
+            return "month";
+        }
+        String normalized = period.trim().toLowerCase();
+        if ("date".equals(normalized)) {
+            return "day";
+        }
+        return normalized;
+    }
+
+    private LocalDate parseTargetDate(String date) {
+        if (date == null || date.isBlank()) {
+            return LocalDate.now();
+        }
+        try {
+            return LocalDate.parse(date.trim());
+        } catch (Exception e) {
+            return LocalDate.now();
+        }
+    }
+
+    private LocalDateTime getPeriodStart(String periodType, LocalDate targetDate) {
+        switch (periodType) {
+            case "day":
+                return targetDate.atStartOfDay();
+            case "week":
+                return targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+            case "year":
+                return targetDate.withDayOfYear(1).atStartOfDay();
+            case "month":
+            default:
+                return targetDate.withDayOfMonth(1).atStartOfDay();
+        }
+    }
+
+    private LocalDateTime getPeriodEnd(String periodType, LocalDate targetDate) {
+        switch (periodType) {
+            case "day":
+                return targetDate.plusDays(1).atStartOfDay();
+            case "week":
+                return targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).plusWeeks(1).atStartOfDay();
+            case "year":
+                return targetDate.withDayOfYear(1).plusYears(1).atStartOfDay();
+            case "month":
+            default:
+                return targetDate.withDayOfMonth(1).plusMonths(1).atStartOfDay();
+        }
+    }
+
+    private String getPeriodLabel(String periodType) {
+        switch (periodType) {
+            case "day":
+                return "hôm nay";
+            case "week":
+                return "tuần này";
+            case "year":
+                return "năm nay";
+            case "month":
+            default:
+                return "tháng này";
+        }
+    }
+
+    private List<StatCard> buildStatCards(String role, String periodLabel,
+            long poInPeriod, long waybillsInTransit, BigDecimal totalGoodsCost,
             long totalPendingApproval, long totalProducts, long totalPO,
             long prPendingL1, long prAccountingCheck, long prPendingL2, long prApproved,
-            long prThisMonth, BigDecimal totalGoodsCostThisMonth, BigDecimal totalPaymentAmount,
-            long waybillsThisMonth, long totalWarehouseReceipts, long wpPendingApproval,
-            long wpThisMonth, long poPendingApproval,
+            long prInPeriod, BigDecimal totalGoodsCostInPeriod, BigDecimal totalPaymentAmount,
+            long waybillsInPeriod, long totalWarehouseReceipts, long wpPendingApproval,
+            long wpInPeriod, long poPendingApproval,
             LocalDateTime startOfWeek, LocalDateTime endOfWeek) {
 
         List<StatCard> cards = new ArrayList<>();
         DecimalFormat df = new DecimalFormat("#,###");
+        String poLabel = "Đơn " + periodLabel;
+        String prLabel = "DNTT " + periodLabel;
+        String waybillLabel = "Vận đơn " + periodLabel;
+        String wpLabel = "KH tuần " + periodLabel;
 
         switch (role) {
             case "ADMIN":
             case "CEO":
-                cards.add(new StatCard("Đơn tháng này", String.valueOf(poThisMonth),
+                cards.add(new StatCard(poLabel, String.valueOf(poInPeriod),
                         "Tổng số đơn hàng: " + df.format(totalPO), "#2563eb"));
                 cards.add(new StatCard("Đang vận chuyển", String.valueOf(waybillsInTransit),
                         "Lô hàng đang trên đường", "#7c3aed"));
-                cards.add(new StatCard("Tổng tiền hàng", formatVnd(totalGoodsCost),
-                        "VNĐ - tổng giá trị hàng", "#d97706"));
+                cards.add(new StatCard("Tổng tiền hàng", formatVnd(totalGoodsCostInPeriod),
+                        "VNĐ - giá trị hàng " + periodLabel, "#d97706"));
                 cards.add(new StatCard("Chờ phê duyệt", String.valueOf(totalPendingApproval),
                         "PO và DNTT cần xử lý", "#dc2626"));
                 cards.add(new StatCard("Sản phẩm", String.valueOf(totalProducts),
                         "Sản phẩm đang kinh doanh", "#0891b2"));
-                cards.add(new StatCard("DNTT tháng này", String.valueOf(prThisMonth),
+                cards.add(new StatCard(prLabel, String.valueOf(prInPeriod),
                         "Yêu cầu thanh toán", "#059669"));
                 break;
 
             case "WAREHOUSE":
                 cards.add(new StatCard("Đang vận chuyển", String.valueOf(waybillsInTransit),
                         "Lô hàng đang trên đường", "#7c3aed"));
-                cards.add(new StatCard("Vận đơn tháng này", String.valueOf(waybillsThisMonth),
+                cards.add(new StatCard(waybillLabel, String.valueOf(waybillsInPeriod),
                         "Tổng số vận đơn", "#2563eb"));
                 cards.add(new StatCard("Phiếu nhập kho", String.valueOf(totalWarehouseReceipts),
                         "Tổng số phiếu nhập kho", "#059669"));
-                cards.add(new StatCard("Đơn hàng tháng này", String.valueOf(poThisMonth),
+                cards.add(new StatCard(poLabel, String.valueOf(poInPeriod),
                         "Đơn hàng cần xử lý", "#d97706"));
                 break;
 
             case "ACCOUNTANT":
                 cards.add(new StatCard("DNTT chờ duyệt L1", String.valueOf(prPendingL1),
                         "Cần phê duyệt", "#dc2626"));
-                cards.add(new StatCard("DNTT tháng này", String.valueOf(prThisMonth),
+                cards.add(new StatCard(prLabel, String.valueOf(prInPeriod),
                         "Yêu cầu thanh toán", "#2563eb"));
                 cards.add(new StatCard("Tổng tiền DNTT", formatVnd(totalPaymentAmount),
-                        "VNĐ - tổng giá trị", "#059669"));
+                        "VNĐ - tổng giá trị " + periodLabel, "#059669"));
                 cards.add(new StatCard("Đã phê duyệt L2", String.valueOf(prApproved),
                         "Chờ thanh toán", "#d97706"));
                 break;
@@ -163,31 +233,31 @@ public class DashboardService {
                         "Cần kiểm tra kế toán", "#dc2626"));
                 cards.add(new StatCard("DNTT chờ duyệt L1", String.valueOf(prPendingL1),
                         "Cần phê duyệt", "#7c3aed"));
-                cards.add(new StatCard("DNTT tháng này", String.valueOf(prThisMonth),
+                cards.add(new StatCard(prLabel, String.valueOf(prInPeriod),
                         "Yêu cầu thanh toán", "#2563eb"));
                 cards.add(new StatCard("Tổng tiền DNTT", formatVnd(totalPaymentAmount),
-                        "VNĐ - tổng giá trị", "#059669"));
+                        "VNĐ - tổng giá trị " + periodLabel, "#059669"));
                 cards.add(new StatCard("Chờ duyệt L2", String.valueOf(prPendingL2),
                         "ADMIN cần phê duyệt", "#d97706"));
                 break;
 
             case "SALES":
-                cards.add(new StatCard("Đơn tháng này", String.valueOf(poThisMonth),
+                cards.add(new StatCard(poLabel, String.valueOf(poInPeriod),
                         "Đơn hàng đã tạo", "#2563eb"));
                 cards.add(new StatCard("Chờ duyệt PO", String.valueOf(poPendingApproval),
                         "Cần TP.KD phê duyệt", "#dc2626"));
-                cards.add(new StatCard("KH tuần tháng này", String.valueOf(wpThisMonth),
+                cards.add(new StatCard(wpLabel, String.valueOf(wpInPeriod),
                         "Kế hoạch tuần", "#059669"));
                 cards.add(new StatCard("Sản phẩm", String.valueOf(totalProducts),
                         "Sản phẩm đang kinh doanh", "#0891b2"));
                 break;
 
             case "PURCHASING":
-                cards.add(new StatCard("Đơn tháng này", String.valueOf(poThisMonth),
+                cards.add(new StatCard(poLabel, String.valueOf(poInPeriod),
                         "Đơn hàng đã tạo", "#2563eb"));
                 cards.add(new StatCard("Chờ duyệt PO", String.valueOf(poPendingApproval),
                         "Cần phê duyệt", "#dc2626"));
-                cards.add(new StatCard("DNTT tháng này", String.valueOf(prThisMonth),
+                cards.add(new StatCard(prLabel, String.valueOf(prInPeriod),
                         "Đề nghị thanh toán", "#059669"));
                 cards.add(new StatCard("Sản phẩm", String.valueOf(totalProducts),
                         "Sản phẩm trong hệ thống", "#0891b2"));
@@ -196,11 +266,11 @@ public class DashboardService {
             case "SALES_MANAGER":
                 cards.add(new StatCard("Chờ duyệt PO", String.valueOf(poPendingApproval),
                         "Cần phê duyệt L1", "#dc2626"));
-                cards.add(new StatCard("Đơn tháng này", String.valueOf(poThisMonth),
+                cards.add(new StatCard(poLabel, String.valueOf(poInPeriod),
                         "Đơn hàng đã tạo", "#2563eb"));
                 cards.add(new StatCard("KH tuần chờ duyệt", String.valueOf(wpPendingApproval),
                         "Kế hoạch tuần cần duyệt", "#7c3aed"));
-                cards.add(new StatCard("KH tuần tháng này", String.valueOf(wpThisMonth),
+                cards.add(new StatCard(wpLabel, String.valueOf(wpInPeriod),
                         "Kế hoạch tuần", "#059669"));
                 cards.add(new StatCard("Sản phẩm", String.valueOf(totalProducts),
                         "Sản phẩm đang kinh doanh", "#0891b2"));
@@ -255,46 +325,64 @@ public class DashboardService {
         }
     }
 
-    private List<WeeklyTrend> buildMonthlyTrend() {
+    private List<WeeklyTrend> buildTrendByPeriod(String entityType, String periodType, LocalDate targetDate) {
         List<WeeklyTrend> trends = new ArrayList<>();
-        LocalDate now = LocalDate.now();
-        String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
-        for (int i = 5; i >= 0; i--) {
-            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
-            LocalDate monthEnd = monthStart.plusMonths(1);
-            long count = purchaseOrderRepository.countByCreatedAtBetween(
-                    monthStart.atStartOfDay(), monthEnd.atStartOfDay());
-            int monthValue = monthStart.getMonthValue();
-            String label = monthNames[monthValue - 1];
-            trends.add(new WeeklyTrend(label, count));
+        DateTimeFormatter dayFormatter = DateTimeFormatter.ofPattern("dd/MM");
+
+        switch (periodType) {
+            case "day":
+                for (int i = 6; i >= 0; i--) {
+                    LocalDate day = targetDate.minusDays(i);
+                    LocalDateTime start = day.atStartOfDay();
+                    LocalDateTime end = day.plusDays(1).atStartOfDay();
+                    trends.add(new WeeklyTrend(day.format(dayFormatter), countByEntity(entityType, start, end)));
+                }
+                break;
+            case "week":
+                LocalDate weekStart = targetDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                for (int i = 3; i >= 0; i--) {
+                    LocalDate ws = weekStart.minusWeeks(i);
+                    LocalDateTime start = ws.atStartOfDay();
+                    LocalDateTime end = ws.plusWeeks(1).atStartOfDay();
+                    String label = ws.format(dayFormatter) + " - " + ws.plusDays(6).format(dayFormatter);
+                    trends.add(new WeeklyTrend(label, countByEntity(entityType, start, end)));
+                }
+                break;
+            case "year":
+                for (int i = 11; i >= 0; i--) {
+                    LocalDate monthStart = targetDate.minusMonths(i).withDayOfMonth(1);
+                    LocalDate monthEnd = monthStart.plusMonths(1);
+                    trends.add(new WeeklyTrend(getMonthLabel(monthStart), countByEntity(entityType, monthStart.atStartOfDay(), monthEnd.atStartOfDay())));
+                }
+                break;
+            case "month":
+            default:
+                for (int i = 5; i >= 0; i--) {
+                    LocalDate monthStart = targetDate.minusMonths(i).withDayOfMonth(1);
+                    LocalDate monthEnd = monthStart.plusMonths(1);
+                    trends.add(new WeeklyTrend(getMonthLabel(monthStart), countByEntity(entityType, monthStart.atStartOfDay(), monthEnd.atStartOfDay())));
+                }
+                break;
         }
+
         return trends;
     }
 
-    private List<WeeklyTrend> buildMonthlyPlanTrend() {
-        List<WeeklyTrend> trends = new ArrayList<>();
-        LocalDate now = LocalDate.now();
-        String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
-        for (int i = 5; i >= 0; i--) {
-            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
-            LocalDate monthEnd = monthStart.plusMonths(1);
-            long count = weeklyPlanRepository.countByCreatedAtBetween(monthStart.atStartOfDay(), monthEnd.atStartOfDay());
-            trends.add(new WeeklyTrend(monthNames[monthStart.getMonthValue() - 1], count));
+    private long countByEntity(String entityType, LocalDateTime start, LocalDateTime end) {
+        switch (entityType) {
+            case "weeklyPlan":
+                return weeklyPlanRepository.countByCreatedAtBetween(start, end);
+            case "paymentRequest":
+                return paymentRequestRepository.countByCreatedAtBetween(start, end);
+            case "purchaseOrder":
+            default:
+                return purchaseOrderRepository.countByCreatedAtBetween(start, end);
         }
-        return trends;
     }
 
-    private List<WeeklyTrend> buildMonthlyPaymentTrend() {
-        List<WeeklyTrend> trends = new ArrayList<>();
-        LocalDate now = LocalDate.now();
+    private String getMonthLabel(LocalDate monthStart) {
         String[] monthNames = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
-        for (int i = 5; i >= 0; i--) {
-            LocalDate monthStart = now.minusMonths(i).withDayOfMonth(1);
-            LocalDate monthEnd = monthStart.plusMonths(1);
-            long count = paymentRequestRepository.countByCreatedAtBetween(monthStart.atStartOfDay(), monthEnd.atStartOfDay());
-            trends.add(new WeeklyTrend(monthNames[monthStart.getMonthValue() - 1], count));
-        }
-        return trends;
+        return monthNames[monthStart.getMonthValue() - 1];
     }
 
     private List<ProductTrend> buildTopProducts() {

@@ -579,24 +579,36 @@ const suggestTotalAmount = useMemo(() => {
                           waybillCode: wb.waybillCode,
                           waybillId: wbId,
                         })));
-                        const items = prods.map((p, i) => ({
-                          key: `ship-${Date.now()}-${i}`,
-                          waybillCode: wb.waybillCode,
-                          waybillId: Number(wbId),
-                          poCode: p.poCode || '',
-                          posCode: p.posCode || '',
-                          productName: p.productName || '',
-                          spec: p.spec || '',
-                          orderedQty: p.orderedQty || 0,
-                          weightOrVolume: Number(p.volume) || 0,
-                          unitPriceVC: Number(p.unitPriceVC) || 0,
-                          totalCny: (Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0),
-                          packageCount: p.packageCount || '',
-                          exchangeRate: Number(p.exchangeRate) || 1,
-                          totalVnd: ((Number(p.volume) || 0) * (Number(p.unitPriceVC) || 0) * Number(p.exchangeRate) || 0),
-                          shippingMethod: p.shippingMethod || '',
-                          trackingNumber: p.trackingNumber || '',
-                        }));
+                        const items = prods.map((p, i) => {
+                          const itemShippingMethod = p.shippingMethod || '';
+                          const itemVolume = p.volume || '';
+                          console.log('[PaymentRequestNew] Mapping waybill product item:', {
+                            idx: i,
+                            productName: p.productName,
+                            hasShippingMethod: !!itemShippingMethod,
+                            shippingMethod: itemShippingMethod,
+                            hasVolume: !!itemVolume,
+                            volume: itemVolume
+                          });
+                          return {
+                            key: `ship-${Date.now()}-${i}`,
+                            waybillCode: wb.waybillCode,
+                            waybillId: Number(wbId),
+                            poCode: p.poCode || '',
+                            posCode: p.posCode || '',
+                            productName: p.productName || '',
+                            spec: p.spec || '',
+                            orderedQty: p.orderedQty || 0,
+                            weightOrVolume: Number(itemVolume) || 0,
+                            unitPriceVC: Number(p.unitPriceVC) || 0,
+                            totalCny: (Number(itemVolume) || 0) * (Number(p.unitPriceVC) || 0),
+                            packageCount: p.packageCount || '',
+                            exchangeRate: Number(p.exchangeRate) || 1,
+                            totalVnd: ((Number(itemVolume) || 0) * (Number(p.unitPriceVC) || 0) * Number(p.exchangeRate) || 0),
+                            shippingMethod: itemShippingMethod,
+                            trackingNumber: p.trackingNumber || '',
+                          };
+                        });
                         setShipmentItems(items);
                         const totalFees = items.reduce((s, item) => s + (Number(item.totalVnd) || 0), 0);
                         setWaybillTotalFreight(totalFees);

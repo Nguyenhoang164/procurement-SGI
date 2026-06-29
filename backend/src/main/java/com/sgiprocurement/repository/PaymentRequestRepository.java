@@ -28,4 +28,7 @@ public interface PaymentRequestRepository extends JpaRepository<PaymentRequest, 
     @Query("SELECT COALESCE(SUM(pr.totalAmountVnd), 0) FROM PaymentRequest pr")
     BigDecimal sumTotalAmountVnd();
 
+    @Query("SELECT COALESCE(SUM(pr.totalAmountVnd), 0) FROM PaymentRequest pr WHERE pr.createdAt BETWEEN :start AND :end")
+    BigDecimal sumTotalAmountVndBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
 }

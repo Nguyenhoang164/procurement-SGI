@@ -382,7 +382,7 @@ String poIds = null;
                     } else if (waybill.getCarrier() != null && !waybill.getCarrier().isBlank()) {
                         shippingMethod = waybill.getCarrier();
                     }
-                    System.out.println("[WaybillService] convertToDTO - shippingMethod from products/carrier: " + shippingMethod);
+                    System.out.println("[WaybillService] convertToDTO - Final shippingMethod: " + shippingMethod);
 
                 BigDecimal totalFreight = BigDecimal.ZERO;
                 for (Map<String, Object> p : productList) {
